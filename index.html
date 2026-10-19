@@ -1,1 +1,335 @@
 
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131e">
+  <title>SNV Game Top-up</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #10131e;
+      color: #f5f6ff;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 15px;
+      background: linear-gradient(135deg, #29285c, #10131e);
+      border-bottom: 1px solid #343650;
+    }
+
+    .logo {
+      color: #9baaff;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    header p, .muted {
+      color: #bdc3d8;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    main {
+      max-width: 650px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    .panel {
+      padding: 17px;
+      margin-bottom: 17px;
+      border-radius: 15px;
+      border: 1px solid #30364c;
+      background: #1a1e2d;
+    }
+
+    h2 { font-size: 19px; }
+
+    .products {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .product {
+      text-align: left;
+      color: white;
+      background: #20263a;
+      border: 1px solid #39435e;
+      border-radius: 12px;
+      padding: 14px 11px;
+      cursor: pointer;
+    }
+
+    .product.selected {
+      border: 2px solid #9baaff;
+      background: #2b3150;
+    }
+
+    .product strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .price {
+      color: #aab8ff;
+      font-weight: bold;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 7px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border-radius: 9px;
+      background: #101522;
+      color: white;
+      border: 1px solid #414a64;
+      font-size: 16px;
+    }
+
+    button {
+      font-size: 15px;
+      font-weight: bold;
+      padding: 13px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .primary {
+      width: 100%;
+      margin-top: 14px;
+      border: 0;
+      background: #899aff;
+      color: #10131e;
+    }
+
+    .secondary {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid #626e98;
+      background: #252b40;
+      color: white;
+    }
+
+    .qr {
+      display: block;
+      width: 200px;
+      height: 200px;
+      max-width: 100%;
+      object-fit: contain;
+      margin: 15px auto;
+      padding: 8px;
+      background: white;
+      border-radius: 10px;
+    }
+
+    .notice {
+      padding: 12px;
+      border-radius: 10px;
+      background: #29243a;
+      color: #ddd8f1;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    #result {
+      display: none;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #101522;
+      padding: 13px;
+      border-radius: 10px;
+      margin-top: 14px;
+      line-height: 1.8;
+    }
+
+    footer {
+      text-align: center;
+      color: #969db5;
+      font-size: 12px;
+      padding: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo">SNV TOP-UP</div>
+    <h1>The Spike Store</h1>
+    <p>Game Top-up • Order • Payment QR</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>សូមស្វាគមន៍មកកាន់ SNV TOP-UP</h2>
+      <p class="muted">
+        ជ្រើសរើសផលិតផល បញ្ចូល Player ID
+        ហើយបង្កើតព័ត៌មានបញ្ជាទិញរបស់អ្នក។
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>ជ្រើសរើសផលិតផល</h2>
+      <div class="products" id="products"></div>
+      <p class="muted">
+        តម្លៃនៅក្នុងកូដនេះជាតម្លៃគំរូប៉ុណ្ណោះ។
+        សូមកែឱ្យត្រូវមុនផ្សព្វផ្សាយគេហទំព័រ។
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>ព័ត៌មានបញ្ជាទិញ</h2>
+
+      <label for="player">Player ID</label>
+      <input id="player" placeholder="បញ្ចូល Player ID">
+
+      <label for="contact">ព័ត៌មានទំនាក់ទំនង</label>
+      <input id="contact" placeholder="Telegram ឬព័ត៌មានទាក់ទង">
+
+      <label for="note">កំណត់ចំណាំ (មិនចាំបាច់)</label>
+      <input id="note" placeholder="កំណត់ចំណាំរបស់អ្នក">
+
+      <button class="primary" onclick="makeOrder()">
+        បង្កើតព័ត៌មានបញ្ជាទិញ
+      </button>
+
+      <div id="result"></div>
+
+      <button id="copyBtn" class="secondary"
+        style="display:none" onclick="copyOrder()">
+        ចម្លងព័ត៌មានបញ្ជាទិញ
+      </button>
+    </section>
+
+    <section class="panel">
+      <h2>QR សម្រាប់ទូទាត់</h2>
+      <p class="muted">
+        ដាក់រូប QR ទូទាត់ពិតរបស់អ្នកក្នុងឯកសារ
+        payment-qr.png នៅក្នុង Repository។
+      </p>
+
+      <img id="qrImage" class="qr"
+        src="payment-qr.png"
+        alt="QR សម្រាប់ទូទាត់"
+        onerror="this.style.display='none';
+        document.getElementById('qrMissing').style.display='block';">
+
+      <p id="qrMissing" class="muted" style="display:none;text-align:center">
+        មិនទាន់មានរូប QR ទេ។
+      </p>
+
+      <div class="notice">
+        សូមពិនិត្យឈ្មោះអ្នកទទួល និងចំនួនប្រាក់
+        មុនទូទាត់។ កុំបញ្ចូលពាក្យសម្ងាត់ ឬ OTP
+        នៅក្នុងទម្រង់បញ្ជាទិញ។
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    SNV TOP-UP<br>
+    Independent fan-made store template.
+    មិនមែនជាគេហទំព័រផ្លូវការរបស់ The Spike ទេ។
+  </footer>
+
+  <script>
+    // តម្លៃខាងក្រោមគ្រាន់តែជាតម្លៃគំរូ។
+    // កែឈ្មោះ និងតម្លៃមុនប្រើប្រាស់ពិត។
+    const products = [
+      { id: 1, name: "Package A", price: 1.00 },
+      { id: 2, name: "Package B", price: 2.00 },
+      { id: 3, name: "Package C", price: 5.00 },
+      { id: 4, name: "Package D", price: 10.00 }
+    ];
+
+    let selected = 1;
+    let orderText = "";
+
+    function renderProducts() {
+      const area = document.getElementById("products");
+      area.innerHTML = "";
+
+      products.forEach(function(p) {
+        const button = document.createElement("button");
+        button.className = "product" +
+          (p.id === selected ? " selected" : "");
+
+        const name = document.createElement("strong");
+        name.textContent = p.name;
+
+        const price = document.createElement("span");
+        price.className = "price";
+        price.textContent = "$" + p.price.toFixed(2);
+
+        button.appendChild(name);
+        button.appendChild(price);
+
+        button.onclick = function() {
+          selected = p.id;
+          renderProducts();
+        };
+
+        area.appendChild(button);
+      });
+    }
+
+    function makeOrder() {
+      const player = document.getElementById("player").value.trim();
+      const contact = document.getElementById("contact").value.trim();
+      const note = document.getElementById("note").value.trim();
+      const product = products.find(function(p) {
+        return p.id === selected;
+      });
+
+      if (!player || !contact) {
+        alert("សូមបញ្ចូល Player ID និងព័ត៌មានទំនាក់ទំនង។");
+        return;
+      }
+
+      orderText =
+        "SNV TOP-UP - ORDER\n" +
+        "Game: The Spike\n" +
+        "Product: " + product.name + "\n" +
+        "Price: $" + product.price.toFixed(2) + "\n" +
+        "Player ID: " + player + "\n" +
+        "Contact: " + contact +
+        (note ? "\nNote: " + note : "") +
+        "\nPayment status: Not verified";
+
+      document.getElementById("result").textContent = orderText;
+      document.getElementById("result").style.display = "block";
+      document.getElementById("copyBtn").style.display = "block";
+    }
+
+    async function copyOrder() {
+      try {
+        await navigator.clipboard.writeText(orderText);
+        alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
+      } catch (error) {
+        const area = document.createElement("textarea");
+        area.value = orderText;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+        alert("សូមពិនិត្យមើលព័ត៌មានដែលបានចម្លង។");
+      }
+    }
+
+    renderProducts();
+  </script>
+</body>
+</html>
+
