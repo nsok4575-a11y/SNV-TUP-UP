@@ -250,14 +250,14 @@
     <section class="panel">
       <h2>ព័ត៌មានបញ្ជាទិញ</h2>
 
-      <label for="player">Player ID</label>
-      <input id="player" placeholder="បញ្ចូល Player ID">
-
-      <label for="contact">ព័ត៌មានទំនាក់ទំនង</label>
-      <input id="contact" placeholder="Telegram ឬព័ត៌មានទាក់ទង">
-
-      <label for="note">កំណត់ចំណាំ (មិនចាំបាច់)</label>
-      <input id="note" placeholder="កំណត់ចំណាំ">
+      
+<label for="uid">UID</label>
+<input
+  id="uid"
+  type="text"
+  placeholder="បញ្ចូល UID របស់អ្នក"
+  autocomplete="off"
+>
 
       <button class="primary" type="button" onclick="makeOrder()">
         បង្កើតព័ត៌មានបញ្ជាទិញ
@@ -636,46 +636,44 @@ async function loadPackageZip() {
       }
     }
 
-    function makeOrder() {
-      const player = document.getElementById("player").value.trim();
-      const contact = document.getElementById("contact").value.trim();
-      const note = document.getElementById("note").value.trim();
+    
+function makeOrder() {
+  const uid = document.getElementById("uid").value.trim();
 
-      const product = products.find(function(item) {
-        return item.id === selected;
-      });
+  const product = products.find(function(item) {
+    return item.id === selected;
+  });
 
-      if (!player || !contact) {
-        alert("សូមបញ្ចូល Player ID និងព័ត៌មានទំនាក់ទំនង។");
-        return;
-      }
+  if (!uid) {
+    alert("សូមបញ្ចូល UID របស់អ្នកជាមុនសិន។");
+    return;
+  }
 
-      orderText =
-        "SNV TOP-UP - ORDER\n" +
-        "Game: The Spike\n" +
-        "Product: " + product.name + "\n" +
-        "Price: $" + product.price.toFixed(2) + "\n" +
-        "Player ID: " + player + "\n" +
-        "Contact: " + contact +
-        (note ? "\nNote: " + note : "") +
-        "\nPayment status: Not verified";
+  orderText =
+    "SNV TOP-UP - ORDER\n" +
+    "Game: The Spike\n" +
+    "Product: " + product.name + "\n" +
+    "Price: $" + product.price.toFixed(2) + "\n" +
+    "UID: " + uid + "\n" +
+    "Payment status: Not verified";
 
-      document.getElementById("result").textContent = orderText;
-      document.getElementById("result").style.display = "block";
-      document.getElementById("copyBtn").style.display = "block";
+  document.getElementById("result").textContent = orderText;
+  document.getElementById("result").style.display = "block";
+  document.getElementById("copyBtn").style.display = "block";
 
-      orderCreated = true;
+  orderCreated = true;
 
-      const panel = document.getElementById("paymentPanel");
-      panel.style.display = "block";
+  const panel = document.getElementById("paymentPanel");
+  panel.style.display = "block";
 
-      updatePaymentDisplay(product);
+  updatePaymentDisplay(product);
 
-      panel.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }
+  panel.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
 
     function payNow() {
       if (!orderCreated) {
