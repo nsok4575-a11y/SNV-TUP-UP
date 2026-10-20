@@ -135,6 +135,14 @@
       border-radius: 10px;
     }
 
+    .amount {
+      text-align: center;
+      font-size: 25px;
+      font-weight: bold;
+      color: #aab8ff;
+      margin: 12px 0;
+    }
+
     .notice {
       padding: 12px;
       border-radius: 10px;
@@ -159,19 +167,6 @@
       display: none;
     }
 
-    #qrMissing {
-      display: none;
-      text-align: center;
-    }
-
-    .amount {
-      text-align: center;
-      font-size: 25px;
-      font-weight: bold;
-      color: #aab8ff;
-      margin: 12px 0;
-    }
-
     footer {
       text-align: center;
       color: #969db5;
@@ -186,7 +181,7 @@
   <header>
     <div class="logo">SNV TOP-UP</div>
     <h1>The Spike Store</h1>
-    <p>Game Top-up • Order • Payment QR</p>
+    <p>Game Top-up • Order • Payment</p>
   </header>
 
   <main>
@@ -200,12 +195,10 @@
 
     <section class="panel">
       <h2>ជ្រើសរើសផលិតផល</h2>
-
       <div class="products" id="products"></div>
-
       <p class="muted">
-        ចំណាំ៖ ឈ្មោះកញ្ចប់ និងតម្លៃនៅទីនេះជាតម្លៃគំរូ។
-        សូមកែឱ្យត្រូវមុនប្រើប្រាស់ពិត។
+        តម្លៃខាងក្រោមជាតម្លៃគំរូ។
+        សូមកែឈ្មោះ និងតម្លៃឱ្យត្រូវមុនប្រើប្រាស់ពិត។
       </p>
     </section>
 
@@ -213,27 +206,13 @@
       <h2>ព័ត៌មានបញ្ជាទិញ</h2>
 
       <label for="player">Player ID</label>
-      <input
-        id="player"
-        type="text"
-        placeholder="បញ្ចូល Player ID"
-        autocomplete="off"
-      >
+      <input id="player" placeholder="បញ្ចូល Player ID">
 
       <label for="contact">ព័ត៌មានទំនាក់ទំនង</label>
-      <input
-        id="contact"
-        type="text"
-        placeholder="Telegram ឬព័ត៌មានទាក់ទង"
-        autocomplete="off"
-      >
+      <input id="contact" placeholder="Telegram ឬព័ត៌មានទាក់ទង">
 
       <label for="note">កំណត់ចំណាំ (មិនចាំបាច់)</label>
-      <input
-        id="note"
-        type="text"
-        placeholder="កំណត់ចំណាំ"
-      >
+      <input id="note" placeholder="កំណត់ចំណាំ">
 
       <button class="primary" type="button" onclick="makeOrder()">
         បង្កើតព័ត៌មានបញ្ជាទិញ
@@ -246,38 +225,54 @@
         class="secondary"
         type="button"
         style="display:none"
-        onclick="copyOrder()"
-      >
+        onclick="copyOrder()">
         ចម្លងព័ត៌មានបញ្ជាទិញ
       </button>
     </section>
 
+    <!-- ផ្នែកទូទាត់៖ បង្ហាញក្រោយពេលបង្កើតការបញ្ជាទិញ -->
     <section class="panel" id="paymentPanel">
-      <h2>QR សម្រាប់ទូទាត់</h2>
+      <h2>ទូទាត់ប្រាក់</h2>
 
       <p class="muted" style="text-align:center">
-        សូមពិនិត្យតម្លៃ និងព័ត៌មានបញ្ជាទិញរបស់អ្នក។
+        សូមពិនិត្យ Package និងតម្លៃ មុនពេលទូទាត់។
       </p>
 
+      <p id="selectedProduct" class="muted"
+         style="text-align:center"></p>
+
       <div id="paymentAmount" class="amount"></div>
+
+      <h3 style="text-align:center;font-size:16px">
+        ស្កេន QR ដើម្បីទូទាត់
+      </h3>
 
       <img
         id="qrImage"
         class="qr"
         src="IMG_1792457505747.jpg"
         alt="QR សម្រាប់ទូទាត់"
-      >
+        onerror="this.style.display='none';
+          document.getElementById('qrMissing').style.display='block';">
 
-      <p id="qrMissing" class="muted">
+      <p id="qrMissing" class="muted"
+         style="display:none;text-align:center">
         មិនអាចបង្ហាញរូប QR បានទេ។
-        សូមពិនិត្យឈ្មោះឯកសារ QR នៅក្នុង Repository។
+        សូមពិនិត្យឈ្មោះឯកសារ QR ក្នុង Repository។
       </p>
 
-      <div class="notice">
-        QR ដែលបង្ហាញនៅទីនេះគឺជារូប QR ដែលបានកំណត់ក្នុងគេហទំព័រ។
-        តម្លៃដែលបង្ហាញមិនផ្លាស់ប្ដូរចំនួនប្រាក់ក្នុង QR ដោយស្វ័យប្រវត្តិទេ។
-        សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់មុនបង់។
-        កុំផ្ញើ PIN ឬ OTP របស់អ្នកទៅនរណាម្នាក់។
+      <button
+        class="primary"
+        type="button"
+        onclick="payNow()">
+        បង់ប្រាក់ឥឡូវនេះ
+      </button>
+
+      <div class="notice" style="margin-top:14px">
+        អ្នកអាចស្កេន QR ឬចុចប៊ូតុងខាងលើដើម្បីបើកលីងបង់ប្រាក់។
+        សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់។
+        កុំបញ្ចូល ឬចែករំលែក PIN និង OTP របស់អ្នក។
+        ការបើកលីងមិនមានន័យថាការបង់ប្រាក់បានជោគជ័យទេ។
       </div>
     </section>
   </main>
@@ -289,7 +284,7 @@
   </footer>
 
   <script>
-    // កែឈ្មោះ និងតម្លៃកញ្ចប់នៅទីនេះ។
+    // 1. កែឈ្មោះ និងតម្លៃ Package នៅទីនេះ
     const products = [
       { id: 1, name: "Package A", price: 1.00 },
       { id: 2, name: "Package B", price: 2.00 },
@@ -297,8 +292,18 @@
       { id: 4, name: "Package D", price: 10.00 }
     ];
 
+    // 2. ដាក់លីងបង់ប្រាក់ពិតរបស់ Package នីមួយៗនៅទីនេះ
+    // ទុក "" បើមិនទាន់មានលីង។
+    const paymentLinks = {
+      1: "",
+      2: "",
+      3: "",
+      4: ""
+    };
+
     let selected = 1;
     let orderText = "";
+    let orderCreated = false;
 
     function renderProducts() {
       const area = document.getElementById("products");
@@ -306,8 +311,8 @@
 
       products.forEach(function(p) {
         const button = document.createElement("button");
-        button.type = "button";
 
+        button.type = "button";
         button.className = "product" +
           (p.id === selected ? " selected" : "");
 
@@ -323,13 +328,16 @@
 
         button.onclick = function() {
           selected = p.id;
-          renderProducts();
 
-          // លាក់ QR ចាស់ រហូតដល់បង្កើតការបញ្ជាទិញថ្មី។
-          document.getElementById("paymentPanel").style.display = "none";
+          // លាក់ការបញ្ជាទិញចាស់ ដើម្បីកុំឱ្យច្រឡំ Package
+          orderCreated = false;
+          orderText = "";
+
           document.getElementById("result").style.display = "none";
           document.getElementById("copyBtn").style.display = "none";
-          orderText = "";
+          document.getElementById("paymentPanel").style.display = "none";
+
+          renderProducts();
         };
 
         area.appendChild(button);
@@ -350,11 +358,6 @@
         return p.id === selected;
       });
 
-      if (!product) {
-        alert("សូមជ្រើសរើសផលិតផលមុន។");
-        return;
-      }
-
       if (!player || !contact) {
         alert("សូមបញ្ចូល Player ID និងព័ត៌មានទំនាក់ទំនង។");
         return;
@@ -374,18 +377,61 @@
       document.getElementById("result").style.display = "block";
       document.getElementById("copyBtn").style.display = "block";
 
+      // បង្ហាញ Package និងតម្លៃនៅផ្នែកទូទាត់
+      document.getElementById("selectedProduct").textContent =
+        "Package ដែលបានជ្រើសរើស៖ " + product.name;
+
       document.getElementById("paymentAmount").textContent =
-        "ត្រូវបង់៖ $" + product.price.toFixed(2);
+        "$" + product.price.toFixed(2);
 
-      document.getElementById("paymentPanel").style.display = "block";
+      orderCreated = true;
 
-      document.getElementById("paymentPanel").scrollIntoView({
+      const paymentPanel = document.getElementById("paymentPanel");
+      paymentPanel.style.display = "block";
+
+      paymentPanel.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
     }
 
+    function payNow() {
+      if (!orderCreated) {
+        alert("សូមបង្កើតព័ត៌មានបញ្ជាទិញជាមុនសិន។");
+        return;
+      }
+
+      const link = paymentLinks[selected];
+
+      if (!link) {
+        alert(
+          "មិនទាន់មានលីងបង់ប្រាក់សម្រាប់ Package នេះទេ។\n" +
+          "សូមបញ្ចូលលីងបង់ប្រាក់ផ្លូវការនៅក្នុង paymentLinks។"
+        );
+        return;
+      }
+
+      // អនុញ្ញាតតែលីង HTTPS ប៉ុណ្ណោះ
+      try {
+        const url = new URL(link);
+
+        if (url.protocol !== "https:") {
+          alert("លីងបង់ប្រាក់ត្រូវតែចាប់ផ្ដើមដោយ https://");
+          return;
+        }
+
+        window.open(url.href, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        alert("លីងបង់ប្រាក់មិនត្រឹមត្រូវទេ។ សូមពិនិត្យម្ដងទៀត។");
+      }
+    }
+
     async function copyOrder() {
+      if (!orderText) {
+        alert("មិនទាន់មានព័ត៌មានបញ្ជាទិញទេ។");
+        return;
+      }
+
       try {
         await navigator.clipboard.writeText(orderText);
         alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
@@ -398,23 +444,13 @@
         const copied = document.execCommand("copy");
         area.remove();
 
-        if (copied) {
-          alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
-        } else {
-          alert("មិនអាចចម្លងបានទេ។ សូមចម្លងអត្ថបទដោយដៃ។");
-        }
+        alert(
+          copied
+            ? "បានចម្លងព័ត៌មានបញ្ជាទិញ!"
+            : "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើស និងចម្លងអត្ថបទដោយដៃ។"
+        );
       }
     }
-
-    document.getElementById("qrImage").onerror = function() {
-      this.style.display = "none";
-      document.getElementById("qrMissing").style.display = "block";
-    };
-
-    document.getElementById("qrImage").onload = function() {
-      this.style.display = "block";
-      document.getElementById("qrMissing").style.display = "none";
-    };
 
     renderProducts();
   </script>
