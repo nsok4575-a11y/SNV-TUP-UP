@@ -7,7 +7,6 @@
   <meta name="theme-color" content="#10131e">
   <title>SNV Game Top-up</title>
 
-  <!-- JSZip: អានរូបភាពនៅក្នុង ZIP -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
   <style>
@@ -62,13 +61,19 @@
     }
 
     .product {
-      text-align: left;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
       color: white;
       background: #20263a;
       border: 1px solid #39435e;
       border-radius: 12px;
-      padding: 14px 11px;
+      padding: 10px;
       cursor: pointer;
+      min-width: 0;
+      width: 100%;
+      overflow: hidden;
     }
 
     .product.selected {
@@ -76,9 +81,33 @@
       background: #2b3150;
     }
 
+    .package-image {
+      display: block;
+      width: 100%;
+      height: 115px;
+      object-fit: contain;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .package-placeholder {
+      width: 100%;
+      height: 115px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: #151a29;
+      color: #969db5;
+      font-size: 12px;
+      text-align: center;
+    }
+
     .product strong {
       display: block;
       margin-bottom: 8px;
+      overflow-wrap: anywhere;
     }
 
     .price {
@@ -179,6 +208,17 @@
       padding: 20px;
       line-height: 1.8;
     }
+
+    @media (max-width: 360px) {
+      .package-image,
+      .package-placeholder {
+        height: 90px;
+      }
+
+      .product {
+        padding: 8px;
+      }
+    }
   </style>
 </head>
 
@@ -204,6 +244,7 @@
       <p class="muted">
         សូមពិនិត្យឈ្មោះ និងតម្លៃ Package មុនប្រើប្រាស់ពិត។
       </p>
+      <p class="muted" id="packageImageStatus"></p>
     </section>
 
     <section class="panel">
@@ -269,7 +310,7 @@
 
   <script>
     const products = [
-      { id: 1, name: "Package $1", price: 11.00 },
+      { id: 1, name: "Package $1", price: 1.00 },
       { id: 2, name: "Package $2", price: 2.00 },
       { id: 3, name: "Package $3", price: 3.00 },
       { id: 4, name: "Package $4", price: 4.00 },
@@ -281,22 +322,21 @@
       { id: 10, name: "Package $10", price: 10.00 }
     ];
 
-    
-const qrFiles = {
-  1: "SNV-QR/1.jpg",
-  2: "SNV-QR/2.jpg",
-  3: "SNV-QR/3.jpg",
-  4: "SNV-QR/4.jpg",
-  5: "SNV-QR/5.jpg",
-  6: "SNV-QR/6.jpg",
-  7: "SNV-QR/7.jpg",
-  8: "SNV-QR/8.jpg",
-  9: "SNV-QR/9.jpg",
-  10: "SNV-QR/10.jpg"
-};
+    // QR របស់អ្នកនៅដដែល
+    const qrFiles = {
+      1: "SNV-QR/1.jpg",
+      2: "SNV-QR/2.jpg",
+      3: "SNV-QR/3.jpg",
+      4: "SNV-QR/4.jpg",
+      5: "SNV-QR/5.jpg",
+      6: "SNV-QR/6.jpg",
+      7: "SNV-QR/7.jpg",
+      8: "SNV-QR/8.jpg",
+      9: "SNV-QR/9.jpg",
+      10: "SNV-QR/10.jpg"
+    };
 
-
-    // បញ្ចូល URL HTTPS ពិតរបស់អ្នកវិញ ប្រសិនបើមាន។
+    // URL បង់ប្រាក់៖ បញ្ចូលលីង HTTPS ពិតនៅទីនេះ ប្រសិនបើមាន
     const paymentLinks = {
       1: "",
       2: "",
@@ -313,13 +353,137 @@ const qrFiles = {
     let selected = 1;
     let orderText = "";
     let orderCreated = false;
+
     let qrObjectUrls = {};
-    let zipPromise = null;
+    let packageObjectUrls = {};
+
+    let qrZipPromise = null;
+    let packageZipPromise = null;
+
+    // ស្វែងរករូបភាពក្នុង ZIP តាមលេខ និងប្រភេទរូបភាព
+    
+async function loadPackageZip() {
+  if (packageZipPromise) return packageZipPromise;
+
+  packageZipPromise = (async function() {
+    if (!window.JSZip) {
+      throw new Error("មិនអាចផ្ទុក JSZip បានទេ។");
+    }
+
+    const response = await fetch("./itim.zip", {
+      cache: "no-cache"
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "រក itim.zip មិនឃើញ (HTTP " +
+        response.status + ")"
+      );
+    }
+
+    const zip = await JSZip.loadAsync(
+      await response.arrayBuffer()
+    );
+
+    const files = Object.keys(zip.files).filter(function(path) {
+      return !zip.files[path].dir;
+    });
+
+    for (const product of products) {
+      const id = String(product.id);
+
+      const matchingFile = files.find(function(path) {
+        const normalizedPath = path.replace(/\\/g, "/");
+
+        return new RegExp(
+          "^itim/" + id + "\\.(jpg|jpeg|png|webp)$",
+          "i"
+        ).test(normalizedPath);
+      });
+
+      if (!matchingFile) continue;
+
+      const blob = await zip.file(matchingFile).async("blob");
+
+      packageObjectUrls[product.id] =
+        URL.createObjectURL(blob);
+    }
+
+    return packageObjectUrls;
+  })();
+
+  try {
+    return await packageZipPromise;
+  } catch (error) {
+    packageZipPromise = null;
+    throw error;
+  }
+}
+
+    // ផ្ទុករូប Package ហើយដាក់លើកាត
+    async function showPackageImages() {
+      const status = document.getElementById("packageImageStatus");
+      status.textContent = "កំពុងផ្ទុករូបភាព Package ពី itime.zip...";
+
+      try {
+        await loadPackageZip();
+
+        products.forEach(function(product) {
+          const image = document.getElementById(
+            "packageImage" + product.id
+          );
+          const placeholder = document.getElementById(
+            "packagePlaceholder" + product.id
+          );
+
+          const imageUrl = packageObjectUrls[product.id];
+
+          if (!image || !placeholder) return;
+
+          if (!imageUrl) {
+            placeholder.textContent =
+              "រកមិនឃើញរូបលេខ " + product.id;
+            return;
+          }
+
+          image.onload = function() {
+            image.style.display = "block";
+            placeholder.style.display = "none";
+          };
+
+          image.onerror = function() {
+            image.style.display = "none";
+            placeholder.style.display = "flex";
+            placeholder.textContent =
+              "មិនអាចបង្ហាញរូបលេខ " + product.id;
+          };
+
+          image.src = imageUrl;
+        });
+
+        const count = Object.keys(packageObjectUrls).length;
+
+        status.textContent = count
+          ? "បានរកឃើញរូបភាព Package " + count + "/10"
+          : "មិនទាន់រកឃើញរូបភាពក្នុង itime.zip ទេ។ សូមពិនិត្យឈ្មោះរូបភាព។";
+
+      } catch (error) {
+        status.textContent = "បញ្ហារូប Package៖ " + error.message;
+        products.forEach(function(product) {
+          const placeholder = document.getElementById(
+            "packagePlaceholder" + product.id
+          );
+          if (placeholder) {
+            placeholder.textContent = "មិនអាចផ្ទុករូបបាន";
+          }
+        });
+      }
+    }
 
     async function loadQRZip() {
-      if (zipPromise) return zipPromise;
+      if (qrZipPromise) return qrZipPromise;
 
-      zipPromise = (async function() {
+      qrZipPromise = (async function() {
         if (!window.JSZip) {
           throw new Error(
             "មិនអាចផ្ទុក JSZip បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត។"
@@ -354,9 +518,9 @@ const qrFiles = {
       })();
 
       try {
-        return await zipPromise;
+        return await qrZipPromise;
       } catch (error) {
-        zipPromise = null;
+        qrZipPromise = null;
         throw error;
       }
     }
@@ -367,9 +531,22 @@ const qrFiles = {
 
       products.forEach(function(product) {
         const button = document.createElement("button");
+
         button.type = "button";
         button.className = "product" +
           (product.id === selected ? " selected" : "");
+
+        // កន្លែងបង្ហាញរូបភាព
+        const image = document.createElement("img");
+        image.id = "packageImage" + product.id;
+        image.className = "package-image";
+        image.alt = product.name;
+        image.style.display = "none";
+
+        const placeholder = document.createElement("div");
+        placeholder.id = "packagePlaceholder" + product.id;
+        placeholder.className = "package-placeholder";
+        placeholder.textContent = "កំពុងផ្ទុករូប...";
 
         const name = document.createElement("strong");
         name.textContent = product.name;
@@ -378,6 +555,8 @@ const qrFiles = {
         price.className = "price";
         price.textContent = "$" + product.price.toFixed(2);
 
+        button.appendChild(image);
+        button.appendChild(placeholder);
         button.appendChild(name);
         button.appendChild(price);
 
@@ -396,6 +575,9 @@ const qrFiles = {
           if (panel.style.display !== "none") {
             updatePaymentDisplay(product);
           }
+
+          // បន្ទាប់ពីបង្កើតកាតឡើងវិញ ក៏បង្ហាញរូបដដែល
+          showPackageImages();
         };
 
         area.appendChild(button);
@@ -550,6 +732,7 @@ const qrFiles = {
     }
 
     renderProducts();
+    showPackageImages();
   </script>
 </body>
 </html>
