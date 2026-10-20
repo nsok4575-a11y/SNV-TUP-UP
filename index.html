@@ -123,19 +123,16 @@
       color: white;
     }
 
-    
-.qr {
-  display: block;
-  width: 180px;
-  height: auto;
-  max-width: 100%;
-  object-fit: contain;
-  margin: 15px auto;
-  padding: 0;
-  background: white;
-  border-radius: 10px;
-}
-
+    .qr {
+      display: block;
+      width: 180px;
+      height: auto;
+      max-width: 100%;
+      object-fit: contain;
+      margin: 15px auto;
+      background: white;
+      border-radius: 10px;
+    }
 
     .amount {
       text-align: center;
@@ -165,9 +162,7 @@
       line-height: 1.8;
     }
 
-    #paymentPanel {
-      display: none;
-    }
+    #paymentPanel { display: none; }
 
     footer {
       text-align: center;
@@ -221,22 +216,17 @@
 
       <div id="result"></div>
 
-      <button
-        id="copyBtn"
-        class="secondary"
-        type="button"
-        style="display:none"
-        onclick="copyOrder()">
+      <button id="copyBtn" class="secondary"
+        type="button" style="display:none" onclick="copyOrder()">
         ចម្លងព័ត៌មានបញ្ជាទិញ
       </button>
     </section>
 
-    <!-- ផ្នែក QR និងលីងបង់ប្រាក់ -->
     <section class="panel" id="paymentPanel">
       <h2>ទូទាត់ប្រាក់</h2>
 
       <p id="selectedProduct" class="muted"
-         style="text-align:center"></p>
+        style="text-align:center"></p>
 
       <div id="paymentAmount" class="amount"></div>
 
@@ -244,16 +234,12 @@
         ស្កេន QR ដើម្បីទូទាត់
       </h3>
 
-      <img
-        id="qrImage"
-        class="qr"
-        src=""
-        alt="QR សម្រាប់ទូទាត់"
+      <img id="qrImage" class="qr" alt="QR សម្រាប់ទូទាត់"
         style="display:none">
 
       <p id="qrMissing" class="muted"
-         style="text-align:center">
-        សូមបន្ថែមរូប QR របស់ Package នេះទៅក្នុង Repository។
+        style="text-align:center">
+        កំពុងផ្ទុករូប QR...
       </p>
 
       <button class="primary" type="button" onclick="payNow()">
@@ -275,8 +261,10 @@
     មិនមែនជាគេហទំព័រផ្លូវការរបស់ The Spike ទេ។
   </footer>
 
+  <!-- បណ្ណាល័យសម្រាប់អាន ZIP -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
   <script>
-    // 1. Package តម្លៃពី $1 ដល់ $10
     const products = [
       { id: 1, name: "Package $1", price: 1.00 },
       { id: 2, name: "Package $2", price: 2.00 },
@@ -290,9 +278,8 @@
       { id: 10, name: "Package $10", price: 10.00 }
     ];
 
-    // 2. រូប QR ដាច់ដោយឡែកសម្រាប់ Package នីមួយៗ
-    // ឈ្មោះឯកសារត្រូវតែដូចនឹងឈ្មោះក្នុង GitHub។
-    const qrImages = {
+    // ឈ្មោះរូបភាពនៅខាងក្នុង SNV-QR.zip
+    const qrFiles = {
       1: "1.jpg",
       2: "2.jpg",
       3: "3.jpg",
@@ -305,7 +292,8 @@
       10: "10.jpg"
     };
 
-    // 3. លីងបង់ប្រាក់ដដែល៖ ដាក់លីងពិតរបស់អ្នកនៅទីនេះ
+    // រក្សាទុកលីងចាស់របស់អ្នកនៅទីនេះ។
+    // បញ្ចូល URL ពិតវិញ ព្រោះកូដដែលផ្ញើមកមានតម្លៃទទេ។
     const paymentLinks = {
       1: "",
       2: "",
@@ -322,6 +310,53 @@
     let selected = 1;
     let orderText = "";
     let orderCreated = false;
+    let qrObjectUrls = {};
+    let zipPromise = null;
+
+    // អាន ZIP ម្តងគត់ ហើយរក្សាទុករូបភាពសម្រាប់ប្រើឡើងវិញ។
+    async function loadQRZip() {
+      if (zipPromise) return zipPromise;
+
+      zipPromise = (async function() {
+        if (!window.JSZip) {
+          throw new Error("មិនអាចផ្ទុកបណ្ណាល័យ ZIP បានទេ។");
+        }
+
+        const response = await fetch("SNV-QR.zip", {
+          cache: "no-cache"
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            "មិនអាចរក SNV-QR.zip បានទេ (" +
+            response.status + ")"
+          );
+        }
+
+        const zip = await JSZip.loadAsync(
+          await response.arrayBuffer()
+        );
+
+        for (const id of Object.keys(qrFiles)) {
+          const path = qrFiles[id];
+          const file = zip.file(path);
+
+          if (!file) continue;
+
+          const blob = await file.async("blob");
+          qrObjectUrls[id] = URL.createObjectURL(blob);
+        }
+
+        return qrObjectUrls;
+      })();
+
+      try {
+        return await zipPromise;
+      } catch (error) {
+        zipPromise = null;
+        throw error;
+      }
+    }
 
     function renderProducts() {
       const area = document.getElementById("products");
@@ -350,16 +385,25 @@
 
           document.getElementById("result").style.display = "none";
           document.getElementById("copyBtn").style.display = "none";
-          document.getElementById("paymentPanel").style.display = "none";
 
           renderProducts();
+
+          // បើផ្ទាំងបង់ប្រាក់បើករួច ប្ដូរ QR តាម Package ថ្មី។
+          const panel = document.getElementById("paymentPanel");
+          if (panel.style.display !== "none") {
+            updatePaymentDisplay(
+              products.find(function(item) {
+                return item.id === selected;
+              })
+            );
+          }
         };
 
         area.appendChild(button);
       });
     }
 
-    function updatePaymentDisplay(product) {
+    async function updatePaymentDisplay(product) {
       document.getElementById("selectedProduct").textContent =
         "Package ដែលបានជ្រើសរើស៖ " + product.name;
 
@@ -367,32 +411,51 @@
         "$" + product.price.toFixed(2);
 
       const qr = document.getElementById("qrImage");
-      const qrMissing = document.getElementById("qrMissing");
+      const missing = document.getElementById("qrMissing");
 
-      // លាក់ QR ចាស់ជាមុន ដើម្បីកុំឱ្យបង្ហាញខុស Package
+      // លាក់រូបចាស់មុនពេលបង្ហាញ QR ថ្មី។
       qr.style.display = "none";
-      qrMissing.style.display = "block";
-      qr.onload = null;
-      qr.onerror = null;
       qr.removeAttribute("src");
+      missing.style.display = "block";
+      missing.textContent = "កំពុងផ្ទុករូប QR...";
 
-      const imagePath = qrImages[product.id];
+      try {
+        await loadQRZip();
 
-      if (!imagePath) {
-        return;
-      }
+        const imageUrl = qrObjectUrls[product.id];
 
-      qr.onload = function() {
-        qr.style.display = "block";
-        qrMissing.style.display = "none";
-      };
+        if (!imageUrl) {
+          throw new Error(
+            "មិនមាន " + qrFiles[product.id] +
+            " នៅក្នុង ZIP ទេ។"
+          );
+        }
 
-      qr.onerror = function() {
+        // ពិនិត្យថា Package នៅតែដដែលក្រោយផ្ទុករួច។
+        if (product.id !== selected) return;
+
+        qr.onload = function() {
+          if (product.id !== selected) return;
+          qr.style.display = "block";
+          missing.style.display = "none";
+        };
+
+        qr.onerror = function() {
+          if (product.id !== selected) return;
+          qr.style.display = "none";
+          missing.style.display = "block";
+          missing.textContent = "មិនអាចបង្ហាញរូប QR នេះបានទេ។";
+        };
+
+        qr.src = imageUrl;
+      } catch (error) {
+        if (product.id !== selected) return;
+
         qr.style.display = "none";
-        qrMissing.style.display = "block";
-      };
-
-      qr.src = imagePath;
+        missing.style.display = "block";
+        missing.textContent =
+          "បញ្ហារូប QR៖ " + error.message;
+      }
     }
 
     function makeOrder() {
@@ -428,12 +491,78 @@
       document.getElementById("result").style.display = "block";
       document.getElementById("copyBtn").style.display = "block";
 
-      updatePaymentDisplay(product);
-
       orderCreated = true;
 
       const panel = document.getElementById("paymentPanel");
       panel.style.display = "block";
+
+      updatePaymentDisplay(product);
+
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+    function payNow() {
+      if (!orderCreated) {
+        alert("សូមបង្កើតព័ត៌មានបញ្ជាទិញជាមុនសិន។");
+        return;
+      }
+
+      const link = paymentLinks[selected];
+
+      if (!link) {
+        alert(
+          "មិនទាន់មានលីងបង់ប្រាក់សម្រាប់ Package នេះទេ។\n" +
+          "សូមបញ្ចូលលីងបង់ប្រាក់ពិតក្នុង paymentLinks។"
+        );
+        return;
+      }
+
+      try {
+        const url = new URL(link);
+
+        if (url.protocol !== "https:") {
+          alert("លីងបង់ប្រាក់ត្រូវតែចាប់ផ្ដើមដោយ https://");
+          return;
+        }
+
+        window.open(url.href, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        alert("លីងបង់ប្រាក់មិនត្រឹមត្រូវទេ។");
+      }
+    }
+
+    async function copyOrder() {
+      if (!orderText) {
+        alert("មិនទាន់មានព័ត៌មានបញ្ជាទិញទេ។");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(orderText);
+        alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
+      } catch (error) {
+        const area = document.createElement("textarea");
+        area.value = orderText;
+        document.body.appendChild(area);
+        area.select();
+
+        const copied = document.execCommand("copy");
+        area.remove();
+
+        alert(copied
+          ? "បានចម្លងព័ត៌មានបញ្ជាទិញ!"
+          : "មិនអាចចម្លងបានទេ។ សូមចម្លងអត្ថបទដោយដៃ។");
+      }
+    }
+
+    renderProducts();
+  </script>
+</body>
+</html>
+ock";
       panel.scrollIntoView({
         behavior: "smooth",
         block: "start"
