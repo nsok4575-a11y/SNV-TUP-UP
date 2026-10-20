@@ -2,11 +2,13 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10131e">
   <title>SNV Game Top-up</title>
+
+  <!-- JSZip: អានរូបភាពនៅក្នុង ZIP -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
   <style>
     * { box-sizing: border-box; }
@@ -126,7 +128,7 @@
 
     .qr {
       display: block;
-      width: 180px;
+      width: 220px;
       height: auto;
       max-width: 100%;
       object-fit: contain;
@@ -164,6 +166,11 @@
     }
 
     #paymentPanel { display: none; }
+
+    #qrMissing {
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
 
     footer {
       text-align: center;
@@ -238,8 +245,7 @@
       <img id="qrImage" class="qr" alt="QR សម្រាប់ទូទាត់"
         style="display:none">
 
-      <p id="qrMissing" class="muted"
-        style="text-align:center">
+      <p id="qrMissing" class="muted">
         កំពុងផ្ទុករូប QR...
       </p>
 
@@ -248,7 +254,6 @@
       </button>
 
       <div class="notice" style="margin-top:14px">
-        អ្នកអាចស្កេន QR ឬចុចប៊ូតុងដើម្បីបើកលីងបង់ប្រាក់។
         សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់មុនទូទាត់។
         កុំចែករំលែក PIN ឬ OTP។
         ស្ថានភាពការទូទាត់ត្រូវពិនិត្យផ្ទៀងផ្ទាត់ដោយឡែក។
@@ -261,9 +266,6 @@
     Independent fan-made store template.<br>
     មិនមែនជាគេហទំព័រផ្លូវការរបស់ The Spike ទេ។
   </footer>
-
-  <!-- បណ្ណាល័យសម្រាប់អាន ZIP -->
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
   <script>
     const products = [
@@ -279,22 +281,22 @@
       { id: 10, name: "Package $10", price: 10.00 }
     ];
 
-    // ឈ្មោះរូបភាពនៅខាងក្នុង SNV-QR.zip
-    const qrFiles = {
-      1: "1.jpg",
-      2: "2.jpg",
-      3: "3.jpg",
-      4: "4.jpg",
-      5: "5.jpg",
-      6: "6.jpg",
-      7: "7.jpg",
-      8: "8.jpg",
-      9: "9.jpg",
-      10: "10.jpg"
-    };
+    
+const qrFiles = {
+  1: "SNV-QR/1.jpg",
+  2: "SNV-QR/2.jpg",
+  3: "SNV-QR/3.jpg",
+  4: "SNV-QR/4.jpg",
+  5: "SNV-QR/5.jpg",
+  6: "SNV-QR/6.jpg",
+  7: "SNV-QR/7.jpg",
+  8: "SNV-QR/8.jpg",
+  9: "SNV-QR/9.jpg",
+  10: "SNV-QR/10.jpg"
+};
 
-    // រក្សាទុកលីងចាស់របស់អ្នកនៅទីនេះ។
-    // បញ្ចូល URL ពិតវិញ ព្រោះកូដដែលផ្ញើមកមានតម្លៃទទេ។
+
+    // បញ្ចូល URL HTTPS ពិតរបស់អ្នកវិញ ប្រសិនបើមាន។
     const paymentLinks = {
       1: "",
       2: "",
@@ -314,23 +316,24 @@
     let qrObjectUrls = {};
     let zipPromise = null;
 
-    // អាន ZIP ម្តងគត់ ហើយរក្សាទុករូបភាពសម្រាប់ប្រើឡើងវិញ។
     async function loadQRZip() {
       if (zipPromise) return zipPromise;
 
       zipPromise = (async function() {
         if (!window.JSZip) {
-          throw new Error("មិនអាចផ្ទុកបណ្ណាល័យ ZIP បានទេ។");
+          throw new Error(
+            "មិនអាចផ្ទុក JSZip បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត។"
+          );
         }
 
-        const response = await fetch("SNV-QR.zip", {
+        const response = await fetch("./SNV-QR.zip", {
           cache: "no-cache"
         });
 
         if (!response.ok) {
           throw new Error(
-            "មិនអាចរក SNV-QR.zip បានទេ (" +
-            response.status + ")"
+            "រក SNV-QR.zip មិនឃើញ (HTTP " +
+            response.status + ")។ សូមពិនិត្យ GitHub។"
           );
         }
 
@@ -339,8 +342,7 @@
         );
 
         for (const id of Object.keys(qrFiles)) {
-          const path = qrFiles[id];
-          const file = zip.file(path);
+          const file = zip.file(qrFiles[id]);
 
           if (!file) continue;
 
@@ -363,24 +365,24 @@
       const area = document.getElementById("products");
       area.innerHTML = "";
 
-      products.forEach(function(p) {
+      products.forEach(function(product) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "product" +
-          (p.id === selected ? " selected" : "");
+          (product.id === selected ? " selected" : "");
 
         const name = document.createElement("strong");
-        name.textContent = p.name;
+        name.textContent = product.name;
 
         const price = document.createElement("span");
         price.className = "price";
-        price.textContent = "$" + p.price.toFixed(2);
+        price.textContent = "$" + product.price.toFixed(2);
 
         button.appendChild(name);
         button.appendChild(price);
 
         button.onclick = function() {
-          selected = p.id;
+          selected = product.id;
           orderCreated = false;
           orderText = "";
 
@@ -389,14 +391,10 @@
 
           renderProducts();
 
-          // បើផ្ទាំងបង់ប្រាក់បើករួច ប្ដូរ QR តាម Package ថ្មី។
           const panel = document.getElementById("paymentPanel");
+
           if (panel.style.display !== "none") {
-            updatePaymentDisplay(
-              products.find(function(item) {
-                return item.id === selected;
-              })
-            );
+            updatePaymentDisplay(product);
           }
         };
 
@@ -405,16 +403,15 @@
     }
 
     async function updatePaymentDisplay(product) {
+      const qr = document.getElementById("qrImage");
+      const missing = document.getElementById("qrMissing");
+
       document.getElementById("selectedProduct").textContent =
         "Package ដែលបានជ្រើសរើស៖ " + product.name;
 
       document.getElementById("paymentAmount").textContent =
         "$" + product.price.toFixed(2);
 
-      const qr = document.getElementById("qrImage");
-      const missing = document.getElementById("qrMissing");
-
-      // លាក់រូបចាស់មុនពេលបង្ហាញ QR ថ្មី។
       qr.style.display = "none";
       qr.removeAttribute("src");
       missing.style.display = "block";
@@ -432,7 +429,6 @@
           );
         }
 
-        // ពិនិត្យថា Package នៅតែដដែលក្រោយផ្ទុករួច។
         if (product.id !== selected) return;
 
         qr.onload = function() {
@@ -454,23 +450,17 @@
 
         qr.style.display = "none";
         missing.style.display = "block";
-        missing.textContent =
-          "បញ្ហារូប QR៖ " + error.message;
+        missing.textContent = "បញ្ហារូប QR៖ " + error.message;
       }
     }
 
     function makeOrder() {
-      const player =
-        document.getElementById("player").value.trim();
+      const player = document.getElementById("player").value.trim();
+      const contact = document.getElementById("contact").value.trim();
+      const note = document.getElementById("note").value.trim();
 
-      const contact =
-        document.getElementById("contact").value.trim();
-
-      const note =
-        document.getElementById("note").value.trim();
-
-      const product = products.find(function(p) {
-        return p.id === selected;
+      const product = products.find(function(item) {
+        return item.id === selected;
       });
 
       if (!player || !contact) {
@@ -516,7 +506,7 @@
       if (!link) {
         alert(
           "មិនទាន់មានលីងបង់ប្រាក់សម្រាប់ Package នេះទេ។\n" +
-          "សូមបញ្ចូលលីងបង់ប្រាក់ពិតក្នុង paymentLinks។"
+          "សូមបញ្ចូល URL ពិតក្នុង paymentLinks។"
         );
         return;
       }
@@ -556,114 +546,6 @@
         alert(copied
           ? "បានចម្លងព័ត៌មានបញ្ជាទិញ!"
           : "មិនអាចចម្លងបានទេ។ សូមចម្លងអត្ថបទដោយដៃ។");
-      }
-    }
-
-    renderProducts();
-  </script>
-</body>
-</html>
-ock";
-      panel.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }
-
-    function payNow() {
-      if (!orderCreated) {
-        alert("សូមបង្កើតព័ត៌មានបញ្ជាទិញជាមុនសិន។");
-        return;
-      }
-
-      const link = paymentLinks[selected];
-
-      if (!link) {
-        alert(
-          "មិនទាន់មានលីងបង់ប្រាក់សម្រាប់ Package នេះទេ។\n" +
-          "សូមបញ្ចូលលីងបង់ប្រាក់ពិតក្នុង paymentLinks។"
-        );
-        return;
-      }
-
-      try {
-        const url = new URL(link);
-
-        if (url.protocol !== "https:") {
-          alert("លីងបង់ប្រាក់ត្រូវតែចាប់ផ្ដើមដោយ https://");
-          return;
-        }
-
-        window.open(url.href, "_blank", "noopener,noreferrer");
-      } catch (error) {
-        alert("លីងបង់ប្រាក់មិនត្រឹមត្រូវទេ។");
-      }
-    }
-
-    async function copyOrder() {
-      if (!orderText) {
-        alert("មិនទាន់មានព័ត៌មានបញ្ជាទិញទេ។");
-        return;
-      }
-
-      try {
-        await navigator.clipboard.writeText(orderText);
-        alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
-      } catch (error) {
-        const area = document.createElement("textarea");
-        area.value = orderText;
-        document.body.appendChild(area);
-        area.select();
-
-        const copied = document.execCommand("copy");
-        area.remove();
-
-        alert(copied
-          ? "បានចម្លងព័ត៌មានបញ្ជាទិញ!"
-          : "មិនអាចចម្លងបានទេ។ សូមចម្លងអត្ថបទដោយដៃ។");
-      }
-    }
-
-    renderProducts();
-  </script>
-</body>
-</html>
-
-
-        if (url.protocol !== "https:") {
-          alert("លីងបង់ប្រាក់ត្រូវតែចាប់ផ្ដើមដោយ https://");
-          return;
-        }
-
-        window.open(url.href, "_blank", "noopener,noreferrer");
-      } catch (error) {
-        alert("លីងបង់ប្រាក់មិនត្រឹមត្រូវទេ។ សូមពិនិត្យម្ដងទៀត។");
-      }
-    }
-
-    async function copyOrder() {
-      if (!orderText) {
-        alert("មិនទាន់មានព័ត៌មានបញ្ជាទិញទេ។");
-        return;
-      }
-
-      try {
-        await navigator.clipboard.writeText(orderText);
-        alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
-      } catch (error) {
-        const area = document.createElement("textarea");
-        area.value = orderText;
-        document.body.appendChild(area);
-        area.select();
-
-        const copied = document.execCommand("copy");
-        area.remove();
-
-        alert(
-          copied
-            ? "បានចម្លងព័ត៌មានបញ្ជាទិញ!"
-            : "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើស និងចម្លងអត្ថបទដោយដៃ។"
-        );
       }
     }
 
