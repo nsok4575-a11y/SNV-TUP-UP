@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10131e">
   <title>SNV Game Top-up</title>
+
   <style>
     * { box-sizing: border-box; }
 
@@ -124,8 +125,8 @@
 
     .qr {
       display: block;
-      width: 200px;
-      height: 200px;
+      width: 220px;
+      height: 220px;
       max-width: 100%;
       object-fit: contain;
       margin: 15px auto;
@@ -154,11 +155,29 @@
       line-height: 1.8;
     }
 
+    #paymentPanel {
+      display: none;
+    }
+
+    #qrMissing {
+      display: none;
+      text-align: center;
+    }
+
+    .amount {
+      text-align: center;
+      font-size: 25px;
+      font-weight: bold;
+      color: #aab8ff;
+      margin: 12px 0;
+    }
+
     footer {
       text-align: center;
       color: #969db5;
       font-size: 12px;
       padding: 20px;
+      line-height: 1.8;
     }
   </style>
 </head>
@@ -181,9 +200,11 @@
 
     <section class="panel">
       <h2>ជ្រើសរើសផលិតផល</h2>
+
       <div class="products" id="products"></div>
+
       <p class="muted">
-        តម្លៃខាងក្រោមជាតម្លៃគំរូ។
+        ចំណាំ៖ ឈ្មោះកញ្ចប់ និងតម្លៃនៅទីនេះជាតម្លៃគំរូ។
         សូមកែឱ្យត្រូវមុនប្រើប្រាស់ពិត។
       </p>
     </section>
@@ -192,59 +213,83 @@
       <h2>ព័ត៌មានបញ្ជាទិញ</h2>
 
       <label for="player">Player ID</label>
-      <input id="player" placeholder="បញ្ចូល Player ID">
+      <input
+        id="player"
+        type="text"
+        placeholder="បញ្ចូល Player ID"
+        autocomplete="off"
+      >
 
       <label for="contact">ព័ត៌មានទំនាក់ទំនង</label>
-      <input id="contact" placeholder="Telegram ឬព័ត៌មានទាក់ទង">
+      <input
+        id="contact"
+        type="text"
+        placeholder="Telegram ឬព័ត៌មានទាក់ទង"
+        autocomplete="off"
+      >
 
       <label for="note">កំណត់ចំណាំ (មិនចាំបាច់)</label>
-      <input id="note" placeholder="កំណត់ចំណាំ">
+      <input
+        id="note"
+        type="text"
+        placeholder="កំណត់ចំណាំ"
+      >
 
-      <button class="primary" onclick="makeOrder()">
+      <button class="primary" type="button" onclick="makeOrder()">
         បង្កើតព័ត៌មានបញ្ជាទិញ
       </button>
 
       <div id="result"></div>
 
-      <button id="copyBtn" class="secondary"
-        style="display:none" onclick="copyOrder()">
+      <button
+        id="copyBtn"
+        class="secondary"
+        type="button"
+        style="display:none"
+        onclick="copyOrder()"
+      >
         ចម្លងព័ត៌មានបញ្ជាទិញ
       </button>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="paymentPanel">
       <h2>QR សម្រាប់ទូទាត់</h2>
-      <p class="muted">
-        បន្ថែមរូប QR របស់អ្នកដោយដាក់ឯកសារ
-        payment-qr.png ក្នុង Repository។
+
+      <p class="muted" style="text-align:center">
+        សូមពិនិត្យតម្លៃ និងព័ត៌មានបញ្ជាទិញរបស់អ្នក។
       </p>
 
-      <img id="qrImage" class="qr"
-     src="IMG_1792457505747.jpg"
-     alt="QR សម្រាប់ទូទាត់"
-     onerror="this.style.display='none';
-     document.getElementById('qrMissing').style.display='block';">
+      <div id="paymentAmount" class="amount"></div>
 
-      <p id="qrMissing" class="muted"
-        style="display:none;text-align:center">
-        មិនទាន់មានរូប QR ទេ។
+      <img
+        id="qrImage"
+        class="qr"
+        src="IMG_1792457505747.jpg"
+        alt="QR សម្រាប់ទូទាត់"
+      >
+
+      <p id="qrMissing" class="muted">
+        មិនអាចបង្ហាញរូប QR បានទេ។
+        សូមពិនិត្យឈ្មោះឯកសារ QR នៅក្នុង Repository។
       </p>
 
       <div class="notice">
-        សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់
-        មុនទូទាត់។ កុំបញ្ចូលពាក្យសម្ងាត់ ឬ OTP។
+        QR ដែលបង្ហាញនៅទីនេះគឺជារូប QR ដែលបានកំណត់ក្នុងគេហទំព័រ។
+        តម្លៃដែលបង្ហាញមិនផ្លាស់ប្ដូរចំនួនប្រាក់ក្នុង QR ដោយស្វ័យប្រវត្តិទេ។
+        សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់មុនបង់។
+        កុំផ្ញើ PIN ឬ OTP របស់អ្នកទៅនរណាម្នាក់។
       </div>
     </section>
   </main>
 
   <footer>
     SNV TOP-UP<br>
-    Independent fan-made store template.
+    Independent fan-made store template.<br>
     មិនមែនជាគេហទំព័រផ្លូវការរបស់ The Spike ទេ។
   </footer>
 
   <script>
-    // តម្លៃគំរូ៖ កែឈ្មោះ និងតម្លៃមុនប្រើពិត។
+    // កែឈ្មោះ និងតម្លៃកញ្ចប់នៅទីនេះ។
     const products = [
       { id: 1, name: "Package A", price: 1.00 },
       { id: 2, name: "Package B", price: 2.00 },
@@ -261,6 +306,8 @@
 
       products.forEach(function(p) {
         const button = document.createElement("button");
+        button.type = "button";
+
         button.className = "product" +
           (p.id === selected ? " selected" : "");
 
@@ -277,6 +324,12 @@
         button.onclick = function() {
           selected = p.id;
           renderProducts();
+
+          // លាក់ QR ចាស់ រហូតដល់បង្កើតការបញ្ជាទិញថ្មី។
+          document.getElementById("paymentPanel").style.display = "none";
+          document.getElementById("result").style.display = "none";
+          document.getElementById("copyBtn").style.display = "none";
+          orderText = "";
         };
 
         area.appendChild(button);
@@ -286,14 +339,21 @@
     function makeOrder() {
       const player =
         document.getElementById("player").value.trim();
+
       const contact =
         document.getElementById("contact").value.trim();
+
       const note =
         document.getElementById("note").value.trim();
 
       const product = products.find(function(p) {
         return p.id === selected;
       });
+
+      if (!product) {
+        alert("សូមជ្រើសរើសផលិតផលមុន។");
+        return;
+      }
 
       if (!player || !contact) {
         alert("សូមបញ្ចូល Player ID និងព័ត៌មានទំនាក់ទំនង។");
@@ -313,6 +373,16 @@
       document.getElementById("result").textContent = orderText;
       document.getElementById("result").style.display = "block";
       document.getElementById("copyBtn").style.display = "block";
+
+      document.getElementById("paymentAmount").textContent =
+        "ត្រូវបង់៖ $" + product.price.toFixed(2);
+
+      document.getElementById("paymentPanel").style.display = "block";
+
+      document.getElementById("paymentPanel").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
     }
 
     async function copyOrder() {
@@ -324,11 +394,27 @@
         area.value = orderText;
         document.body.appendChild(area);
         area.select();
-        document.execCommand("copy");
+
+        const copied = document.execCommand("copy");
         area.remove();
-        alert("សូមពិនិត្យមើលព័ត៌មានដែលបានចម្លង។");
+
+        if (copied) {
+          alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
+        } else {
+          alert("មិនអាចចម្លងបានទេ។ សូមចម្លងអត្ថបទដោយដៃ។");
+        }
       }
     }
+
+    document.getElementById("qrImage").onerror = function() {
+      this.style.display = "none";
+      document.getElementById("qrMissing").style.display = "block";
+    };
+
+    document.getElementById("qrImage").onload = function() {
+      this.style.display = "block";
+      document.getElementById("qrMissing").style.display = "none";
+    };
 
     renderProducts();
   </script>
