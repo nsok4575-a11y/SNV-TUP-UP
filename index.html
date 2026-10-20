@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10131e">
   <title>SNV Game Top-up</title>
-
   <style>
     * { box-sizing: border-box; }
 
@@ -184,8 +183,8 @@
       <h2>ជ្រើសរើសផលិតផល</h2>
       <div class="products" id="products"></div>
       <p class="muted">
-        តម្លៃនៅក្នុងកូដនេះជាតម្លៃគំរូប៉ុណ្ណោះ។
-        សូមកែឱ្យត្រូវមុនផ្សព្វផ្សាយគេហទំព័រ។
+        តម្លៃខាងក្រោមជាតម្លៃគំរូ។
+        សូមកែឱ្យត្រូវមុនប្រើប្រាស់ពិត។
       </p>
     </section>
 
@@ -199,7 +198,7 @@
       <input id="contact" placeholder="Telegram ឬព័ត៌មានទាក់ទង">
 
       <label for="note">កំណត់ចំណាំ (មិនចាំបាច់)</label>
-      <input id="note" placeholder="កំណត់ចំណាំរបស់អ្នក">
+      <input id="note" placeholder="កំណត់ចំណាំ">
 
       <button class="primary" onclick="makeOrder()">
         បង្កើតព័ត៌មានបញ្ជាទិញ
@@ -216,8 +215,8 @@
     <section class="panel">
       <h2>QR សម្រាប់ទូទាត់</h2>
       <p class="muted">
-        ដាក់រូប QR ទូទាត់ពិតរបស់អ្នកក្នុងឯកសារ
-        payment-qr.png នៅក្នុង Repository។
+        បន្ថែមរូប QR របស់អ្នកដោយដាក់ឯកសារ
+        payment-qr.png ក្នុង Repository។
       </p>
 
       <img id="qrImage" class="qr"
@@ -226,14 +225,14 @@
         onerror="this.style.display='none';
         document.getElementById('qrMissing').style.display='block';">
 
-      <p id="qrMissing" class="muted" style="display:none;text-align:center">
+      <p id="qrMissing" class="muted"
+        style="display:none;text-align:center">
         មិនទាន់មានរូប QR ទេ។
       </p>
 
       <div class="notice">
-        សូមពិនិត្យឈ្មោះអ្នកទទួល និងចំនួនប្រាក់
-        មុនទូទាត់។ កុំបញ្ចូលពាក្យសម្ងាត់ ឬ OTP
-        នៅក្នុងទម្រង់បញ្ជាទិញ។
+        សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់
+        មុនទូទាត់។ កុំបញ្ចូលពាក្យសម្ងាត់ ឬ OTP។
       </div>
     </section>
   </main>
@@ -245,8 +244,7 @@
   </footer>
 
   <script>
-    // តម្លៃខាងក្រោមគ្រាន់តែជាតម្លៃគំរូ។
-    // កែឈ្មោះ និងតម្លៃមុនប្រើប្រាស់ពិត។
+    // តម្លៃគំរូ៖ កែឈ្មោះ និងតម្លៃមុនប្រើពិត។
     const products = [
       { id: 1, name: "Package A", price: 1.00 },
       { id: 2, name: "Package B", price: 2.00 },
@@ -286,9 +284,13 @@
     }
 
     function makeOrder() {
-      const player = document.getElementById("player").value.trim();
-      const contact = document.getElementById("contact").value.trim();
-      const note = document.getElementById("note").value.trim();
+      const player =
+        document.getElementById("player").value.trim();
+      const contact =
+        document.getElementById("contact").value.trim();
+      const note =
+        document.getElementById("note").value.trim();
+
       const product = products.find(function(p) {
         return p.id === selected;
       });
@@ -332,4 +334,3 @@
   </script>
 </body>
 </html>
-
