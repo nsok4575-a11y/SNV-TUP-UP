@@ -137,7 +137,7 @@
 
     .amount {
       text-align: center;
-      font-size: 25px;
+      font-size: 26px;
       font-weight: bold;
       color: #aab8ff;
       margin: 12px 0;
@@ -197,8 +197,7 @@
       <h2>ជ្រើសរើសផលិតផល</h2>
       <div class="products" id="products"></div>
       <p class="muted">
-        តម្លៃខាងក្រោមជាតម្លៃគំរូ។
-        សូមកែឈ្មោះ និងតម្លៃឱ្យត្រូវមុនប្រើប្រាស់ពិត។
+        សូមពិនិត្យឈ្មោះ និងតម្លៃ Package មុនប្រើប្រាស់ពិត។
       </p>
     </section>
 
@@ -230,13 +229,9 @@
       </button>
     </section>
 
-    <!-- ផ្នែកទូទាត់៖ បង្ហាញក្រោយពេលបង្កើតការបញ្ជាទិញ -->
+    <!-- ផ្នែក QR និងលីងបង់ប្រាក់ -->
     <section class="panel" id="paymentPanel">
       <h2>ទូទាត់ប្រាក់</h2>
-
-      <p class="muted" style="text-align:center">
-        សូមពិនិត្យ Package និងតម្លៃ មុនពេលទូទាត់។
-      </p>
 
       <p id="selectedProduct" class="muted"
          style="text-align:center"></p>
@@ -250,29 +245,24 @@
       <img
         id="qrImage"
         class="qr"
-        src="IMG_1792457505747.jpg"
+        src=""
         alt="QR សម្រាប់ទូទាត់"
-        onerror="this.style.display='none';
-          document.getElementById('qrMissing').style.display='block';">
+        style="display:none">
 
       <p id="qrMissing" class="muted"
-         style="display:none;text-align:center">
-        មិនអាចបង្ហាញរូប QR បានទេ។
-        សូមពិនិត្យឈ្មោះឯកសារ QR ក្នុង Repository។
+         style="text-align:center">
+        សូមបន្ថែមរូប QR របស់ Package នេះទៅក្នុង Repository។
       </p>
 
-      <button
-        class="primary"
-        type="button"
-        onclick="payNow()">
+      <button class="primary" type="button" onclick="payNow()">
         បង់ប្រាក់ឥឡូវនេះ
       </button>
 
       <div class="notice" style="margin-top:14px">
-        អ្នកអាចស្កេន QR ឬចុចប៊ូតុងខាងលើដើម្បីបើកលីងបង់ប្រាក់។
-        សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់។
-        កុំបញ្ចូល ឬចែករំលែក PIN និង OTP របស់អ្នក។
-        ការបើកលីងមិនមានន័យថាការបង់ប្រាក់បានជោគជ័យទេ។
+        អ្នកអាចស្កេន QR ឬចុចប៊ូតុងដើម្បីបើកលីងបង់ប្រាក់។
+        សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់មុនទូទាត់។
+        កុំចែករំលែក PIN ឬ OTP។
+        ស្ថានភាពការទូទាត់ត្រូវពិនិត្យផ្ទៀងផ្ទាត់ដោយឡែក។
       </div>
     </section>
   </main>
@@ -284,21 +274,47 @@
   </footer>
 
   <script>
-    // 1. កែឈ្មោះ និងតម្លៃ Package នៅទីនេះ
+    // 1. Package តម្លៃពី $1 ដល់ $10
     const products = [
-      { id: 1, name: "Package A", price: 1.00 },
-      { id: 2, name: "Package B", price: 2.00 },
-      { id: 3, name: "Package C", price: 5.00 },
-      { id: 4, name: "Package D", price: 10.00 }
+      { id: 1, name: "Package $1", price: 1.00 },
+      { id: 2, name: "Package $2", price: 2.00 },
+      { id: 3, name: "Package $3", price: 3.00 },
+      { id: 4, name: "Package $4", price: 4.00 },
+      { id: 5, name: "Package $5", price: 5.00 },
+      { id: 6, name: "Package $6", price: 6.00 },
+      { id: 7, name: "Package $7", price: 7.00 },
+      { id: 8, name: "Package $8", price: 8.00 },
+      { id: 9, name: "Package $9", price: 9.00 },
+      { id: 10, name: "Package $10", price: 10.00 }
     ];
 
-    // 2. ដាក់លីងបង់ប្រាក់ពិតរបស់ Package នីមួយៗនៅទីនេះ
-    // ទុក "" បើមិនទាន់មានលីង។
+    // 2. រូប QR ដាច់ដោយឡែកសម្រាប់ Package នីមួយៗ
+    // ឈ្មោះឯកសារត្រូវតែដូចនឹងឈ្មោះក្នុង GitHub។
+    const qrImages = {
+      1: "qr-1.png",
+      2: "qr-2.png",
+      3: "qr-3.png",
+      4: "qr-4.png",
+      5: "qr-5.png",
+      6: "qr-6.png",
+      7: "qr-7.png",
+      8: "qr-8.png",
+      9: "qr-9.png",
+      10: "qr-10.png"
+    };
+
+    // 3. លីងបង់ប្រាក់ដដែល៖ ដាក់លីងពិតរបស់អ្នកនៅទីនេះ
     const paymentLinks = {
-      1: "https://acledabank.com.kh/acleda?payment_data=qWY5B2SAUfIhLblxzOtfu5kBrmlB+ox54gwr/o9I7l+NFkiwN/iNyZ1syTMyAhi1qgdIQQ4VERQjZZC7+2rrTHQF8Dd3bbAuuFYtc745D6o93Ln4cBthlUp150mLzIa5Zlop+mFKuRHFsIpxPFf25piKcbKlHpGCeQ/A1PeiBEW4a3Q4Jnp0lklXjmHJlHIAlOMoOt4k8AwjfD1UjDBPVUNWa7w+sKMQrXCej0Zrnk4G1KYgQlDucATCNR3K4tOWrRIaj3Xx9Q7y9TI6hUEULhA3jYZfdRXFpOnPKqeijuvlc48D5qJNLsk2JF+4OSeb&key=khqr",
+      1: "",
       2: "",
       3: "",
-      4: ""
+      4: "",
+      5: "",
+      6: "",
+      7: "",
+      8: "",
+      9: "",
+      10: ""
     };
 
     let selected = 1;
@@ -311,7 +327,6 @@
 
       products.forEach(function(p) {
         const button = document.createElement("button");
-
         button.type = "button";
         button.className = "product" +
           (p.id === selected ? " selected" : "");
@@ -328,8 +343,6 @@
 
         button.onclick = function() {
           selected = p.id;
-
-          // លាក់ការបញ្ជាទិញចាស់ ដើម្បីកុំឱ្យច្រឡំ Package
           orderCreated = false;
           orderText = "";
 
@@ -342,6 +355,42 @@
 
         area.appendChild(button);
       });
+    }
+
+    function updatePaymentDisplay(product) {
+      document.getElementById("selectedProduct").textContent =
+        "Package ដែលបានជ្រើសរើស៖ " + product.name;
+
+      document.getElementById("paymentAmount").textContent =
+        "$" + product.price.toFixed(2);
+
+      const qr = document.getElementById("qrImage");
+      const qrMissing = document.getElementById("qrMissing");
+
+      // លាក់ QR ចាស់ជាមុន ដើម្បីកុំឱ្យបង្ហាញខុស Package
+      qr.style.display = "none";
+      qrMissing.style.display = "block";
+      qr.onload = null;
+      qr.onerror = null;
+      qr.removeAttribute("src");
+
+      const imagePath = qrImages[product.id];
+
+      if (!imagePath) {
+        return;
+      }
+
+      qr.onload = function() {
+        qr.style.display = "block";
+        qrMissing.style.display = "none";
+      };
+
+      qr.onerror = function() {
+        qr.style.display = "none";
+        qrMissing.style.display = "block";
+      };
+
+      qr.src = imagePath;
     }
 
     function makeOrder() {
@@ -377,19 +426,13 @@
       document.getElementById("result").style.display = "block";
       document.getElementById("copyBtn").style.display = "block";
 
-      // បង្ហាញ Package និងតម្លៃនៅផ្នែកទូទាត់
-      document.getElementById("selectedProduct").textContent =
-        "Package ដែលបានជ្រើសរើស៖ " + product.name;
-
-      document.getElementById("paymentAmount").textContent =
-        "$" + product.price.toFixed(2);
+      updatePaymentDisplay(product);
 
       orderCreated = true;
 
-      const paymentPanel = document.getElementById("paymentPanel");
-      paymentPanel.style.display = "block";
-
-      paymentPanel.scrollIntoView({
+      const panel = document.getElementById("paymentPanel");
+      panel.style.display = "block";
+      panel.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
@@ -406,14 +449,54 @@
       if (!link) {
         alert(
           "មិនទាន់មានលីងបង់ប្រាក់សម្រាប់ Package នេះទេ។\n" +
-          "សូមបញ្ចូលលីងបង់ប្រាក់ផ្លូវការនៅក្នុង paymentLinks។"
+          "សូមបញ្ចូលលីងបង់ប្រាក់ពិតក្នុង paymentLinks។"
         );
         return;
       }
 
-      // អនុញ្ញាតតែលីង HTTPS ប៉ុណ្ណោះ
       try {
         const url = new URL(link);
+
+        if (url.protocol !== "https:") {
+          alert("លីងបង់ប្រាក់ត្រូវតែចាប់ផ្ដើមដោយ https://");
+          return;
+        }
+
+        window.open(url.href, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        alert("លីងបង់ប្រាក់មិនត្រឹមត្រូវទេ។");
+      }
+    }
+
+    async function copyOrder() {
+      if (!orderText) {
+        alert("មិនទាន់មានព័ត៌មានបញ្ជាទិញទេ។");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(orderText);
+        alert("បានចម្លងព័ត៌មានបញ្ជាទិញ!");
+      } catch (error) {
+        const area = document.createElement("textarea");
+        area.value = orderText;
+        document.body.appendChild(area);
+        area.select();
+
+        const copied = document.execCommand("copy");
+        area.remove();
+
+        alert(copied
+          ? "បានចម្លងព័ត៌មានបញ្ជាទិញ!"
+          : "មិនអាចចម្លងបានទេ។ សូមចម្លងអត្ថបទដោយដៃ។");
+      }
+    }
+
+    renderProducts();
+  </script>
+</body>
+</html>
+
 
         if (url.protocol !== "https:") {
           alert("លីងបង់ប្រាក់ត្រូវតែចាប់ផ្ដើមដោយ https://");
