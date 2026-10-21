@@ -637,7 +637,8 @@ async function loadPackageZip() {
     }
 
     
-function makeOrder() {
+
+async function makeOrder() {
   const uid = document.getElementById("uid").value.trim();
 
   const product = products.find(function(item) {
@@ -649,30 +650,85 @@ function makeOrder() {
     return;
   }
 
-  orderText =
-    "SNV TOP-UP - ORDER\n" +
-    "Game: The Spike\n" +
-    "Product: " + product.name + "\n" +
-    "Price: $" + product.price.toFixed(2) + "\n" +
-    "UID: " + uid + "\n" +
-    "Payment status: Not verified";
+  if (!product) {
+    alert("សូមជ្រើសរើស Package ជាមុនសិន។");
+    return;
+  }
 
-  document.getElementById("result").textContent = orderText;
-  document.getElementById("result").style.display = "block";
-  document.getElementById("copyBtn").style.display = "block";
+  if (!/^[a-zA-Z0-9_-]{3,40}$/.test(uid)) {
+    alert("UID ត្រូវមាន 3 ដល់ 40 តួអក្សរ និងប្រើតែអក្សរ លេខ _ ឬ - ប៉ុណ្ណោះ។");
+    return;
+  }
 
-  orderCreated = true;
+  const button = document.querySelector(
+    'button[onclick="makeOrder()"]'
+  );
 
-  const panel = document.getElementById("paymentPanel");
-  panel.style.display = "block";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "កំពុងបញ្ជាទិញ...";
+  }
 
-  updatePaymentDisplay(product);
+  try {
+    const response = await fetch(
+      "https://ckqfewtvpirmxcanmyiu.supabase.co/functions/v1/rapid-service",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": "Bearer SUPABASE_PUBLISHABLE_KEY",
+          "Authorization": "Bearer SUPABASE_PUBLISHABLE_KEY"
+        },
+        body: JSON.stringify({
+          product_name: product.name,
+          amount: product.price,
+          game_uid: uid
+        })
+      }
+    );
 
-  panel.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.error || "មិនអាចបង្កើតការបញ្ជាទិញបានទេ។"
+      );
+    }
+
+    orderText =
+      "SNV TOP-UP - ORDER\n" +
+      "Order ID: " + data.order_code + "\n" +
+      "Game: The Spike\n" +
+      "Product: " + data.product_name + "\n" +
+      "Price: $" + Number(data.amount).toFixed(2) + "\n" +
+      "UID: " + uid + "\n" +
+      "Payment status: Pending";
+
+    document.getElementById("result").textContent = orderText;
+    document.getElementById("result").style.display = "block";
+    document.getElementById("copyBtn").style.display = "block";
+
+    orderCreated = true;
+
+    const panel = document.getElementById("paymentPanel");
+    panel.style.display = "block";
+    updatePaymentDisplay(product);
+
+    panel.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  } catch (error) {
+    alert("បញ្ជាទិញមិនបានទេ៖ " + error.message);
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "បង្កើតព័ត៌មានបញ្ជាទិញ";
+    }
+  }
 }
+
 
 
     function payNow() {
