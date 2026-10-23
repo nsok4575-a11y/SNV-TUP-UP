@@ -1,313 +1,127 @@
 
-<!DOCTYPE html>
-<html lang="km">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SNV Game Top-up</title>
-<style>
-:root {
-  color-scheme: dark;
-  --bg: #10131e;
-  --panel: #191e2e;
-  --line: #30394f;
-  --accent: #7775ff;
-  --text: #f5f6ff;
-  --muted: #b5bdd0;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, sans-serif;
-}
-header {
-  padding: 26px 16px;
-  text-align: center;
-  background: linear-gradient(135deg,#29285c,#10131e);
-  border-bottom: 1px solid var(--line);
-}
-header h1 { margin: 0 0 8px; font-size: 25px; }
-header p { margin: 0; color: var(--muted); }
-main { max-width: 650px; margin: auto; padding: 16px; }
-h2 { font-size: 19px; }
-.products {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 12px;
-}
-.product {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  border-radius: 14px;
-  padding: 12px;
-  cursor: pointer;
-}
-.product.selected {
-  border: 2px solid var(--accent);
-  padding: 11px;
-}
-.product img {
-  width: 100%;
-  height: 130px;
-  object-fit: contain;
-  border-radius: 8px;
-  background: #10131e;
-}
-.product h3 { font-size: 15px; margin: 10px 0 5px; }
-.price { color: #a8f0c6; font-weight: 700; }
-.product button, .submit {
-  width: 100%;
-  padding: 11px;
-  border: 0;
-  border-radius: 9px;
-  background: var(--accent);
-  color: white;
-  font-weight: 700;
-  margin-top: 10px;
-}
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px;
-  margin-top: 20px;
-}
-label { display: block; margin: 14px 0 7px; }
-input, select {
-  width: 100%;
-  padding: 12px;
-  border-radius: 9px;
-  border: 1px solid var(--line);
-  background: #101522;
-  color: white;
-  font-size: 16px;
-}
-small, .muted { color: var(--muted); }
-.submit:disabled { opacity: .55; }
-#result {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  margin-top: 14px;
-}
-footer { text-align: center; padding: 24px; color: var(--muted); }
-</style>
-</head>
-<body>
-<header>
-  <h1>SNV GAME TOP-UP</h1>
-  <p>ជ្រើសរើសកញ្ចប់ហ្គេមដែលអ្នកចង់ទិញ</p>
-</header>
+const SUPABASE_URL = "https://ckqfewtvpirmxcanmyiu.supabase.co";
 
-<main>
-  <h2>កញ្ចប់ហ្គេម</h2>
-  <div class="products" id="products"></div>
-
-  <section class="panel">
-    <h2>ព័ត៌មានអ្នកបង់ប្រាក់</h2>
-
-    <p>កញ្ចប់ដែលបានជ្រើសរើស៖
-      <strong id="chosenName">មិនទាន់ជ្រើសរើស</strong>
-    </p>
-    <p>តម្លៃ៖ <strong id="chosenPrice">$0.00</strong></p>
-
-    <form id="orderForm">
-      <label for="bank">ជ្រើសរើសធនាគារ</label>
-      <select id="bank" required>
-        <option value="">-- ជ្រើសរើសធនាគារ --</option>
-        <option value="ABA">ABA Bank</option>
-        <option value="ACLEDA">ACLEDA Bank</option>
-        <option value="Other">ធនាគារផ្សេងទៀត</option>
-      </select>
-
-      <label for="payerName">ឈ្មោះម្ចាស់គណនីដែលបានបង់ប្រាក់</label>
-      <input id="payerName" type="text"
-        minlength="2" maxlength="100"
-        autocomplete="name" required
-        placeholder="បញ្ចូលឈ្មោះអ្នកបង់ប្រាក់">
-
-      <small>
-        ការបញ្ចូលឈ្មោះមិនមែនជាការបញ្ជាក់ថាបានបង់ប្រាក់ទេ។
-      </small>
-
-      <button class="submit" id="submitButton" type="submit">
-        បង្កើតការបញ្ជាទិញ
-      </button>
-    </form>
-
-    <div id="result" role="status" aria-live="polite"></div>
-  </section>
-</main>
-
-<footer>SNV Game Top-up · សាកល្បង</footer>
-
-<script>
-"use strict";
-
-// បញ្ចូល Supabase Publishable Key របស់គម្រោងអ្នកនៅទីនេះ។
-const SUPABASE_URL =
-  "https://ckqfewtvpirmxcanmyiu.supabase.co";
+// ដាក់ Publishable Key របស់ Supabase នៅទីនេះ
 const SUPABASE_PUBLISHABLE_KEY =
-  "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
-const FUNCTION_URL = SUPABASE_URL + "/functions/v1/rapid-service";
+  "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
 
-// តម្លៃទាំងនេះជាតម្លៃសាកល្បងប៉ុណ្ណោះ។
-const products = [
-  { id: 1, name: "Package 1", price: 1.00, image: "itim/1.jpg" },
-  { id: 2, name: "Package 2", price: 2.00, image: "" },
-  { id: 3, name: "Package 3", price: 3.00, image: "" },
-  { id: 4, name: "Package 4", price: 4.00, image: "" }
-];
+const SHOP_PACKAGES_URL =
+  SUPABASE_URL + "/functions/v1/shop-packages";
 
-let selectedProductId = 1;
-let submitting = false;
+let products = [];
+let selectedProductId = null;
 
-const productsElement = document.getElementById("products");
-const resultElement = document.getElementById("result");
-const submitButton = document.getElementById("submitButton");
+async function loadProducts() {
+  const grid = document.getElementById("products");
+
+  if (grid) {
+    grid.textContent = "កំពុងទាញយកកញ្ចប់...";
+  }
+
+  try {
+    const response = await fetch(SHOP_PACKAGES_URL, {
+      method: "GET",
+      headers: {
+        apikey: SUPABASE_PUBLISHABLE_KEY
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    const result = await response.json();
+
+    products = (result.packages || [])
+      .filter(item => item.is_sold !== true)
+      .map(item => ({
+        id: item.id,
+        name: item.package_name,
+        price: Number(item.price),
+        image: item.product_image || ""
+      }));
+
+    if (products.length > 0) {
+      selectedProductId = products[0].id;
+    } else {
+      selectedProductId = null;
+    }
+
+    renderProducts();
+  } catch (error) {
+    console.error("Failed to load packages:", error);
+
+    if (grid) {
+      grid.textContent =
+        "មិនអាចទាញយកកញ្ចប់បានទេ។ សូមពិនិត្យការកំណត់ Supabase។";
+    }
+  }
+}
 
 function renderProducts() {
-  productsElement.replaceChildren();
+  const grid = document.getElementById("products");
 
-  products.forEach(function(product) {
-    const card = document.createElement("article");
-    card.className = "product" +
-      (product.id === selectedProductId ? " selected" : "");
+  if (!grid) {
+    console.error('រកមិនឃើញ element id="products"');
+    return;
+  }
+
+  grid.replaceChildren();
+
+  if (products.length === 0) {
+    grid.textContent = "មិនទាន់មានកញ្ចប់ទេ។";
+    return;
+  }
+
+  products.forEach(product => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.style.cursor = "pointer";
+    card.style.textAlign = "center";
 
     const image = document.createElement("img");
     image.alt = product.name;
+    image.style.width = "100%";
+    image.style.maxWidth = "180px";
+    image.style.objectFit = "contain";
 
     if (product.image) {
       image.src = product.image;
-      image.onerror = function() {
-        image.style.display = "none";
-      };
     } else {
-      image.style.display = "none";
+      image.alt = "មិនទាន់មានរូបភាព";
     }
 
-    const name = document.createElement("h3");
+    const name = document.createElement("div");
     name.textContent = product.name;
 
     const price = document.createElement("div");
-    price.className = "price";
     price.textContent = "$" + product.price.toFixed(2);
 
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent =
-      product.id === selectedProductId ? "បានជ្រើសរើស" : "ជ្រើសរើស";
+    card.append(image, name, price);
 
-    button.addEventListener("click", function() {
+    if (product.id === selectedProductId) {
+      card.style.outline = "2px solid #6c8cff";
+    }
+
+    card.addEventListener("click", () => {
       selectedProductId = product.id;
-      document.getElementById("chosenName").textContent = product.name;
-      document.getElementById("chosenPrice").textContent =
-        "$" + product.price.toFixed(2);
-      resultElement.textContent = "";
       renderProducts();
+
+      // បើគេហទំព័រចាស់មានមុខងារបង្ហាញតម្លៃ
+      // ឬព័ត៌មានកញ្ចប់ដែលបានជ្រើស សូមរក្សាមុខងារនោះផង។
+      const selected = products.find(
+        item => item.id === selectedProductId
+      );
+
+      const priceField = document.getElementById("amount");
+
+      if (selected && priceField) {
+        priceField.value = selected.price.toFixed(2);
+      }
     });
 
-    card.append(image, name, price, button);
-    productsElement.appendChild(card);
+    grid.appendChild(card);
   });
-
-  const selected = products.find(function(p) {
-    return p.id === selectedProductId;
-  });
-
-  if (selected) {
-    document.getElementById("chosenName").textContent = selected.name;
-    document.getElementById("chosenPrice").textContent =
-      "$" + selected.price.toFixed(2);
-  }
 }
 
-document.getElementById("orderForm").addEventListener(
-  "submit",
-  async function(event) {
-    event.preventDefault();
-    if (submitting) return;
-
-    const selected = products.find(function(p) {
-      return p.id === selectedProductId;
-    });
-    const bankName = document.getElementById("bank").value;
-    const payerName =
-      document.getElementById("payerName").value.trim();
-
-    if (!selected || !bankName || payerName.length < 2) {
-      resultElement.textContent = "សូមបំពេញព័ត៌មានឱ្យបានត្រឹមត្រូវ។";
-      return;
-    }
-
-    if (
-      SUPABASE_PUBLISHABLE_KEY ===
-      "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
-    ) {
-      resultElement.textContent =
-        "សូមបញ្ចូល Supabase Publishable Key មុនពេលសាកល្បង។";
-      return;
-    }
-
-    submitting = true;
-    submitButton.disabled = true;
-    submitButton.textContent = "កំពុងបង្កើតការបញ្ជាទិញ...";
-    resultElement.textContent = "";
-
-    try {
-      const response = await fetch(FUNCTION_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_PUBLISHABLE_KEY,
-          "Authorization": "Bearer " + SUPABASE_PUBLISHABLE_KEY
-        },
-        body: JSON.stringify({
-          product_name: selected.name,
-          amount: selected.price,
-          bank_name: bankName,
-          payer_name: payerName
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success || !data.order) {
-        throw new Error(
-          data.error || "មិនអាចបង្កើតការបញ្ជាទិញបានទេ។"
-        );
-      }
-
-      resultElement.textContent =
-        "បង្កើតការបញ្ជាទិញបានជោគជ័យ\n" +
-        "លេខបញ្ជាទិញ៖ " + data.order.order_code + "\n" +
-        "កញ្ចប់៖ " + data.order.product_name + "\n" +
-        "តម្លៃ៖ $" + Number(data.order.amount).toFixed(2) + "\n" +
-        "ធនាគារ៖ " + data.order.bank_name + "\n" +
-        "ឈ្មោះអ្នកបង់ប្រាក់៖ " + data.order.payer_name + "\n" +
-        "ស្ថានភាព៖ PENDING\n\n" +
-        "នេះមិនមែនជាការបញ្ជាក់ថាប្រាក់បានចូលទេ។";
-
-      // សម្អាតតែទម្រង់សម្រាប់ការទិញបន្ទាប់។
-      // ប្រវត្តិបញ្ជាទិញដែលរក្សាទុកក្នុង Supabase មិនត្រូវបានលុបទេ។
-      document.getElementById("bank").value = "";
-      document.getElementById("payerName").value = "";
-      selectedProductId = 1;
-      renderProducts();
-
-    } catch (error) {
-      resultElement.textContent =
-        "មានបញ្ហា៖ " + (error.message || "សូមព្យាយាមម្ដងទៀត។");
-    } finally {
-      submitting = false;
-      submitButton.disabled = false;
-      submitButton.textContent = "បង្កើតការបញ្ជាទិញ";
-    }
-  }
-);
-
-renderProducts();
-</script>
-</body>
-</html>
+loadProducts();
