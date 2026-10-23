@@ -2,704 +2,312 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10131e">
-  <title>SNV Game Top-up</title>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: #10131e;
-      color: #f5f6ff;
-      font-family: Arial, sans-serif;
-    }
-
-    header {
-      text-align: center;
-      padding: 30px 15px;
-      background: linear-gradient(135deg, #29285c, #10131e);
-      border-bottom: 1px solid #343650;
-    }
-
-    .logo {
-      color: #9baaff;
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    header p, .muted {
-      color: #bdc3d8;
-      font-size: 14px;
-      line-height: 1.7;
-    }
-
-    main {
-      max-width: 650px;
-      margin: auto;
-      padding: 16px;
-    }
-
-    .panel {
-      padding: 17px;
-      margin-bottom: 17px;
-      border-radius: 15px;
-      border: 1px solid #30364c;
-      background: #1a1e2d;
-    }
-
-    h2 { font-size: 19px; }
-
-    .products {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .product {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      color: white;
-      background: #20263a;
-      border: 1px solid #39435e;
-      border-radius: 12px;
-      padding: 10px;
-      cursor: pointer;
-      min-width: 0;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    .product.selected {
-      border: 2px solid #9baaff;
-      background: #2b3150;
-    }
-
-    .package-image, .package-placeholder {
-      width: 100%;
-      height: 115px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-    }
-
-    .package-image {
-      object-fit: contain;
-    }
-
-    .package-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #151a29;
-      color: #969db5;
-      font-size: 12px;
-      text-align: center;
-      overflow-wrap: anywhere;
-    }
-
-    .product strong {
-      display: block;
-      margin-bottom: 8px;
-      overflow-wrap: anywhere;
-    }
-
-    .price, .amount {
-      color: #aab8ff;
-      font-weight: bold;
-    }
-
-    button {
-      font-size: 15px;
-      font-weight: bold;
-      padding: 13px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: .6;
-      cursor: wait;
-    }
-
-    .primary {
-      width: 100%;
-      margin-top: 14px;
-      border: 0;
-      background: #899aff;
-      color: #10131e;
-    }
-
-    .secondary {
-      width: 100%;
-      margin-top: 10px;
-      border: 1px solid #626e98;
-      background: #252b40;
-      color: white;
-    }
-
-    .qr {
-      display: block;
-      width: 220px;
-      height: auto;
-      max-width: 100%;
-      margin: 15px auto;
-      background: white;
-      border-radius: 10px;
-    }
-
-    .amount {
-      text-align: center;
-      font-size: 26px;
-      margin: 12px 0;
-    }
-
-    .notice {
-      padding: 12px;
-      border-radius: 10px;
-      background: #29243a;
-      color: #ddd8f1;
-      font-size: 13px;
-      line-height: 1.8;
-    }
-
-    #result {
-      display: none;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      background: #101522;
-      padding: 13px;
-      border-radius: 10px;
-      margin-top: 14px;
-      line-height: 1.8;
-    }
-
-    #paymentPanel { display: none; }
-
-    #qrMissing {
-      text-align: center;
-      overflow-wrap: anywhere;
-    }
-
-    footer {
-      text-align: center;
-      color: #969db5;
-      font-size: 12px;
-      padding: 20px;
-      line-height: 1.8;
-    }
-
-    @media (max-width: 360px) {
-      .package-image, .package-placeholder { height: 90px; }
-      .product { padding: 8px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SNV Game Top-up</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #10131e;
+  --panel: #191e2e;
+  --line: #30394f;
+  --accent: #7775ff;
+  --text: #f5f6ff;
+  --muted: #b5bdd0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+}
+header {
+  padding: 26px 16px;
+  text-align: center;
+  background: linear-gradient(135deg,#29285c,#10131e);
+  border-bottom: 1px solid var(--line);
+}
+header h1 { margin: 0 0 8px; font-size: 25px; }
+header p { margin: 0; color: var(--muted); }
+main { max-width: 650px; margin: auto; padding: 16px; }
+h2 { font-size: 19px; }
+.products {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 12px;
+}
+.product {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+}
+.product.selected {
+  border: 2px solid var(--accent);
+  padding: 11px;
+}
+.product img {
+  width: 100%;
+  height: 130px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #10131e;
+}
+.product h3 { font-size: 15px; margin: 10px 0 5px; }
+.price { color: #a8f0c6; font-weight: 700; }
+.product button, .submit {
+  width: 100%;
+  padding: 11px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  margin-top: 10px;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 20px;
+}
+label { display: block; margin: 14px 0 7px; }
+input, select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #101522;
+  color: white;
+  font-size: 16px;
+}
+small, .muted { color: var(--muted); }
+.submit:disabled { opacity: .55; }
+#result {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 14px;
+}
+footer { text-align: center; padding: 24px; color: var(--muted); }
+</style>
 </head>
-
 <body>
 <header>
-  <div class="logo">SNV TOP-UP</div>
-  <h1>The Spike Store</h1>
-  <p>Game Top-up • Order • Payment</p>
+  <h1>SNV GAME TOP-UP</h1>
+  <p>ជ្រើសរើសកញ្ចប់ហ្គេមដែលអ្នកចង់ទិញ</p>
 </header>
 
 <main>
-  <section class="panel">
-    <h2>សូមស្វាគមន៍មកកាន់ SNV TOP-UP</h2>
-    <p class="muted">
-      ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់ទិញ រួចបង្កើតការបញ្ជាទិញ។
-      អ្នកមិនចាំបាច់បញ្ចូល UID ទេ។
-    </p>
-  </section>
+  <h2>កញ្ចប់ហ្គេម</h2>
+  <div class="products" id="products"></div>
 
   <section class="panel">
-    <h2>ជ្រើសរើសផលិតផល</h2>
-    <div class="products" id="products"></div>
-    <p class="muted" id="packageImageStatus">
-      កំពុងពិនិត្យរូបភាព Package...
+    <h2>ព័ត៌មានអ្នកបង់ប្រាក់</h2>
+
+    <p>កញ្ចប់ដែលបានជ្រើសរើស៖
+      <strong id="chosenName">មិនទាន់ជ្រើសរើស</strong>
     </p>
-  </section>
+    <p>តម្លៃ៖ <strong id="chosenPrice">$0.00</strong></p>
 
-  <section class="panel">
-    <h2>ព័ត៌មានបញ្ជាទិញ</h2>
-    <p class="muted">
-      កញ្ចប់ដែលបានជ្រើសរើស៖
-      <strong id="chosenProduct">Package $1</strong>
-    </p>
-    <p class="muted">
-      តម្លៃ៖ <strong id="chosenPrice">$1.00</strong>
-    </p>
+    <form id="orderForm">
+      <label for="bank">ជ្រើសរើសធនាគារ</label>
+      <select id="bank" required>
+        <option value="">-- ជ្រើសរើសធនាគារ --</option>
+        <option value="ABA">ABA Bank</option>
+        <option value="ACLEDA">ACLEDA Bank</option>
+        <option value="Other">ធនាគារផ្សេងទៀត</option>
+      </select>
 
-    <button id="orderBtn" class="primary" type="button">
-      បង្កើតព័ត៌មានបញ្ជាទិញ
-    </button>
+      <label for="payerName">ឈ្មោះម្ចាស់គណនីដែលបានបង់ប្រាក់</label>
+      <input id="payerName" type="text"
+        minlength="2" maxlength="100"
+        autocomplete="name" required
+        placeholder="បញ្ចូលឈ្មោះអ្នកបង់ប្រាក់">
 
-    <div id="result"></div>
+      <small>
+        ការបញ្ចូលឈ្មោះមិនមែនជាការបញ្ជាក់ថាបានបង់ប្រាក់ទេ។
+      </small>
 
-    <button id="copyBtn" class="secondary"
-      type="button" style="display:none">
-      ចម្លងព័ត៌មានបញ្ជាទិញ
-    </button>
-  </section>
+      <button class="submit" id="submitButton" type="submit">
+        បង្កើតការបញ្ជាទិញ
+      </button>
+    </form>
 
-  <section class="panel" id="paymentPanel">
-    <h2>ទូទាត់ប្រាក់</h2>
-
-    <p id="selectedProduct" class="muted"
-      style="text-align:center"></p>
-
-    <div id="paymentAmount" class="amount"></div>
-
-    <h3 style="text-align:center;font-size:16px">
-      ស្កេន QR ដើម្បីទូទាត់
-    </h3>
-
-    <img id="qrImage" class="qr"
-      alt="QR សម្រាប់ទូទាត់" style="display:none">
-
-    <p id="qrMissing" class="muted">
-      កំពុងផ្ទុករូប QR...
-    </p>
-
-    <button id="payBtn" class="primary" type="button">
-      បើកលីងបង់ប្រាក់
-    </button>
-
-    <div class="notice" style="margin-top:14px">
-      សូមផ្ទៀងផ្ទាត់ឈ្មោះអ្នកទទួល និងចំនួនប្រាក់មុនទូទាត់។
-      ការបង្កើត Order មិនមែនជាការបញ្ជាក់ថាបានបង់ប្រាក់រួចទេ។
-      ស្ថានភាពនឹងនៅ Pending រហូតដល់អ្នកលក់ពិនិត្យការទូទាត់។
-      កុំចែករំលែក PIN ឬ OTP។
-    </div>
+    <div id="result" role="status" aria-live="polite"></div>
   </section>
 </main>
 
-<footer>
-  SNV TOP-UP<br>
-  Independent fan-made store template.<br>
-  មិនមែនជាគេហទំព័រផ្លូវការរបស់ The Spike ទេ។
-</footer>
+<footer>SNV Game Top-up · សាកល្បង</footer>
 
 <script>
 "use strict";
 
-/*
-  សូមបញ្ចូល Supabase publishable key ឬ anon key
-  របស់ Project របស់អ្នកនៅទីនេះ។
-  កុំប្រើ service_role key នៅក្នុងគេហទំព័រ។
-*/
+// បញ្ចូល Supabase Publishable Key របស់គម្រោងអ្នកនៅទីនេះ។
 const SUPABASE_URL =
   "https://ckqfewtvpirmxcanmyiu.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY =
+  "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+const FUNCTION_URL = SUPABASE_URL + "/functions/v1/rapid-service";
 
-const SUPABASE_PUBLIC_KEY = "SUPABASE_PUBLISHABLE_KEY";
-
-const FUNCTION_URL =
-  SUPABASE_URL + "/functions/v1/rapid-service";
-
+// តម្លៃទាំងនេះជាតម្លៃសាកល្បងប៉ុណ្ណោះ។
 const products = [
-  { id: 1, name: "Package $1", price: 1.00 },
-  { id: 2, name: "Package $2", price: 2.00 },
-  { id: 3, name: "Package $3", price: 3.00 },
-  { id: 4, name: "Package $4", price: 4.00 },
-  { id: 5, name: "Package $5", price: 5.00 },
-  { id: 6, name: "Package $6", price: 6.00 },
-  { id: 7, name: "Package $7", price: 7.00 },
-  { id: 8, name: "Package $8", price: 8.00 },
-  { id: 9, name: "Package $9", price: 9.00 },
-  { id: 10, name: "Package $10", price: 10.00 }
+  { id: 1, name: "Package 1", price: 1.00, image: "itim/1.jpg" },
+  { id: 2, name: "Package 2", price: 2.00, image: "" },
+  { id: 3, name: "Package 3", price: 3.00, image: "" },
+  { id: 4, name: "Package 4", price: 4.00, image: "" }
 ];
 
-const qrFiles = {};
-for (let i = 1; i <= 10; i++) {
-  qrFiles[i] = "SNV-QR/" + i + ".jpg";
-}
+let selectedProductId = 1;
+let submitting = false;
 
-/*
-  រក្សាលីងដែលអ្នកមានស្រាប់សម្រាប់ Package 1។
-  បញ្ចូលលីង HTTPS ពិតសម្រាប់ Package ផ្សេងៗ
-  នៅពេលអ្នកមានលីងត្រឹមត្រូវ។
-*/
-const paymentLinks = {
-  1: "https://acledabank.com.kh/acleda?payment_data=qWY5B2SAUfIhLblxzOtfu5kBrmlB+ox54gwr/o9I7l+NFkiwN/iNyZ1syTMyAhi1qgdIQQ4VERQjZZC7+2rrTHQF8Dd3bbAuuFYtc745D6o93Ln4cBthlUp150mLzIa50sYAnUdgks5uzgrtYMZ0QEDDtnYUphlI3INKMav3o5PCfJR6MuaQuCp1M3ZrGwWVcym3lK73duLM1nSAyRBlJa2Na/0keIO38BnQBOzHjs1QoWJNzTWZplWB8vec6mkfzBJUrwP/4QwqTySx8zycRqgE7xpXaYiXdXzeBeCUePgrFv7jPcRUjbWfJMroB7xJ&key=khqr",
-  2: "",
-  3: "",
-  4: "",
-  5: "",
-  6: "",
-  7: "",
-  8: "",
-  9: "",
-  10: ""
-};
-
-let selected = 1;
-let currentOrder = null;
-let orderText = "";
-
-const packageObjectUrls = {};
-const qrObjectUrls = {};
-
-let packageZipPromise = null;
-let qrZipPromise = null;
-
-const $ = (id) => document.getElementById(id);
-
-function money(value) {
-  return "$" + Number(value).toFixed(2);
-}
-
-function showMessage(message) {
-  alert(message);
-}
-
-async function loadZipImages(zipPath, prefix, output, promiseName) {
-  if (promiseName === "package") {
-    if (packageZipPromise) return packageZipPromise;
-  } else {
-    if (qrZipPromise) return qrZipPromise;
-  }
-
-  const task = (async () => {
-    if (!window.JSZip) {
-      throw new Error("មិនអាចផ្ទុក JSZip បានទេ។");
-    }
-
-    const response = await fetch(zipPath, {
-      cache: "no-cache"
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        "រក " + zipPath + " មិនឃើញ (HTTP " +
-        response.status + ")"
-      );
-    }
-
-    const zip = await JSZip.loadAsync(
-      await response.arrayBuffer()
-    );
-
-    const files = Object.keys(zip.files).filter(
-      path => !zip.files[path].dir
-    );
-
-    for (let id = 1; id <= 10; id++) {
-      const expected = prefix + id + ".jpg";
-
-      let file = zip.file(expected);
-
-      if (!file) {
-        const match = files.find(path =>
-          path.replace(/\\/g, "/").toLowerCase() ===
-          expected.toLowerCase()
-        );
-        if (match) file = zip.file(match);
-      }
-
-      if (file) {
-        const blob = await file.async("blob");
-        output[id] = URL.createObjectURL(blob);
-      }
-    }
-
-    return output;
-  })();
-
-  if (promiseName === "package") packageZipPromise = task;
-  else qrZipPromise = task;
-
-  try {
-    return await task;
-  } catch (error) {
-    if (promiseName === "package") packageZipPromise = null;
-    else qrZipPromise = null;
-    throw error;
-  }
-}
-
-async function loadPackageImages() {
-  const status = $("packageImageStatus");
-  status.textContent = "កំពុងផ្ទុករូប Package...";
-
-  try {
-    await loadZipImages(
-      "./itim.zip", "itim/", packageObjectUrls, "package"
-    );
-
-    products.forEach(product => {
-      const image = $("packageImage" + product.id);
-      const placeholder = $("packagePlaceholder" + product.id);
-      const src = packageObjectUrls[product.id];
-
-      if (!image || !placeholder) return;
-
-      if (!src) {
-        placeholder.textContent = "រកមិនឃើញរូបលេខ " + product.id;
-        return;
-      }
-
-      image.onload = () => {
-        image.style.display = "block";
-        placeholder.style.display = "none";
-      };
-
-      image.onerror = () => {
-        image.style.display = "none";
-        placeholder.style.display = "flex";
-        placeholder.textContent = "មិនអាចបង្ហាញរូបលេខ " + product.id;
-      };
-
-      image.src = src;
-    });
-
-    const count = Object.keys(packageObjectUrls).length;
-    status.textContent = count
-      ? "បានរកឃើញរូបភាព Package " + count + "/10"
-      : "មិនទាន់រកឃើញរូបក្នុង itim.zip។ សូមពិនិត្យឈ្មោះឯកសារ។";
-
-  } catch (error) {
-    status.textContent = "បញ្ហារូប Package៖ " + error.message;
-  }
-}
+const productsElement = document.getElementById("products");
+const resultElement = document.getElementById("result");
+const submitButton = document.getElementById("submitButton");
 
 function renderProducts() {
-  const area = $("products");
-  area.innerHTML = "";
+  productsElement.replaceChildren();
 
-  products.forEach(product => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "product" +
-      (product.id === selected ? " selected" : "");
+  products.forEach(function(product) {
+    const card = document.createElement("article");
+    card.className = "product" +
+      (product.id === selectedProductId ? " selected" : "");
 
     const image = document.createElement("img");
-    image.id = "packageImage" + product.id;
-    image.className = "package-image";
     image.alt = product.name;
-    image.style.display = "none";
 
-    const placeholder = document.createElement("div");
-    placeholder.id = "packagePlaceholder" + product.id;
-    placeholder.className = "package-placeholder";
-    placeholder.textContent = "កំពុងផ្ទុករូប...";
+    if (product.image) {
+      image.src = product.image;
+      image.onerror = function() {
+        image.style.display = "none";
+      };
+    } else {
+      image.style.display = "none";
+    }
 
-    const name = document.createElement("strong");
+    const name = document.createElement("h3");
     name.textContent = product.name;
 
-    const price = document.createElement("span");
+    const price = document.createElement("div");
     price.className = "price";
-    price.textContent = money(product.price);
+    price.textContent = "$" + product.price.toFixed(2);
 
-    button.append(image, placeholder, name, price);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent =
+      product.id === selectedProductId ? "បានជ្រើសរើស" : "ជ្រើសរើស";
 
-    button.addEventListener("click", () => {
-      selected = product.id;
+    button.addEventListener("click", function() {
+      selectedProductId = product.id;
+      document.getElementById("chosenName").textContent = product.name;
+      document.getElementById("chosenPrice").textContent =
+        "$" + product.price.toFixed(2);
+      resultElement.textContent = "";
       renderProducts();
-
-      $("chosenProduct").textContent = product.name;
-      $("chosenPrice").textContent = money(product.price);
-
-      loadPackageImages();
-
-      // មិនអនុញ្ញាតឱ្យប្ដូរកញ្ចប់នៃ Order ចាស់។
-      // អ្នកអាចបង្កើត Order ថ្មីសម្រាប់កញ្ចប់ថ្មីបាន។
     });
 
-    area.appendChild(button);
+    card.append(image, name, price, button);
+    productsElement.appendChild(card);
   });
-}
 
-async function updatePaymentDisplay(product) {
-  $("selectedProduct").textContent =
-    "Package៖ " + product.name;
+  const selected = products.find(function(p) {
+    return p.id === selectedProductId;
+  });
 
-  $("paymentAmount").textContent = money(product.price);
-
-  const qr = $("qrImage");
-  const missing = $("qrMissing");
-
-  qr.style.display = "none";
-  qr.removeAttribute("src");
-  missing.style.display = "block";
-  missing.textContent = "កំពុងផ្ទុករូប QR...";
-
-  try {
-    await loadZipImages(
-      "./SNV-QR.zip", "SNV-QR/",
-      qrObjectUrls, "qr"
-    );
-
-    if (product.id !== selected) return;
-
-    const imageUrl = qrObjectUrls[product.id];
-
-    if (!imageUrl) {
-      throw new Error("រកមិនឃើញ " + qrFiles[product.id]);
-    }
-
-    qr.onload = () => {
-      qr.style.display = "block";
-      missing.style.display = "none";
-    };
-
-    qr.onerror = () => {
-      qr.style.display = "none";
-      missing.style.display = "block";
-      missing.textContent = "មិនអាចបង្ហាញរូប QR បានទេ។";
-    };
-
-    qr.src = imageUrl;
-
-  } catch (error) {
-    if (product.id !== selected) return;
-    missing.style.display = "block";
-    missing.textContent = "បញ្ហារូប QR៖ " + error.message;
+  if (selected) {
+    document.getElementById("chosenName").textContent = selected.name;
+    document.getElementById("chosenPrice").textContent =
+      "$" + selected.price.toFixed(2);
   }
 }
 
-async function makeOrder() {
-  const product = products.find(item => item.id === selected);
+document.getElementById("orderForm").addEventListener(
+  "submit",
+  async function(event) {
+    event.preventDefault();
+    if (submitting) return;
 
-  if (!product) {
-    showMessage("សូមជ្រើសរើស Package ជាមុនសិន។");
-    return;
-  }
-
-  if (
-    !SUPABASE_PUBLIC_KEY ||
-    SUPABASE_PUBLIC_KEY === "PASTE_YOUR_PUBLISHABLE_OR_ANON_KEY_HERE"
-  ) {
-    showMessage(
-      "សូមបញ្ចូល Supabase publishable/anon key ក្នុង index.html ជាមុនសិន។"
-    );
-    return;
-  }
-
-  const button = $("orderBtn");
-  button.disabled = true;
-  button.textContent = "កំពុងបង្កើត Order...";
-
-  try {
-    const response = await fetch(FUNCTION_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_PUBLIC_KEY,
-        "Authorization": "Bearer " + SUPABASE_PUBLIC_KEY
-      },
-      body: JSON.stringify({
-        product_name: product.name,
-        amount: product.price
-      })
+    const selected = products.find(function(p) {
+      return p.id === selectedProductId;
     });
+    const bankName = document.getElementById("bank").value;
+    const payerName =
+      document.getElementById("payerName").value.trim();
 
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error("Server មិនបានត្រឡប់ JSON ត្រឹមត្រូវទេ។");
-    }
-
-    if (!response.ok || !data.success || !data.order) {
-      throw new Error(
-        data.error || "មិនអាចបង្កើតការបញ្ជាទិញបានទេ។"
-      );
-    }
-
-    // rapid-service ត្រឡប់ទិន្នន័យនៅក្នុង data.order
-    currentOrder = data.order;
-
-    orderText =
-      "SNV TOP-UP - ORDER\n" +
-      "Order Code: " + currentOrder.order_code + "\n" +
-      "Product: " + currentOrder.product_name + "\n" +
-      "Amount: " + money(currentOrder.amount) + "\n" +
-      "Status: " + currentOrder.status + "\n\n" +
-      "សូមរក្សាទុក Order Code សម្រាប់យោង។";
-
-    $("result").textContent = orderText;
-    $("result").style.display = "block";
-    $("copyBtn").style.display = "block";
-
-    $("paymentPanel").style.display = "block";
-    await updatePaymentDisplay(product);
-
-    $("paymentPanel").scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
-  } catch (error) {
-    showMessage("បង្កើត Order មិនបានទេ៖ " + error.message);
-  } finally {
-    button.disabled = false;
-    button.textContent = "បង្កើតព័ត៌មានបញ្ជាទិញ";
-  }
-}
-
-function payNow() {
-  if (!currentOrder) {
-    showMessage("សូមបង្កើត Order ជាមុនសិន។");
-    return;
-  }
-
-  const link = paymentLinks[selected];
-
-  if (!link) {
-    showMessage(
-      "មិនទាន់មានលីងបង់ប្រាក់សម្រាប់ Package នេះទេ។"
-    );
-    return;
-  }
-
-  try {
-    const url = new URL(link);
-
-    if (url.protocol !== "https:") {
-      showMessage("លីងបង់ប្រាក់ត្រូវតែប្រើ HTTPS។");
+    if (!selected || !bankName || payerName.length < 2) {
+      resultElement.textContent = "សូមបំពេញព័ត៌មានឱ្យបានត្រឹមត្រូវ។";
       return;
     }
 
-    window.open(url.href, "_blank", "noopener,noreferrer");
-  } catch {
-    showMessage("លីងបង់ប្រាក់មិនត្រឹមត្រូវទេ។");
+    if (
+      SUPABASE_PUBLISHABLE_KEY ===
+      "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
+    ) {
+      resultElement.textContent =
+        "សូមបញ្ចូល Supabase Publishable Key មុនពេលសាកល្បង។";
+      return;
+    }
+
+    submitting = true;
+    submitButton.disabled = true;
+    submitButton.textContent = "កំពុងបង្កើតការបញ្ជាទិញ...";
+    resultElement.textContent = "";
+
+    try {
+      const response = await fetch(FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_PUBLISHABLE_KEY,
+          "Authorization": "Bearer " + SUPABASE_PUBLISHABLE_KEY
+        },
+        body: JSON.stringify({
+          product_name: selected.name,
+          amount: selected.price,
+          bank_name: bankName,
+          payer_name: payerName
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success || !data.order) {
+        throw new Error(
+          data.error || "មិនអាចបង្កើតការបញ្ជាទិញបានទេ។"
+        );
+      }
+
+      resultElement.textContent =
+        "បង្កើតការបញ្ជាទិញបានជោគជ័យ\n" +
+        "លេខបញ្ជាទិញ៖ " + data.order.order_code + "\n" +
+        "កញ្ចប់៖ " + data.order.product_name + "\n" +
+        "តម្លៃ៖ $" + Number(data.order.amount).toFixed(2) + "\n" +
+        "ធនាគារ៖ " + data.order.bank_name + "\n" +
+        "ឈ្មោះអ្នកបង់ប្រាក់៖ " + data.order.payer_name + "\n" +
+        "ស្ថានភាព៖ PENDING\n\n" +
+        "នេះមិនមែនជាការបញ្ជាក់ថាប្រាក់បានចូលទេ។";
+
+      // សម្អាតតែទម្រង់សម្រាប់ការទិញបន្ទាប់។
+      // ប្រវត្តិបញ្ជាទិញដែលរក្សាទុកក្នុង Supabase មិនត្រូវបានលុបទេ។
+      document.getElementById("bank").value = "";
+      document.getElementById("payerName").value = "";
+      selectedProductId = 1;
+      renderProducts();
+
+    } catch (error) {
+      resultElement.textContent =
+        "មានបញ្ហា៖ " + (error.message || "សូមព្យាយាមម្ដងទៀត។");
+    } finally {
+      submitting = false;
+      submitButton.disabled = false;
+      submitButton.textContent = "បង្កើតការបញ្ជាទិញ";
+    }
   }
-}
-
-async function copyOrder() {
-  if (!orderText) {
-    showMessage("មិនទាន់មានព័ត៌មាន Order ទេ។");
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(orderText);
-    showMessage("បានចម្លងព័ត៌មាន Order!");
-  } catch {
-    const area = document.createElement("textarea");
-    area.value = orderText;
-    document.body.appendChild(area);
-    area.select();
-
-    const copied = document.execCommand("copy");
-    area.remove();
-
-    showMessage(copied
-      ? "បានចម្លងព័ត៌មាន Order!"
-      : "មិនអាចចម្លងបានទេ។ សូមចម្លងអត្ថបទដោយដៃ។");
-  }
-}
-
-$("orderBtn").addEventListener("click", makeOrder);
-$("copyBtn").addEventListener("click", copyOrder);
-$("payBtn").addEventListener("click", payNow);
+);
 
 renderProducts();
-loadPackageImages();
 </script>
 </body>
 </html>
