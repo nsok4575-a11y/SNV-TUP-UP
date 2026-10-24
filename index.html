@@ -1,7 +1,7 @@
 
-const SUPABASE_URL = "https://ckqfewtvpirmxcanmyiu.supabase.co";
+const SUPABASE_URL =
+  "https://ckqfewtvpirmxcanmyiu.supabase.co";
 
-// ដាក់ Publishable Key របស់ Supabase នៅទីនេះ
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
 
@@ -10,20 +10,21 @@ const SHOP_PACKAGES_URL =
 
 let products = [];
 let selectedProductId = null;
+let isLoadingProducts = false;
 
 async function loadProducts() {
-  const grid = document.getElementById("products");
+  if (isLoadingProducts) return;
+  isLoadingProducts = true;
 
-  if (grid) {
-    grid.textContent = "កំពុងទាញយកកញ្ចប់...";
-  }
+  const grid = document.getElementById("products");
 
   try {
     const response = await fetch(SHOP_PACKAGES_URL, {
       method: "GET",
       headers: {
         apikey: SUPABASE_PUBLISHABLE_KEY
-      }
+      },
+      cache: "no-store"
     });
 
     if (!response.ok) {
@@ -32,29 +33,53 @@ async function loadProducts() {
 
     const result = await response.json();
 
-    products = (result.packages || [])
+    const newProducts = (result.packages || [])
       .filter(item => item.is_sold !== true)
       .map(item => ({
         id: item.id,
-        name: item.package_name,
         price: Number(item.price),
-        image: item.product_image || ""
-      }));
+        image: item.image_url || ""
+      }))
+      .filter(item =>
+        Number.isFinite(item.price) &&
+        item.price >= 0
+      );
 
-    if (products.length > 0) {
-      selectedProductId = products[0].id;
-    } else {
-      selectedProductId = null;
+    // រក្សាកញ្ចប់ដែលអតិថិជនបានជ្រើសរើស
+    // ប្រសិនបើកញ្ចប់នោះនៅមានក្នុងទិន្នន័យថ្មី។
+    const oldSelection = selectedProductId;
+
+    products = newProducts;
+
+    const selectionExists = products.some(
+      item => String(item.id) === String(oldSelection)
+    );
+
+    if (!selectionExists) {
+      selectedProductId = products.length
+        ? products[0].id
+        : null;
     }
 
     renderProducts();
+
+    const status = document.getElementById("productStatus");
+    if (status) {
+      status.textContent = products.length
+        ? ""
+        : "មិនទាន់មានកញ្ចប់ទេ។";
+    }
+
   } catch (error) {
     console.error("Failed to load packages:", error);
 
-    if (grid) {
+    if (grid && products.length === 0) {
       grid.textContent =
-        "មិនអាចទាញយកកញ្ចប់បានទេ។ សូមពិនិត្យការកំណត់ Supabase។";
+        "មិនអាចទាញយកកញ្ចប់បានទេ។ សូមពិនិត្យ Supabase។";
     }
+
+  } finally {
+    isLoadingProducts = false;
   }
 }
 
@@ -78,12 +103,29 @@ function renderProducts() {
     card.type = "button";
     card.style.cursor = "pointer";
     card.style.textAlign = "center";
+    card.style.display = "flex";
+    card.style.flexDirection = "column";
+    card.style.alignItems = "center";
+    card.style.justifyContent = "center";
+    card.style.padding = "10px";
+    card.style.borderRadius = "12px";
+    card.style.background = "#22283a";
+    card.style.color = "#ffffff";
+    card.style.border = "2px solid #343b55";
+
+    if (String(product.id) === String(selectedProductId)) {
+      card.style.borderColor = "#6c8cff";
+      card.style.outline = "1px solid #6c8cff";
+    }
 
     const image = document.createElement("img");
-    image.alt = product.name;
+    image.alt = "";
     image.style.width = "100%";
     image.style.maxWidth = "180px";
+    image.style.height = "135px";
     image.style.objectFit = "contain";
+    image.style.background = "#ffffff";
+    image.style.borderRadius = "8px";
 
     if (product.image) {
       image.src = product.image;
@@ -91,37 +133,52 @@ function renderProducts() {
       image.alt = "មិនទាន់មានរូបភាព";
     }
 
-    const name = document.createElement("div");
-    name.textContent = product.name;
+    image.addEventListener("error", () => {
+      image.removeAttribute("src");
+      image.alt = "មិនអាចបង្ហាញរូបភាពបាន";
+    });
 
     const price = document.createElement("div");
     price.textContent = "$" + product.price.toFixed(2);
+    price.style.marginTop = "10px";
+    price.style.fontSize = "19px";
+    price.style.fontWeight = "bold";
+    price.style.color = "#85f0b1";
 
-    card.append(image, name, price);
-
-    if (product.id === selectedProductId) {
-      card.style.outline = "2px solid #6c8cff";
-    }
+    // បង្ហាញតែរូបភាព និងតម្លៃ។
+    card.append(image, price);
 
     card.addEventListener("click", () => {
       selectedProductId = product.id;
-      renderProducts();
 
-      // បើគេហទំព័រចាស់មានមុខងារបង្ហាញតម្លៃ
-      // ឬព័ត៌មានកញ្ចប់ដែលបានជ្រើស សូមរក្សាមុខងារនោះផង។
-      const selected = products.find(
-        item => item.id === selectedProductId
-      );
-
-      const priceField = document.getElementById("amount");
-
-      if (selected && priceField) {
-        priceField.value = selected.price.toFixed(2);
+      const amountField = document.getElementById("amount");
+      if (amountField) {
+        amountField.value = product.price.toFixed(2);
       }
+
+      renderProducts();
     });
 
     grid.appendChild(card);
   });
+
+  // បំពេញតម្លៃរបស់កញ្ចប់ដែលបានជ្រើស។
+  const selected = products.find(
+    item => String(item.id) === String(selectedProductId)
+  );
+
+  const amountField = document.getElementById("amount");
+
+  if (amountField && selected) {
+    amountField.value = selected.price.toFixed(2);
+  } else if (amountField) {
+    amountField.value = "";
+  }
 }
 
+// ទាញយកទិន្នន័យដំបូង។
 loadProducts();
+
+// ទាញយកម្ដងទៀតរៀងរាល់ ៥ នាទី
+// ដើម្បីទទួល Signed URL ថ្មីពី Supabase។
+setInterval(loadProducts, 5 * 60 * 1000);
