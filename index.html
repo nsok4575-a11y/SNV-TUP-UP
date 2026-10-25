@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="km">
 <head>
@@ -20,8 +19,9 @@
     }
 
     .container {
+      width: 100%;
       max-width: 650px;
-      margin: auto;
+      margin: 0 auto;
     }
 
     header {
@@ -55,21 +55,33 @@
       line-height: 1.7;
     }
 
+    /* រៀបចំកញ្ចប់ជាពីរជួរឈរនៅលើទូរសព្ទ */
     .products-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch;
       gap: 12px;
+      width: 100%;
     }
 
+    /* កាតកញ្ចប់ */
     .product-card {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
       min-width: 0;
+      width: 100%;
       padding: 10px;
+      margin: 0;
       background: #22283a;
       color: #fff;
       border: 2px solid #343b55;
       border-radius: 12px;
       cursor: pointer;
       text-align: center;
+      font-family: inherit;
+      appearance: none;
+      -webkit-appearance: none;
     }
 
     .product-card.selected {
@@ -77,18 +89,25 @@
       outline: 1px solid #6c8cff;
     }
 
+    /* កំណត់ទំហំ និងទីតាំងរូបភាពឱ្យដូចគ្នា */
     .product-card img {
       display: block;
       width: 100%;
       height: 135px;
+      min-height: 135px;
+      max-height: 135px;
       object-fit: contain;
+      object-position: center;
       background: #fff;
       border-radius: 8px;
+      margin: 0 auto;
+      flex-shrink: 0;
     }
 
     .image-placeholder {
       width: 100%;
       height: 135px;
+      min-height: 135px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -97,19 +116,29 @@
       background: #fff;
       border-radius: 8px;
       font-size: 13px;
+      overflow-wrap: anywhere;
+      flex-shrink: 0;
     }
 
     .product-name {
+      display: block;
+      width: 100%;
       margin-top: 10px;
       font-size: 15px;
+      line-height: 1.4;
       overflow-wrap: anywhere;
+      text-align: center;
     }
 
     .product-price {
-      margin-top: 8px;
+      display: block;
+      width: 100%;
+      margin-top: auto;
+      padding-top: 8px;
       color: #85f0b1;
       font-size: 19px;
       font-weight: bold;
+      text-align: center;
     }
 
     .selected-info {
@@ -126,6 +155,7 @@
     }
 
     #bankAccountName {
+      display: block;
       width: 100%;
       padding: 12px;
       border: 1px solid #454d68;
@@ -140,6 +170,7 @@
     }
 
     .refresh-button {
+      display: block;
       width: 100%;
       margin-top: 14px;
       padding: 12px;
@@ -153,6 +184,7 @@
 
     .refresh-button:disabled {
       opacity: .6;
+      cursor: wait;
     }
 
     .note {
@@ -164,12 +196,31 @@
     }
 
     @media (max-width: 360px) {
+      body {
+        padding: 14px 8px;
+      }
+
       .products-grid {
         gap: 8px;
       }
 
       .product-card {
         padding: 7px;
+      }
+
+      .product-card img,
+      .image-placeholder {
+        height: 115px;
+        min-height: 115px;
+        max-height: 115px;
+      }
+
+      .product-name {
+        font-size: 14px;
+      }
+
+      .product-price {
+        font-size: 17px;
       }
     }
   </style>
@@ -194,9 +245,11 @@
 
       <div id="products" class="products-grid"></div>
 
-      <button id="refreshButton"
-              class="refresh-button"
-              type="button">
+      <button
+        id="refreshButton"
+        class="refresh-button"
+        type="button"
+      >
         ផ្ទុកកញ្ចប់ឡើងវិញ
       </button>
     </section>
@@ -235,9 +288,6 @@
     const PRODUCTS_URL =
       SUPABASE_URL + "/rest/v1/products?select=*";
 
-    const IMAGE_FUNCTION_URL =
-      SUPABASE_URL + "/functions/v1/package-image";
-
     const grid = document.getElementById("products");
     const status = document.getElementById("productStatus");
     const refreshButton = document.getElementById("refreshButton");
@@ -245,7 +295,55 @@
     let products = [];
     let selectedProductId = null;
     let isLoading = false;
-    let loadVersion = 0;
+
+    // =====================================
+    // CONVERT IMAGE PATH TO PUBLIC URL
+    // =====================================
+
+    function getImageUrl(imageValue) {
+      if (!imageValue) return "";
+
+      let path = String(imageValue).trim();
+
+      if (!path) return "";
+
+      // ប្រសិនបើជា URL ពេញលេញ ប្រើ URL ដើម
+      if (/^https?:\/\//i.test(path)) {
+        return path;
+      }
+
+      // ដកសញ្ញា / នៅដើម
+      path = path.replace(/^\/+/, "");
+
+      // បើមានឈ្មោះ bucket នៅខាងមុខ ដកចេញ
+      if (path.startsWith("package-images/")) {
+        path = path.substring("package-images/".length);
+      }
+
+      // បើ image_url មាន URL storage path
+      // តែខ្វះផ្នែក package-images
+      const storagePrefix =
+        "storage/v1/object/public/";
+
+      if (path.startsWith(storagePrefix)) {
+        const publicPrefix =
+          SUPABASE_URL + "/" + storagePrefix;
+
+        return publicPrefix + path.substring(storagePrefix.length);
+      }
+
+      // បង្កើត Public URL ពី storage path
+      const encodedPath = path
+        .split("/")
+        .map(part => encodeURIComponent(part))
+        .join("/");
+
+      return (
+        SUPABASE_URL +
+        "/storage/v1/object/public/package-images/" +
+        encodedPath
+      );
+    }
 
     // =====================================
     // LOAD PRODUCTS
@@ -255,8 +353,6 @@
       if (isLoading) return;
 
       isLoading = true;
-      const thisLoad = ++loadVersion;
-
       refreshButton.disabled = true;
       refreshButton.textContent = "កំពុងទាញយក...";
       status.textContent = "កំពុងទាញយកកញ្ចប់...";
@@ -273,7 +369,11 @@
 
         if (!response.ok) {
           const detail = await response.text();
-          console.error("Products API:", response.status, detail);
+          console.error(
+            "Products API:",
+            response.status,
+            detail
+          );
           throw new Error("HTTP " + response.status);
         }
 
@@ -298,7 +398,7 @@
 
             const price = Number(item.price);
 
-            // មិនបង្ហាញកញ្ចប់ដែលគ្មានតម្លៃ
+            // មិនបង្ហាញកញ្ចប់ដែលគ្មានតម្លៃត្រឹមត្រូវ
             if (!Number.isFinite(price) || price <= 0) {
               return false;
             }
@@ -313,14 +413,26 @@
             image: item.image_url || item.image || ""
           }));
 
-        if (thisLoad !== loadVersion) return;
+        // រក្សាលំដាប់តាមឈ្មោះកញ្ចប់
+        // ឧទាហរណ៍ Package 1, Package 2, Package 3
+        newProducts.sort((a, b) => {
+          return a.name.localeCompare(
+            b.name,
+            undefined,
+            {
+              numeric: true,
+              sensitivity: "base"
+            }
+          );
+        });
 
         const previousSelection = selectedProductId;
         products = newProducts;
 
+        // រក្សាកញ្ចប់ដែលបានជ្រើសរើស
         if (
-          !products.some(p =>
-            String(p.id) === String(previousSelection)
+          !products.some(product =>
+            String(product.id) === String(previousSelection)
           )
         ) {
           selectedProductId =
@@ -328,113 +440,18 @@
         }
 
         renderProducts();
-
-        // មិនបង្ហាញចំនួនកញ្ចប់
         status.textContent = "";
 
       } catch (error) {
         console.error("Load products failed:", error);
 
-        if (thisLoad === loadVersion) {
-          status.textContent =
-            "មិនអាចទាញយកកញ្ចប់បានទេ។ សូមចុចផ្ទុកឡើងវិញ។";
-        }
+        status.textContent =
+          "មិនអាចទាញយកកញ្ចប់បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត រួចចុចផ្ទុកឡើងវិញ។";
+
       } finally {
         isLoading = false;
         refreshButton.disabled = false;
         refreshButton.textContent = "ផ្ទុកកញ្ចប់ឡើងវិញ";
-      }
-    }
-
-    // =====================================
-    // GET IMAGE URL
-    // =====================================
-
-    async function getImageUrl(imageValue) {
-      if (!imageValue) return "";
-
-      let path = String(imageValue).trim();
-
-      if (!path) return "";
-
-      // បើ DB មាន URL ពេញលេញ សាកល្បងប្រើផ្ទាល់
-      if (/^https?:\/\//i.test(path)) {
-        return path;
-      }
-
-      // កែផ្លូវឱ្យស្អាត
-      path = path.replace(/^\/+/, "");
-
-      // បើមានឈ្មោះ bucket នៅខាងមុខ ដកវាចេញ
-      if (path.startsWith("package-images/")) {
-        path = path.substring("package-images/".length);
-      }
-
-      // ស្នើ Signed URL ពី Edge Function
-      const endpoint =
-        IMAGE_FUNCTION_URL +
-        "?path=" + encodeURIComponent(path);
-
-      try {
-        const response = await fetch(endpoint, {
-          method: "GET",
-          headers: {
-            "apikey": SUPABASE_PUBLISHABLE_KEY,
-            "Accept": "application/json"
-          },
-          cache: "no-store"
-        });
-
-        const textResult = await response.text();
-
-        if (!response.ok) {
-          console.error(
-            "Image function failed:",
-            response.status,
-            textResult
-          );
-          return "";
-        }
-
-        let result;
-
-        try {
-          result = JSON.parse(textResult);
-        } catch (_) {
-          result = textResult;
-        }
-
-        // គាំទ្រទម្រង់ដែល Edge Function
-        // អាចប្រើសម្រាប់តំណរូបភាព
-        let url = "";
-
-        if (typeof result === "string") {
-          url = result;
-        } else if (result && typeof result === "object") {
-          url =
-            result.signedUrl ||
-            result.signed_url ||
-            result.signedURL ||
-            result.url ||
-            result.image_url ||
-            result.publicUrl ||
-            result.public_url ||
-            "";
-        }
-
-        if (
-          typeof url === "string" &&
-          /^https?:\/\//i.test(url.trim())
-        ) {
-          return url.trim();
-        }
-
-        console.error("Unexpected image response:", result);
-        return "";
-
-      } catch (error) {
-        console.error("Image request failed:", error);
-        return "";
       }
     }
 
@@ -451,23 +468,25 @@
         return;
       }
 
-      status.textContent = "";
-
       products.forEach(product => {
         const card = document.createElement("button");
+
         card.type = "button";
         card.className = "product-card";
+        card.setAttribute(
+          "aria-pressed",
+          String(
+            String(product.id) === String(selectedProductId)
+          )
+        );
 
-        function updateSelectedStyle() {
-          const selected =
-            String(product.id) === String(selectedProductId);
-
-          card.classList.toggle("selected", selected);
-          card.setAttribute("aria-pressed", String(selected));
+        if (
+          String(product.id) === String(selectedProductId)
+        ) {
+          card.classList.add("selected");
         }
 
-        updateSelectedStyle();
-
+        // រូបភាព ឬកន្លែងបង្ហាញរូបភាព
         const placeholder = document.createElement("div");
         placeholder.className = "image-placeholder";
         placeholder.textContent = product.image
@@ -476,18 +495,19 @@
 
         card.appendChild(placeholder);
 
-        if (product.name) {
-          const name = document.createElement("div");
-          name.className = "product-name";
-          name.textContent = product.name;
-          card.appendChild(name);
-        }
+        // ឈ្មោះកញ្ចប់
+        const name = document.createElement("div");
+        name.className = "product-name";
+        name.textContent = product.name || "Top-up Package";
+        card.appendChild(name);
 
+        // តម្លៃកញ្ចប់
         const price = document.createElement("div");
         price.className = "product-price";
         price.textContent = "$" + product.price.toFixed(2);
         card.appendChild(price);
 
+        // ជ្រើសរើសកញ្ចប់
         card.addEventListener("click", () => {
           selectedProductId = product.id;
 
@@ -503,33 +523,29 @@
 
         grid.appendChild(card);
 
+        // ទាញរូបភាពដោយប្រើ Public URL
         if (product.image) {
-          getImageUrl(product.image).then(url => {
+          const imageUrl = getImageUrl(product.image);
+
+          const img = document.createElement("img");
+          img.alt = product.name || "រូបភាពកញ្ចប់";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.src = imageUrl;
+
+          img.onload = () => {
+            console.log("Image loaded:", product.name);
+          };
+
+          img.onerror = () => {
             if (!card.isConnected) return;
 
-            if (!url) {
-              placeholder.textContent =
-                "មិនអាចទាញរូបភាពបាន";
-              return;
-            }
+            img.replaceWith(placeholder);
+            placeholder.textContent =
+              "មិនអាចបង្ហាញរូបភាពបាន";
+          };
 
-            const img = document.createElement("img");
-            img.alt = product.name || "រូបភាពកញ្ចប់";
-            img.loading = "lazy";
-            img.src = url;
-
-            img.onerror = () => {
-              img.replaceWith(placeholder);
-              placeholder.textContent =
-                "មិនអាចបង្ហាញរូបភាពបាន";
-            };
-
-            img.onload = () => {
-              console.log("Image loaded:", product.name);
-            };
-
-            placeholder.replaceWith(img);
-          });
+          placeholder.replaceWith(img);
         }
       });
     }
@@ -540,8 +556,10 @@
 
     refreshButton.addEventListener("click", loadProducts);
 
+    // ផ្ទុកកញ្ចប់ពេលបើកវេបសាយ
     loadProducts();
 
+    // ផ្ទុកឡើងវិញរៀងរាល់ 5 នាទី
     setInterval(loadProducts, 5 * 60 * 1000);
   </script>
 </body>
