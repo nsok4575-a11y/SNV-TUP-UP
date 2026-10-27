@@ -1,170 +1,112 @@
-<!DOCTYPE html>
-<html lang="km">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SNV Supabase Test</title>
-  <style>
-    body {
-      background: #10131e;
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 16px;
-    }
-    h2 { color: #85f0b1; }
-    button {
-      padding: 12px;
-      width: 100%;
-      background: #536bd7;
-      color: white;
-      border: 0;
-      border-radius: 8px;
-      margin-bottom: 14px;
-      font-size: 16px;
-    }
-    .item {
-      background: #22283a;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      overflow-wrap: anywhere;
-    }
-    .status {
-      padding: 12px;
-      margin: 12px 0;
-      background: #22283a;
-      border-radius: 8px;
-      overflow-wrap: anywhere;
-    }
-    pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-  </style>
-</head>
-<body>
-  <h2>SNV Game Top-up</h2>
-  <p>សាកល្បងទាញកញ្ចប់ពីតារាង products ក្នុង Supabase</p>
-
-  <button id="testButton">សាកល្បងទាញទិន្នន័យ</button>
-  <div id="status" class="status">មិនទាន់សាកល្បងទេ</div>
-  <div id="results"></div>
-
-<script>
-"use strict";
-
-const SUPABASE_URL =
-  "https://ckqfewtvpirmxcanmyiu.supabase.co";
-
-/* ដាក់ Supabase Publishable Key ពិតរបស់អ្នកនៅទីនេះ */
-const SUPABASE_KEY =
-  "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
-
-const statusBox = document.getElementById("status");
-const results = document.getElementById("results");
-const testButton = document.getElementById("testButton");
-
-function showError(message) {
-  statusBox.textContent = message;
-}
-
-async function testTable() {
-  results.replaceChildren();
-
-  if (
-    !SUPABASE_KEY ||
-    SUPABASE_KEY === "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
-  ) {
-    showError("សូមដាក់ Supabase Publishable Key របស់អ្នកជាមុន។");
-    return;
-  }
-
-  testButton.disabled = true;
-  showError("កំពុងភ្ជាប់ទៅ Supabase...");
-
-  try {
-    const url =
-      SUPABASE_URL +
-      "/rest/v1/products?select=id,name,price,image_url,is_active,is_sold&order=id.asc";
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": "Bearer " + SUPABASE_KEY
-      },
-      cache: "no-store"
-    });
-
-    const responseText = await response.text();
-
-    let data;
-    try {
-      data = responseText ? JSON.parse(responseText) : [];
-    } catch {
-      showError("Supabase បានឆ្លើយតបជាទម្រង់ដែលមិនមែន JSON។");
-      const pre = document.createElement("pre");
-      pre.textContent = responseText;
-      results.appendChild(pre);
-      return;
-    }
-
-    if (!response.ok) {
-      showError("បរាជ័យ HTTP " + response.status);
-
-      const pre = document.createElement("pre");
-      pre.textContent = JSON.stringify(data, null, 2);
-      results.appendChild(pre);
-      return;
-    }
-
-    if (!Array.isArray(data)) {
-      showError("ទិន្នន័យដែលបានទទួលមិនមែនជាបញ្ជីកញ្ចប់ទេ។");
-      return;
-    }
-
-    showError(
-      "ជោគជ័យ! បានទាញទិន្នន័យ " +
-      data.length + " ជួរ ពីតារាង products។"
-    );
-
-    if (data.length === 0) {
-      results.textContent =
-        "មិនមានទិន្នន័យដែលអាចអានបានទេ។ សូមពិនិត្យ Table Editor និង RLS Policies។";
-      return;
-    }
-
-    data.forEach((row, index) => {
-      const item = document.createElement("div");
-      item.className = "item";
-
-      const title = document.createElement("strong");
-      title.textContent =
-        "កញ្ចប់ទី " + (index + 1) + ": " + (row.name || "គ្មានឈ្មោះ");
-      item.appendChild(title);
-
-      const pre = document.createElement("pre");
-      pre.textContent = JSON.stringify({
-        id: row.id,
-        name: row.name,
-        price: row.price,
-        image_url: row.image_url,
-        is_active: row.is_active,
-        is_sold: row.is_sold
-      }, null, 2);
-
-      item.appendChild(pre);
-      results.appendChild(item);
-    });
-
-  } catch (error) {
-    showError("មានបញ្ហាក្នុងការភ្ជាប់៖ " + error.message);
-  } finally {
-    testButton.disabled = false;
-  }
-}
-
-testButton.addEventListener("click", testTable);
-</script>
-</body>
-</html>
+<!DOCTYPE html>  <html lang="km">  
+<head>  
+  <meta charset="UTF-8">  
+  <meta name="viewport" content="width=device-width, initial-scale=1">  
+  <title>SNV Supabase Test</title>  
+  <style>  
+    body {  
+      background: #10131e;  
+      color: white;  
+      font-family: Arial, sans-serif;  
+      padding: 16px;  
+    }  
+    h2 { color: #85f0b1; }  
+    button {  
+      padding: 12px;  
+      width: 100%;  
+      background: #536bd7;  
+      color: white;  
+      border: 0;  
+      border-radius: 8px;  
+      margin-bottom: 14px;  
+    }  
+    .item {  
+      background: #22283a;  
+      padding: 12px;  
+      margin: 10px 0;  
+      border-radius: 8px;  
+      overflow-wrap: anywhere;  
+    }  
+    pre {  
+      white-space: pre-wrap;  
+      overflow-wrap: anywhere;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <h2>SNV Game Top-up</h2>  
+  <p>សាកល្បងទាញទិន្នន័យពី shop-packages</p>  
+  <button onclick="testTable()">សាកល្បងទាញទិន្នន័យ</button>  
+  <div id="status">មិនទាន់សាកល្បងទេ</div>  
+  <div id="results"></div>  <script>  
+const SUPABASE_URL =  
+  "https://ckqfewtvpirmxcanmyiu.supabase.co";  
+  
+const SUPABASE_KEY =  
+  "ដាក់_PUBLISHABLE_KEY_របស់អ្នកនៅទីនេះ";  
+  
+async function testTable() {  
+  const status = document.getElementById("status");  
+  const results = document.getElementById("results");  
+  
+  status.textContent = "កំពុងភ្ជាប់ Supabase...";  
+  results.replaceChildren();  
+  
+  try {  
+    const url =  
+      SUPABASE_URL +  
+      "/rest/v1/shop-packages?select=*&limit=10";  
+  
+    const response = await fetch(url, {  
+      headers: {  
+        apikey: SUPABASE_KEY,  
+        Authorization: "Bearer " + SUPABASE_KEY  
+      },  
+      cache: "no-store"  
+    });  
+  
+    const text = await response.text();  
+  
+    if (!response.ok) {  
+      status.textContent =  
+        "បរាជ័យ HTTP " + response.status;  
+      const error = document.createElement("pre");  
+      error.textContent = text;  
+      results.appendChild(error);  
+      return;  
+    }  
+  
+    const data = JSON.parse(text);  
+  
+    status.textContent =  
+      "ជោគជ័យ! បានទាញទិន្នន័យ " +  
+      data.length + " ជួរ។";  
+  
+    if (data.length === 0) {  
+      results.textContent =  
+        "តារាងមាន ប៉ុន្តែមិនមានទិន្នន័យ ឬគោលការណ៍ RLS មិនអនុញ្ញាតឱ្យអាន។";  
+      return;  
+    }  
+  
+    data.forEach((row, index) => {  
+      const item = document.createElement("div");  
+      item.className = "item";  
+  
+      const title = document.createElement("strong");  
+      title.textContent = "ទិន្នន័យទី " + (index + 1);  
+      item.appendChild(title);  
+  
+      const pre = document.createElement("pre");  
+      pre.textContent = JSON.stringify(row, null, 2);  
+      item.appendChild(pre);  
+  
+      results.appendChild(item);  
+    });  
+  
+  } catch (error) {  
+    status.textContent =  
+      "មានបញ្ហា៖ " + error.message;  
+  }  
+}  
+</script>  </body>  
+</html>  
