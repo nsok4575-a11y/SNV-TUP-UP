@@ -1,260 +1,136 @@
+
 <!DOCTYPE html>
 <html lang="km">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SNV Game Top-up</title>
-
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;padding:20px 12px;background:#10131e;color:#fff;
-  font-family:Arial,sans-serif
-}
+body{margin:0;padding:20px 12px;background:#10131e;color:#fff;font-family:Arial,sans-serif}
 .container{width:100%;max-width:650px;margin:auto}
-header{
-  padding:22px 12px;margin-bottom:22px;text-align:center;
-  border-radius:14px;background:linear-gradient(135deg,#29285c,#10131e)
-}
+header{padding:22px 12px;margin-bottom:22px;text-align:center;border-radius:14px;background:linear-gradient(135deg,#29285c,#10131e)}
 h1{margin:0;font-size:25px}
 h2{font-size:19px;margin-bottom:12px}
-.subtitle,#productStatus,.info{
-  color:#c8cbe0;font-size:14px;line-height:1.7
-}
+.subtitle,#productStatus,.info{color:#c8cbe0;font-size:14px;line-height:1.7}
 #productStatus{text-align:center}
-.products-grid{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;width:100%
-}
-.product-card{
-  display:flex;flex-direction:column;align-items:stretch;
-  min-width:0;padding:10px;background:#22283a;color:#fff;
-  border:2px solid #343b55;border-radius:12px;cursor:pointer;
-  text-align:center;font-family:inherit
-}
+.products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+.product-card{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:10px;background:#22283a;color:#fff;border:2px solid #343b55;border-radius:12px;cursor:pointer;text-align:center;font-family:inherit}
 .product-card.selected{border-color:#6c8cff;outline:1px solid #6c8cff}
 .product-card.sold{border-color:#75404a;opacity:.85;cursor:not-allowed}
-.product-card img,.image-placeholder{
-  display:flex;align-items:center;justify-content:center;
-  width:100%;height:135px;min-height:135px;max-height:135px;
-  object-fit:contain;object-position:center;background:#fff;
-  color:#555;border-radius:8px;font-size:13px;overflow-wrap:anywhere
-}
+.product-card img,.image-placeholder{display:flex;align-items:center;justify-content:center;width:100%;height:135px;min-height:135px;max-height:135px;object-fit:contain;object-position:center;background:#fff;color:#555;border-radius:8px;font-size:13px;overflow-wrap:anywhere}
 .product-name{margin-top:10px;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
-.product-price{
-  margin-top:auto;padding-top:8px;color:#85f0b1;
-  font-size:19px;font-weight:bold
-}
+.product-price{margin-top:auto;padding-top:8px;color:#85f0b1;font-size:19px;font-weight:bold}
 .sold-label{margin-top:8px;color:#ff8b9a;font-weight:bold}
 .panel{margin-top:22px;padding:16px;background:#1b2030;border-radius:12px}
 label{display:block;margin:12px 0 8px;font-size:14px}
-input{
-  display:block;width:100%;padding:12px;border:1px solid #454d68;
-  border-radius:8px;background:#10131e;color:#fff;font-size:16px
-}
+input{display:block;width:100%;padding:12px;border:1px solid #454d68;border-radius:8px;background:#10131e;color:#fff;font-size:16px}
 input::placeholder{color:#9299b2}
-.button{
-  display:block;width:100%;margin-top:14px;padding:13px;border:none;
-  border-radius:8px;background:#536bd7;color:#fff;font-size:15px;cursor:pointer
-}
+.button{display:block;width:100%;margin-top:14px;padding:13px;border:none;border-radius:8px;background:#536bd7;color:#fff;font-size:15px;cursor:pointer}
 .button.secondary{background:#343e69}
 .button:disabled{opacity:.6;cursor:wait}
 #paymentPanel,#successPanel{display:none}
 #paymentPanel{text-align:center}
-#qrCode{
-  display:flex;justify-content:center;margin:18px auto;padding:12px;
-  background:#fff;border-radius:10px;width:fit-content;
-  max-width:100%;min-height:20px
-}
+#qrCode{display:flex;justify-content:center;margin:18px auto;padding:12px;background:#fff;border-radius:10px;width:fit-content;max-width:100%;min-height:20px}
 #qrCode img,#qrCode canvas{display:block;max-width:100%;height:auto}
-.message{
-  margin-top:12px;padding:10px;border-radius:8px;line-height:1.7;
-  overflow-wrap:anywhere;font-size:14px
-}
+.message{margin-top:12px;padding:10px;border-radius:8px;line-height:1.7;overflow-wrap:anywhere;font-size:14px}
 .note{margin-top:18px;color:#aeb4cc;font-size:12px;text-align:center;line-height:1.7}
 .success-title{color:#85f0b1;text-align:center;font-size:22px;font-weight:bold}
-.detail-list{
-  margin-top:16px;padding:12px;background:#101827;
-  border:1px solid #343b55;border-radius:10px
-}
-.detail-row{
-  display:flex;justify-content:space-between;gap:12px;
-  padding:10px 0;border-bottom:1px solid #343b55;
-  font-size:14px;line-height:1.6
-}
+.detail-list{margin-top:16px;padding:12px;background:#101827;border:1px solid #343b55;border-radius:10px}
+.detail-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #343b55;font-size:14px;line-height:1.6}
 .detail-row:last-child{border-bottom:0}
 .detail-label{color:#aeb4cc;flex:0 0 42%}
-.detail-value{
-  text-align:right;overflow-wrap:anywhere;word-break:break-word
-}
-.delivery-box{
-  margin-top:16px;padding:14px;background:#142c27;
-  border:1px solid #38745f;border-radius:10px
-}
+.detail-value{text-align:right;overflow-wrap:anywhere;word-break:break-word}
+.delivery-box{margin-top:16px;padding:14px;background:#142c27;border:1px solid #38745f;border-radius:10px}
 .delivery-box h3{margin:0 0 8px;color:#85f0b1;font-size:17px}
-.delivery-row{
-  padding:10px 0;border-bottom:1px solid #315347;
-  overflow-wrap:anywhere;word-break:break-word
-}
+.delivery-row{padding:10px 0;border-bottom:1px solid #315347;overflow-wrap:anywhere;word-break:break-word}
 .delivery-row:last-child{border-bottom:0}
 .delivery-label{display:block;color:#b8d9ce;font-size:13px;margin-bottom:5px}
 .delivery-value{font-weight:bold;user-select:text}
-.delivery-warning{
-  margin-top:12px;color:#ffd58a;font-size:13px;line-height:1.7
-}
+.delivery-warning{margin-top:12px;color:#ffd58a;font-size:13px;line-height:1.7}
 @media(max-width:360px){
-  body{padding:14px 8px}
-  .products-grid{gap:8px}
-  .product-card{padding:7px}
-  .product-card img,.image-placeholder{
-    height:115px;min-height:115px;max-height:115px
-  }
-  .product-name{font-size:14px}
-  .product-price{font-size:17px}
+body{padding:14px 8px}
+.products-grid{gap:8px}
+.product-card{padding:7px}
+.product-card img,.image-placeholder{height:115px;min-height:115px;max-height:115px}
+.product-name{font-size:14px}
+.product-price{font-size:17px}
 }
 </style>
 </head>
-
 <body>
 <div class="container">
-
 <header>
-  <h1>SNV Game Top-up</h1>
-  <p class="subtitle">ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
+<h1>SNV Game Top-up</h1>
+<p class="subtitle">ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
 </header>
 
 <section>
-  <h2>ជ្រើសរើសកញ្ចប់</h2>
-  <p id="productStatus" role="status" aria-live="polite">កំពុងទាញយកកញ្ចប់...</p>
-  <div id="products" class="products-grid"></div>
-  <button id="refreshButton" class="button secondary" type="button">
-    ផ្ទុកកញ្ចប់ឡើងវិញ
-  </button>
+<h2>ជ្រើសរើសកញ្ចប់</h2>
+<p id="productStatus" role="status" aria-live="polite">កំពុងទាញយកកញ្ចប់...</p>
+<div id="products" class="products-grid"></div>
+<button id="refreshButton" class="button secondary" type="button">ផ្ទុកកញ្ចប់ឡើងវិញ</button>
 </section>
 
 <section id="checkoutPanel" class="panel">
-  <h2>ព័ត៌មានការបញ្ជាទិញ</h2>
-
-  <label for="bankAccountName">ឈ្មោះគណនីធនាគាររបស់អ្នក</label>
-  <input id="bankAccountName" type="text" maxlength="100"
-    autocomplete="name" placeholder="បញ្ចូលឈ្មោះរបស់អ្នក">
-
-  <label for="gameUid">Player ID របស់ហ្គេម (បើចាំបាច់)</label>
-  <input id="gameUid" type="text" maxlength="100"
-    placeholder="បញ្ចូល Player ID">
-
-  <button id="payButton" class="button" type="button">
-    បង្កើត KHQR សម្រាប់ទូទាត់
-  </button>
-  <p id="checkoutMessage" class="info" role="status" aria-live="polite"></p>
+<h2>ព័ត៌មានការបញ្ជាទិញ</h2>
+<label for="bankAccountName">ឈ្មោះគណនីធនាគាររបស់អ្នក</label>
+<input id="bankAccountName" type="text" maxlength="100" autocomplete="name" placeholder="បញ្ចូលឈ្មោះរបស់អ្នក">
+<label for="gameUid">Player ID របស់ហ្គេម (បើចាំបាច់)</label>
+<input id="gameUid" type="text" maxlength="100" placeholder="បញ្ចូល Player ID">
+<button id="payButton" class="button" type="button">បង្កើត KHQR សម្រាប់ទូទាត់</button>
+<p id="checkoutMessage" class="info" role="status" aria-live="polite"></p>
 </section>
 
 <section id="paymentPanel" class="panel">
-  <h2>ទូទាត់តាម Bakong KHQR</h2>
-  <p class="info">
-    សូមស្កេន QR ដោយកម្មវិធីធនាគារដែលគាំទ្រ KHQR
-    ហើយពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។
-  </p>
-
-  <div id="qrCode" aria-label="KHQR payment code"></div>
-  <p id="paymentAmount" class="product-price"></p>
-  <p id="orderCode" class="info"></p>
-  <p id="paymentStatus" class="message info" role="status" aria-live="polite"></p>
-
-  <button id="checkButton" class="button" type="button">
-    ពិនិត្យការទូទាត់
-  </button>
+<h2>ទូទាត់តាម Bakong KHQR</h2>
+<p class="info">សូមស្កេន QR ដោយកម្មវិធីធនាគារដែលគាំទ្រ KHQR ហើយពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។</p>
+<div id="qrCode" aria-label="KHQR payment code"></div>
+<p id="paymentAmount" class="product-price"></p>
+<p id="orderCode" class="info"></p>
+<p id="paymentStatus" class="message info" role="status" aria-live="polite"></p>
+<button id="checkButton" class="button" type="button">ពិនិត្យការទូទាត់</button>
 </section>
 
 <section id="successPanel" class="panel" aria-live="polite">
-  <p class="success-title">✓ ទូទាត់ប្រាក់ជោគជ័យ</p>
-  <p class="info">ម៉ាស៊ីនមេបានផ្ទៀងផ្ទាត់ការទូទាត់រួចរាល់។</p>
-
-  <div class="detail-list">
-    <div class="detail-row">
-      <span class="detail-label">ស្ថានភាព</span>
-      <strong id="successStatus" class="detail-value">PAID</strong>
-    </div>
-    <div class="detail-row">
-      <span class="detail-label">លេខបញ្ជាទិញ</span>
-      <strong id="successOrderCode" class="detail-value"></strong>
-    </div>
-    <div class="detail-row">
-      <span class="detail-label">កញ្ចប់</span>
-      <strong id="successProduct" class="detail-value"></strong>
-    </div>
-    <div class="detail-row">
-      <span class="detail-label">ចំនួនប្រាក់</span>
-      <strong id="successAmount" class="detail-value"></strong>
-    </div>
-    <div class="detail-row">
-      <span class="detail-label">ឈ្មោះអ្នកទូទាត់</span>
-      <span id="successPayer" class="detail-value"></span>
-    </div>
-    <div class="detail-row">
-      <span class="detail-label">Player ID</span>
-      <span id="successUid" class="detail-value"></span>
-    </div>
-  </div>
-
-  <div id="deliveryBox" class="delivery-box" style="display:none">
-    <h3>ព័ត៌មានកញ្ចប់របស់អ្នក</h3>
-
-    <div class="delivery-row">
-      <span class="delivery-label">Gmail</span>
-      <span id="deliveryGmail" class="delivery-value"></span>
-    </div>
-
-    <div class="delivery-row">
-      <span class="delivery-label">Password</span>
-      <span id="deliveryPassword" class="delivery-value"></span>
-    </div>
-
-    <div class="delivery-row">
-      <span class="delivery-label">លេខកូដ ៨ ខ្ទង់</span>
-      <span id="deliveryCode" class="delivery-value"></span>
-    </div>
-  </div>
-
-  <p id="deliveryMessage" class="delivery-warning" role="status" aria-live="polite"></p>
-
-  <p class="note">
-    សូមរក្សាព័ត៌មានចូលគណនីនេះជាការសម្ងាត់។
-    កុំចែករំលែកវាជាសាធារណៈ។
-  </p>
-
-  <button id="newOrderButton" class="button secondary" type="button">
-    ត្រឡប់ទៅកញ្ចប់
-  </button>
+<p class="success-title">✓ ទូទាត់ប្រាក់ជោគជ័យ</p>
+<p class="info">ម៉ាស៊ីនមេបានផ្ទៀងផ្ទាត់ការទូទាត់រួចរាល់។</p>
+<div class="detail-list">
+<div class="detail-row"><span class="detail-label">ស្ថានភាព</span><strong id="successStatus" class="detail-value">PAID</strong></div>
+<div class="detail-row"><span class="detail-label">លេខបញ្ជាទិញ</span><strong id="successOrderCode" class="detail-value"></strong></div>
+<div class="detail-row"><span class="detail-label">កញ្ចប់</span><strong id="successProduct" class="detail-value"></strong></div>
+<div class="detail-row"><span class="detail-label">ចំនួនប្រាក់</span><strong id="successAmount" class="detail-value"></strong></div>
+<div class="detail-row"><span class="detail-label">ឈ្មោះអ្នកទូទាត់</span><span id="successPayer" class="detail-value"></span></div>
+<div class="detail-row"><span class="detail-label">Player ID</span><span id="successUid" class="detail-value"></span></div>
+</div>
+<div id="deliveryBox" class="delivery-box" style="display:none">
+<h3>ព័ត៌មានកញ្ចប់របស់អ្នក</h3>
+<div class="delivery-row"><span class="delivery-label">Gmail</span><span id="deliveryGmail" class="delivery-value"></span></div>
+<div class="delivery-row"><span class="delivery-label">Password</span><span id="deliveryPassword" class="delivery-value"></span></div>
+<div class="delivery-row"><span class="delivery-label">លេខកូដ ៨ ខ្ទង់</span><span id="deliveryCode" class="delivery-value"></span></div>
+</div>
+<p id="deliveryMessage" class="delivery-warning" role="status" aria-live="polite"></p>
+<p class="note">សូមរក្សាព័ត៌មានចូលគណនីនេះជាការសម្ងាត់។ កុំចែករំលែកវាជាសាធារណៈ។</p>
+<button id="newOrderButton" class="button secondary" type="button">ត្រឡប់ទៅកញ្ចប់</button>
 </section>
 
-<p class="note">
-  ស្ថានភាព PAID ត្រូវការការផ្ទៀងផ្ទាត់ពីម៉ាស៊ីនមេ។
-  កុំបង់ប្រាក់បើចំនួនប្រាក់ ឬព័ត៌មានអ្នកទទួលមិនត្រឹមត្រូវ។
-</p>
+<p class="note">ស្ថានភាព PAID ត្រូវការការផ្ទៀងផ្ទាត់ពីម៉ាស៊ីនមេ។ កុំបង់ប្រាក់បើចំនួនប្រាក់ ឬព័ត៌មានអ្នកទទួលមិនត្រឹមត្រូវ។</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script>
 "use strict";
 
-// SUPABASE SETTINGS
 const SUPABASE_URL = "https://ckqfewtvpirmxcanmyiu.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
 
-// ប្រើ Publishable key របស់គម្រោងអ្នក
-const SUPABASE_PUBLISHABLE_KEY =
-  "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
-
+/* កែសំខាន់៖ អានពី public_products មិនមែន products */
 const PRODUCTS_URL =
-  SUPABASE_URL + "/rest/v1/products?select=*";
+  SUPABASE_URL +
+  "/rest/v1/public_products?select=id,name,price,image_url,is_active,is_sold,created_at,updated_at";
 
-const CREATE_PAYMENT_URL =
-  SUPABASE_URL + "/functions/v1/bakong-payment";
-
-const CHECK_PAYMENT_URL =
-  SUPABASE_URL + "/functions/v1/check-payment";
-
+const CREATE_PAYMENT_URL = SUPABASE_URL + "/functions/v1/bakong-payment";
+const CHECK_PAYMENT_URL = SUPABASE_URL + "/functions/v1/check-payment";
 const POLL_INTERVAL_MS = 5000;
 const POLL_MAX_DURATION_MS = 10 * 60 * 1000;
 
@@ -275,12 +151,10 @@ let products = [];
 let selectedProductId = null;
 let currentOrderCode = null;
 let currentOrderInfo = null;
-
 let isLoading = false;
 let isCreatingPayment = false;
 let isCheckingPayment = false;
 let paymentIsPaid = false;
-
 let pollTimer = null;
 let pollStartedAt = 0;
 
@@ -307,25 +181,18 @@ async function postFunction(url, payload) {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(
-      "ម៉ាស៊ីនមេផ្ញើលទ្ធផលមិនត្រឹមត្រូវ (" + response.status + ")"
-    );
+    throw new Error("ម៉ាស៊ីនមេផ្ញើលទ្ធផលមិនត្រឹមត្រូវ (" + response.status + ")");
   }
 
   if (!response.ok) {
-    throw new Error(
-      data.error || data.message ||
-      ("សំណើបរាជ័យ (" + response.status + ")")
-    );
+    throw new Error(data.error || data.message || ("សំណើបរាជ័យ (" + response.status + ")"));
   }
 
   return data;
 }
 
-// LOAD PRODUCTS
 async function loadProducts() {
   if (isLoading) return;
-
   isLoading = true;
   refreshButton.disabled = true;
   refreshButton.textContent = "កំពុងទាញយក...";
@@ -346,11 +213,8 @@ async function loadProducts() {
     });
 
     const text = await response.text();
-
     if (!response.ok) {
-      throw new Error(
-        "Supabase HTTP " + response.status + ": " + text.substring(0, 250)
-      );
+      throw new Error("Supabase HTTP " + response.status + ": " + text.substring(0, 250));
     }
 
     let data;
@@ -361,16 +225,14 @@ async function loadProducts() {
     }
 
     if (!Array.isArray(data)) {
-      throw new Error("ទិន្នន័យ products មិនមែនជា Array ទេ។");
+      throw new Error("ទិន្នន័យ public_products មិនមែនជា Array ទេ។");
     }
 
     products = data
       .filter(item => {
         const amount = Number(item.amount ?? item.price);
-        return item.id !== null &&
-          item.id !== undefined &&
-          Number.isFinite(amount) &&
-          amount > 0;
+        return item.id !== null && item.id !== undefined &&
+          Number.isFinite(amount) && amount > 0;
       })
       .map(item => ({
         id: item.id,
@@ -381,38 +243,30 @@ async function loadProducts() {
         isActive: item.is_active !== false,
         isSold: item.is_sold === true
       }))
-      .sort((a, b) => a.name.localeCompare(
-        b.name,
-        undefined,
-        { numeric: true, sensitivity: "base" }
-      ));
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, {
+        numeric: true,
+        sensitivity: "base"
+      }));
 
-    if (!products.some(
-      p => String(p.id) === String(selectedProductId) &&
-        p.isActive && !p.isSold
+    if (!products.some(p =>
+      String(p.id) === String(selectedProductId) && p.isActive && !p.isSold
     )) {
-      const firstAvailable = products.find(
-        p => p.isActive && !p.isSold
-      );
+      const firstAvailable = products.find(p => p.isActive && !p.isSold);
       selectedProductId = firstAvailable ? firstAvailable.id : null;
     }
 
     renderProducts();
 
-    const availableCount = products.filter(
-      p => p.isActive && !p.isSold
-    ).length;
-
+    const availableCount = products.filter(p => p.isActive && !p.isSold).length;
     productStatus.textContent = availableCount
       ? "សូមជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន។"
       : "មិនមានកញ្ចប់ដែលអាចទិញបាននៅពេលនេះទេ។";
 
   } catch (error) {
     console.error("Load products error:", error);
-    productStatus.textContent =
-      error.name === "AbortError"
-        ? "ការទាញយកចំណាយពេលលើស 15 វិនាទី។ សូមសាកល្បងម្ដងទៀត។"
-        : "ទាញយកកញ្ចប់មិនបាន៖ " + error.message;
+    productStatus.textContent = error.name === "AbortError"
+      ? "ការទាញយកចំណាយពេលលើស 15 វិនាទី។ សូមសាកល្បងម្ដងទៀត។"
+      : "ទាញយកកញ្ចប់មិនបាន៖ " + error.message;
   } finally {
     clearTimeout(timeoutId);
     isLoading = false;
@@ -421,32 +275,24 @@ async function loadProducts() {
   }
 }
 
-// IMAGE URL
 function getImageUrl(imageValue) {
   if (!imageValue) return "";
-
   let path = String(imageValue).trim();
   if (!path) return "";
-
   if (/^https?:\/\//i.test(path)) return path;
-
   path = path.replace(/^\/+/, "");
 
   const prefix = "storage/v1/object/public/";
-  if (path.startsWith(prefix)) {
-    return SUPABASE_URL + "/" + path;
-  }
+  if (path.startsWith(prefix)) return SUPABASE_URL + "/" + path;
 
   if (path.startsWith("package-images/")) {
     path = path.substring("package-images/".length);
   }
 
-  return SUPABASE_URL +
-    "/storage/v1/object/public/package-images/" +
+  return SUPABASE_URL + "/storage/v1/object/public/package-images/" +
     path.split("/").map(encodeURIComponent).join("/");
 }
 
-// RENDER PRODUCTS
 function renderProducts() {
   grid.replaceChildren();
 
@@ -458,9 +304,7 @@ function renderProducts() {
     card.className = "product-card";
 
     const sold = product.isSold;
-    const selected =
-      String(product.id) === String(selectedProductId);
-
+    const selected = String(product.id) === String(selectedProductId);
     card.classList.toggle("selected", selected && !sold);
     card.classList.toggle("sold", sold);
     card.disabled = sold;
@@ -468,10 +312,7 @@ function renderProducts() {
 
     const placeholder = document.createElement("div");
     placeholder.className = "image-placeholder";
-    placeholder.textContent = product.image
-      ? "កំពុងទាញរូបភាព..."
-      : "មិនទាន់មានរូបភាព";
-
+    placeholder.textContent = product.image ? "កំពុងទាញរូបភាព..." : "មិនទាន់មានរូបភាព";
     card.appendChild(placeholder);
 
     const name = document.createElement("div");
@@ -504,23 +345,19 @@ function renderProducts() {
       img.alt = product.name;
       img.loading = "lazy";
       img.src = getImageUrl(product.image);
-
       img.onerror = () => {
         if (card.isConnected) {
           img.replaceWith(placeholder);
           placeholder.textContent = "មិនអាចបង្ហាញរូបភាពបាន";
         }
       };
-
       placeholder.replaceWith(img);
     }
   });
 }
 
-// DISPLAY DELIVERY INFORMATION
 function showDeliveryInformation(data) {
   const delivery = data.delivery_info;
-
   const gmail = delivery?.gmail;
   const password = delivery?.package_password;
   const code = delivery?.code_8_digits;
@@ -533,21 +370,17 @@ function showDeliveryInformation(data) {
   ) {
     deliveryBox.style.display = "none";
     deliveryMessage.textContent =
-      "ការទូទាត់បានជោគជ័យ ប៉ុន្តែម៉ាស៊ីនមេមិនទាន់បញ្ជូនព័ត៌មានកញ្ចប់មកទេ។ " +
-      "សូមទាក់ទងអ្នកគ្រប់គ្រង ដោយផ្ដល់លេខបញ្ជាទិញខាងលើ។";
+      "ការទូទាត់បានជោគជ័យ ប៉ុន្តែម៉ាស៊ីនមេមិនទាន់បញ្ជូនព័ត៌មានកញ្ចប់មកទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង ដោយផ្ដល់លេខបញ្ជាទិញខាងលើ។";
     return;
   }
 
   document.getElementById("deliveryGmail").textContent = gmail;
   document.getElementById("deliveryPassword").textContent = password;
   document.getElementById("deliveryCode").textContent = String(code);
-
   deliveryBox.style.display = "block";
-  deliveryMessage.textContent =
-    "សូមរក្សាទុកព័ត៌មាននេះដោយសុវត្ថិភាព និងកុំចែករំលែកជាសាធារណៈ។";
+  deliveryMessage.textContent = "សូមរក្សាទុកព័ត៌មាននេះដោយសុវត្ថិភាព និងកុំចែករំលែកជាសាធារណៈ។";
 }
 
-// SHOW SUCCESS INFORMATION
 function showSuccessInformation(data) {
   if (!currentOrderInfo || !currentOrderCode) {
     throw new Error("មិនមានព័ត៌មានការបញ្ជាទិញបច្ចុប្បន្នទេ។");
@@ -562,39 +395,26 @@ function showSuccessInformation(data) {
   }
 
   document.getElementById("successStatus").textContent = "PAID";
-  document.getElementById("successOrderCode").textContent =
-    currentOrderInfo.orderCode;
-  document.getElementById("successProduct").textContent =
-    currentOrderInfo.productName;
+  document.getElementById("successOrderCode").textContent = currentOrderInfo.orderCode;
+  document.getElementById("successProduct").textContent = currentOrderInfo.productName;
   document.getElementById("successAmount").textContent =
     currentOrderInfo.currency + " " + currentOrderInfo.amount.toFixed(2);
-  document.getElementById("successPayer").textContent =
-    currentOrderInfo.payerName || "មិនបានបញ្ចូល";
-  document.getElementById("successUid").textContent =
-    currentOrderInfo.gameUid || "មិនបានបញ្ចូល";
+  document.getElementById("successPayer").textContent = currentOrderInfo.payerName || "មិនបានបញ្ចូល";
+  document.getElementById("successUid").textContent = currentOrderInfo.gameUid || "មិនបានបញ្ចូល";
 
   showDeliveryInformation(data);
-
   paymentIsPaid = true;
   stopPaymentPolling();
-
   paymentStatus.textContent = "បានផ្ទៀងផ្ទាត់ការទូទាត់ជោគជ័យ។";
   checkButton.textContent = "បានទូទាត់រួច";
   checkButton.disabled = true;
-
   successPanel.style.display = "block";
-  successPanel.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-
+  successPanel.scrollIntoView({behavior:"smooth", block:"start"});
   loadProducts();
 }
 
-// AUTOMATIC PAYMENT CHECK
 function schedulePaymentCheck() {
   stopPaymentPolling();
-
   if (!currentOrderCode || paymentIsPaid) return;
 
   if (Date.now() - pollStartedAt >= POLL_MAX_DURATION_MS) {
@@ -609,23 +429,18 @@ function schedulePaymentCheck() {
   }, POLL_INTERVAL_MS);
 }
 
-// CHECK PAYMENT
 async function checkPayment(isAutomatic) {
   if (!currentOrderCode || paymentIsPaid || isCheckingPayment) return;
-
   isCheckingPayment = true;
 
   if (!isAutomatic) {
     checkButton.disabled = true;
     checkButton.textContent = "កំពុងពិនិត្យ...";
-    paymentStatus.textContent =
-      "កំពុងពិនិត្យការទូទាត់ជាមួយម៉ាស៊ីនមេ...";
+    paymentStatus.textContent = "កំពុងពិនិត្យការទូទាត់ជាមួយម៉ាស៊ីនមេ...";
   }
 
   try {
-    const data = await postFunction(CHECK_PAYMENT_URL, {
-      order_code: currentOrderCode
-    });
+    const data = await postFunction(CHECK_PAYMENT_URL, {order_code: currentOrderCode});
 
     if (
       data.payment_verified === true &&
@@ -638,7 +453,6 @@ async function checkPayment(isAutomatic) {
 
     paymentStatus.textContent = data.message ||
       "មិនទាន់បានបញ្ជាក់ការទូទាត់ទេ។ សូមរង់ចាំ ឬសាកល្បងម្ដងទៀត។";
-
   } catch (error) {
     console.error("Payment check failed:", error);
     paymentStatus.textContent = isAutomatic
@@ -646,39 +460,28 @@ async function checkPayment(isAutomatic) {
       : "ពិនិត្យការទូទាត់មិនបាន៖ " + error.message;
   } finally {
     isCheckingPayment = false;
-
     if (!paymentIsPaid) {
       checkButton.disabled = false;
       checkButton.textContent = "ពិនិត្យការទូទាត់";
-
       if (currentOrderCode) schedulePaymentCheck();
     }
   }
 }
 
-// CREATE PAYMENT
 payButton.addEventListener("click", async () => {
   if (isCreatingPayment) return;
 
-  const product = products.find(
-    p => String(p.id) === String(selectedProductId)
-  );
-
+  const product = products.find(p => String(p.id) === String(selectedProductId));
   if (!product || !product.isActive || product.isSold) {
-    checkoutMessage.textContent =
-      "សូមជ្រើសរើសកញ្ចប់ដែលអាចទិញបាន។";
+    checkoutMessage.textContent = "សូមជ្រើសរើសកញ្ចប់ដែលអាចទិញបាន។";
     return;
   }
 
-  const payerName =
-    document.getElementById("bankAccountName").value.trim();
-
-  const gameUid =
-    document.getElementById("gameUid").value.trim();
+  const payerName = document.getElementById("bankAccountName").value.trim();
+  const gameUid = document.getElementById("gameUid").value.trim();
 
   if (!payerName) {
-    checkoutMessage.textContent =
-      "សូមបញ្ចូលឈ្មោះគណនីធនាគាររបស់អ្នក។";
+    checkoutMessage.textContent = "សូមបញ្ចូលឈ្មោះគណនីធនាគាររបស់អ្នក។";
     return;
   }
 
@@ -686,12 +489,10 @@ payButton.addEventListener("click", async () => {
   payButton.disabled = true;
   payButton.textContent = "កំពុងបង្កើត KHQR...";
   checkoutMessage.textContent = "";
-
   stopPaymentPolling();
   currentOrderCode = null;
   currentOrderInfo = null;
   paymentIsPaid = false;
-
   paymentPanel.style.display = "none";
   successPanel.style.display = "none";
   deliveryBox.style.display = "none";
@@ -705,19 +506,15 @@ payButton.addEventListener("click", async () => {
     });
 
     if (
-      !data.order ||
-      !data.order.order_code ||
-      !data.payment ||
-      !data.payment.qr ||
-      !data.product ||
-      !Number.isFinite(Number(data.product.amount))
+      !data.order || !data.order.order_code ||
+      !data.payment || !data.payment.qr ||
+      !data.product || !Number.isFinite(Number(data.product.amount))
     ) {
       console.error("Unexpected create-payment response:", data);
       throw new Error("លទ្ធផលបង្កើត KHQR មិនពេញលេញទេ។");
     }
 
     currentOrderCode = String(data.order.order_code);
-
     currentOrderInfo = {
       orderCode: currentOrderCode,
       productName: data.product.name || product.name,
@@ -728,18 +525,13 @@ payButton.addEventListener("click", async () => {
     };
 
     document.getElementById("paymentAmount").textContent =
-      currentOrderInfo.currency + " " +
-      currentOrderInfo.amount.toFixed(2);
-
-    document.getElementById("orderCode").textContent =
-      "លេខបញ្ជាទិញ៖ " + currentOrderCode;
+      currentOrderInfo.currency + " " + currentOrderInfo.amount.toFixed(2);
+    document.getElementById("orderCode").textContent = "លេខបញ្ជាទិញ៖ " + currentOrderCode;
 
     const qrContainer = document.getElementById("qrCode");
     qrContainer.replaceChildren();
 
-    if (typeof QRCode === "undefined") {
-      throw new Error("មិនអាចផ្ទុក QR library បានទេ។");
-    }
+    if (typeof QRCode === "undefined") throw new Error("មិនអាចផ្ទុក QR library បានទេ។");
 
     new QRCode(qrContainer, {
       text: data.payment.qr,
@@ -748,21 +540,12 @@ payButton.addEventListener("click", async () => {
       correctLevel: QRCode.CorrectLevel.M
     });
 
-    paymentStatus.textContent =
-      "ស្ថានភាព៖ PENDING — កំពុងរង់ចាំការទូទាត់។";
-
+    paymentStatus.textContent = "ស្ថានភាព៖ PENDING — កំពុងរង់ចាំការទូទាត់។";
     checkButton.disabled = false;
     checkButton.textContent = "ពិនិត្យការទូទាត់";
     paymentPanel.style.display = "block";
-
-    checkoutMessage.textContent =
-      "បានបង្កើតការបញ្ជាទិញ។ សូមស្កេន QR ដើម្បីទូទាត់។";
-
-    paymentPanel.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
+    checkoutMessage.textContent = "បានបង្កើតការបញ្ជាទិញ។ សូមស្កេន QR ដើម្បីទូទាត់។";
+    paymentPanel.scrollIntoView({behavior:"smooth", block:"start"});
     pollStartedAt = Date.now();
     schedulePaymentCheck();
 
@@ -771,9 +554,7 @@ payButton.addEventListener("click", async () => {
     currentOrderCode = null;
     currentOrderInfo = null;
     stopPaymentPolling();
-
-    checkoutMessage.textContent =
-      "មិនអាចបង្កើតការទូទាត់បានទេ៖ " + error.message;
+    checkoutMessage.textContent = "មិនអាចបង្កើតការទូទាត់បានទេ៖ " + error.message;
   } finally {
     isCreatingPayment = false;
     payButton.disabled = false;
@@ -781,39 +562,25 @@ payButton.addEventListener("click", async () => {
   }
 });
 
-// BUTTONS
-checkButton.addEventListener("click", () => {
-  checkPayment(false);
-});
-
-refreshButton.addEventListener("click", () => {
-  loadProducts();
-});
+checkButton.addEventListener("click", () => checkPayment(false));
+refreshButton.addEventListener("click", loadProducts);
 
 document.getElementById("newOrderButton").addEventListener("click", () => {
   stopPaymentPolling();
   currentOrderCode = null;
   currentOrderInfo = null;
   paymentIsPaid = false;
-
   paymentPanel.style.display = "none";
   successPanel.style.display = "none";
   deliveryBox.style.display = "none";
   deliveryMessage.textContent = "";
-
   checkButton.disabled = false;
   checkButton.textContent = "ពិនិត្យការទូទាត់";
   checkoutMessage.textContent = "";
-
   loadProducts();
-
-  checkoutPanel.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+  checkoutPanel.scrollIntoView({behavior:"smooth", block:"start"});
 });
 
-// START
 loadProducts();
 </script>
 </body>
