@@ -7,47 +7,110 @@
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:20px 12px;background:#10131e;color:#fff;font-family:Arial,sans-serif}
+body{
+  margin:0;padding:20px 12px;background:#10131e;color:#fff;
+  font-family:Arial,sans-serif
+}
 .container{width:100%;max-width:650px;margin:auto}
-header{padding:22px 12px;margin-bottom:22px;text-align:center;border-radius:14px;background:linear-gradient(135deg,#29285c,#10131e)}
+header{
+  padding:22px 12px;margin-bottom:22px;text-align:center;
+  border-radius:14px;background:linear-gradient(135deg,#29285c,#10131e)
+}
 h1{margin:0;font-size:25px}
 h2{font-size:19px;margin-bottom:12px}
-.subtitle,#productStatus,.info{color:#c8cbe0;font-size:14px;line-height:1.7}
+.subtitle,#productStatus,.info{
+  color:#c8cbe0;font-size:14px;line-height:1.7
+}
 #productStatus{text-align:center}
-.products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
-.product-card{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:10px;background:#22283a;color:#fff;border:2px solid #343b55;border-radius:12px;cursor:pointer;text-align:center;font-family:inherit}
+.products-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;width:100%
+}
+.product-card{
+  display:flex;flex-direction:column;align-items:stretch;
+  min-width:0;padding:10px;background:#22283a;color:#fff;
+  border:2px solid #343b55;border-radius:12px;cursor:pointer;
+  text-align:center;font-family:inherit
+}
 .product-card.selected{border-color:#6c8cff;outline:1px solid #6c8cff}
 .product-card.sold{border-color:#75404a;opacity:.85;cursor:not-allowed}
-.product-card img,.image-placeholder{display:flex;align-items:center;justify-content:center;width:100%;height:135px;min-height:135px;max-height:135px;object-fit:contain;object-position:center;background:#fff;color:#555;border-radius:8px;font-size:13px;overflow-wrap:anywhere}
+.product-card img,.image-placeholder{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:135px;min-height:135px;max-height:135px;
+  object-fit:contain;object-position:center;background:#fff;
+  color:#555;border-radius:8px;font-size:13px;overflow-wrap:anywhere
+}
 .product-name{margin-top:10px;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
-.product-price{margin-top:auto;padding-top:8px;color:#85f0b1;font-size:19px;font-weight:bold}
+.product-price{
+  margin-top:auto;padding-top:8px;color:#85f0b1;
+  font-size:19px;font-weight:bold
+}
 .sold-label{margin-top:8px;color:#ff8b9a;font-weight:bold}
 .panel{margin-top:22px;padding:16px;background:#1b2030;border-radius:12px}
 label{display:block;margin:12px 0 8px;font-size:14px}
-input{display:block;width:100%;padding:12px;border:1px solid #454d68;border-radius:8px;background:#10131e;color:#fff;font-size:16px}
+input{
+  display:block;width:100%;padding:12px;border:1px solid #454d68;
+  border-radius:8px;background:#10131e;color:#fff;font-size:16px
+}
 input::placeholder{color:#9299b2}
-.button{display:block;width:100%;margin-top:14px;padding:13px;border:none;border-radius:8px;background:#536bd7;color:#fff;font-size:15px;cursor:pointer}
+.button{
+  display:block;width:100%;margin-top:14px;padding:13px;border:none;
+  border-radius:8px;background:#536bd7;color:#fff;font-size:15px;cursor:pointer
+}
 .button.secondary{background:#343e69}
 .button:disabled{opacity:.6;cursor:wait}
 #paymentPanel,#successPanel{display:none}
 #paymentPanel{text-align:center}
-#qrCode{display:flex;justify-content:center;margin:18px auto;padding:12px;background:#fff;border-radius:10px;width:fit-content;max-width:100%;min-height:20px}
+#qrCode{
+  display:flex;justify-content:center;margin:18px auto;padding:12px;
+  background:#fff;border-radius:10px;width:fit-content;
+  max-width:100%;min-height:20px
+}
 #qrCode img,#qrCode canvas{display:block;max-width:100%;height:auto}
-.message{margin-top:12px;padding:10px;border-radius:8px;line-height:1.7;overflow-wrap:anywhere;font-size:14px}
+.message{
+  margin-top:12px;padding:10px;border-radius:8px;line-height:1.7;
+  overflow-wrap:anywhere;font-size:14px
+}
 .note{margin-top:18px;color:#aeb4cc;font-size:12px;text-align:center;line-height:1.7}
 .success-title{color:#85f0b1;text-align:center;font-size:22px;font-weight:bold}
-.detail-list{margin-top:16px;padding:12px;background:#101827;border:1px solid #343b55;border-radius:10px}
-.detail-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #343b55;font-size:14px;line-height:1.6}
+.detail-list{
+  margin-top:16px;padding:12px;background:#101827;
+  border:1px solid #343b55;border-radius:10px
+}
+.detail-row{
+  display:flex;justify-content:space-between;gap:12px;
+  padding:10px 0;border-bottom:1px solid #343b55;
+  font-size:14px;line-height:1.6
+}
 .detail-row:last-child{border-bottom:0}
 .detail-label{color:#aeb4cc;flex:0 0 42%}
-.detail-value{text-align:right;overflow-wrap:anywhere;word-break:break-word}
+.detail-value{
+  text-align:right;overflow-wrap:anywhere;word-break:break-word
+}
+.delivery-box{
+  margin-top:16px;padding:14px;background:#142c27;
+  border:1px solid #38745f;border-radius:10px
+}
+.delivery-box h3{margin:0 0 8px;color:#85f0b1;font-size:17px}
+.delivery-row{
+  padding:10px 0;border-bottom:1px solid #315347;
+  overflow-wrap:anywhere;word-break:break-word
+}
+.delivery-row:last-child{border-bottom:0}
+.delivery-label{display:block;color:#b8d9ce;font-size:13px;margin-bottom:5px}
+.delivery-value{font-weight:bold;user-select:text}
+.delivery-warning{
+  margin-top:12px;color:#ffd58a;font-size:13px;line-height:1.7
+}
 @media(max-width:360px){
- body{padding:14px 8px}
- .products-grid{gap:8px}
- .product-card{padding:7px}
- .product-card img,.image-placeholder{height:115px;min-height:115px;max-height:115px}
- .product-name{font-size:14px}
- .product-price{font-size:17px}
+  body{padding:14px 8px}
+  .products-grid{gap:8px}
+  .product-card{padding:7px}
+  .product-card img,.image-placeholder{
+    height:115px;min-height:115px;max-height:115px
+  }
+  .product-name{font-size:14px}
+  .product-price{font-size:17px}
 }
 </style>
 </head>
@@ -56,77 +119,119 @@ input::placeholder{color:#9299b2}
 <div class="container">
 
 <header>
-<h1>SNV Game Top-up</h1>
-<p class="subtitle">ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
+  <h1>SNV Game Top-up</h1>
+  <p class="subtitle">ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
 </header>
 
 <section>
-<h2>ជ្រើសរើសកញ្ចប់</h2>
-<p id="productStatus" role="status" aria-live="polite">កំពុងទាញយកកញ្ចប់...</p>
-<div id="products" class="products-grid"></div>
-<button id="refreshButton" class="button secondary" type="button">ផ្ទុកកញ្ចប់ឡើងវិញ</button>
+  <h2>ជ្រើសរើសកញ្ចប់</h2>
+  <p id="productStatus" role="status" aria-live="polite">កំពុងទាញយកកញ្ចប់...</p>
+  <div id="products" class="products-grid"></div>
+  <button id="refreshButton" class="button secondary" type="button">
+    ផ្ទុកកញ្ចប់ឡើងវិញ
+  </button>
 </section>
 
-<section class="panel">
-<h2>ព័ត៌មានការបញ្ជាទិញ</h2>
+<section id="checkoutPanel" class="panel">
+  <h2>ព័ត៌មានការបញ្ជាទិញ</h2>
 
-<label for="bankAccountName">ឈ្មោះគណនីធនាគាររបស់អ្នក</label>
-<input id="bankAccountName" type="text" maxlength="100" autocomplete="name" placeholder="បញ្ចូលឈ្មោះរបស់អ្នក">
+  <label for="bankAccountName">ឈ្មោះគណនីធនាគាររបស់អ្នក</label>
+  <input id="bankAccountName" type="text" maxlength="100"
+    autocomplete="name" placeholder="បញ្ចូលឈ្មោះរបស់អ្នក">
 
-<label for="gameUid">Player ID របស់ហ្គេម (បើចាំបាច់)</label>
-<input id="gameUid" type="text" maxlength="100" placeholder="បញ្ចូល Player ID">
+  <label for="gameUid">Player ID របស់ហ្គេម (បើចាំបាច់)</label>
+  <input id="gameUid" type="text" maxlength="100"
+    placeholder="បញ្ចូល Player ID">
 
-<button id="payButton" class="button" type="button">បង្កើត KHQR សម្រាប់ទូទាត់</button>
-<p id="checkoutMessage" class="info" role="status" aria-live="polite"></p>
+  <button id="payButton" class="button" type="button">
+    បង្កើត KHQR សម្រាប់ទូទាត់
+  </button>
+  <p id="checkoutMessage" class="info" role="status" aria-live="polite"></p>
 </section>
 
 <section id="paymentPanel" class="panel">
-<h2>ទូទាត់តាម Bakong KHQR</h2>
-<p class="info">សូមស្កេន QR ដោយកម្មវិធីធនាគារដែលគាំទ្រ KHQR ហើយពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។</p>
-<div id="qrCode" aria-label="KHQR payment code"></div>
-<p id="paymentAmount" class="product-price"></p>
-<p id="orderCode" class="info"></p>
-<p id="paymentStatus" class="message info" role="status" aria-live="polite"></p>
-<button id="checkButton" class="button" type="button">ពិនិត្យការទូទាត់</button>
+  <h2>ទូទាត់តាម Bakong KHQR</h2>
+  <p class="info">
+    សូមស្កេន QR ដោយកម្មវិធីធនាគារដែលគាំទ្រ KHQR
+    ហើយពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។
+  </p>
+
+  <div id="qrCode" aria-label="KHQR payment code"></div>
+  <p id="paymentAmount" class="product-price"></p>
+  <p id="orderCode" class="info"></p>
+  <p id="paymentStatus" class="message info" role="status" aria-live="polite"></p>
+
+  <button id="checkButton" class="button" type="button">
+    ពិនិត្យការទូទាត់
+  </button>
 </section>
 
-<!-- ព័ត៌មានបង្ហាញតែក្រោយម៉ាស៊ីនមេផ្ទៀងផ្ទាត់ថាបានទូទាត់ -->
 <section id="successPanel" class="panel" aria-live="polite">
-<p class="success-title">✓ ទូទាត់ប្រាក់ជោគជ័យ</p>
-<p class="info">ម៉ាស៊ីនមេបានផ្ទៀងផ្ទាត់ការទូទាត់រួចរាល់។</p>
+  <p class="success-title">✓ ទូទាត់ប្រាក់ជោគជ័យ</p>
+  <p class="info">ម៉ាស៊ីនមេបានផ្ទៀងផ្ទាត់ការទូទាត់រួចរាល់។</p>
 
-<div class="detail-list">
-<div class="detail-row">
-<span class="detail-label">ស្ថានភាព</span>
-<strong id="successStatus" class="detail-value">PAID</strong>
-</div>
-<div class="detail-row">
-<span class="detail-label">លេខបញ្ជាទិញ</span>
-<strong id="successOrderCode" class="detail-value"></strong>
-</div>
-<div class="detail-row">
-<span class="detail-label">កញ្ចប់</span>
-<strong id="successProduct" class="detail-value"></strong>
-</div>
-<div class="detail-row">
-<span class="detail-label">ចំនួនប្រាក់</span>
-<strong id="successAmount" class="detail-value"></strong>
-</div>
-<div class="detail-row">
-<span class="detail-label">ឈ្មោះអ្នកទូទាត់</span>
-<span id="successPayer" class="detail-value"></span>
-</div>
-<div class="detail-row">
-<span class="detail-label">Player ID</span>
-<span id="successUid" class="detail-value"></span>
-</div>
-</div>
+  <div class="detail-list">
+    <div class="detail-row">
+      <span class="detail-label">ស្ថានភាព</span>
+      <strong id="successStatus" class="detail-value">PAID</strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">លេខបញ្ជាទិញ</span>
+      <strong id="successOrderCode" class="detail-value"></strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">កញ្ចប់</span>
+      <strong id="successProduct" class="detail-value"></strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">ចំនួនប្រាក់</span>
+      <strong id="successAmount" class="detail-value"></strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">ឈ្មោះអ្នកទូទាត់</span>
+      <span id="successPayer" class="detail-value"></span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Player ID</span>
+      <span id="successUid" class="detail-value"></span>
+    </div>
+  </div>
 
-<p class="note">ការបញ្ជាក់នេះបញ្ជាក់ពីការទូទាត់ប្រាក់ប៉ុណ្ណោះ មិនមែនជាការបញ្ជាក់ថាកញ្ចប់ត្រូវបានបញ្ជូនទៅក្នុងហ្គេមរួចទេ។</p>
-<button id="newOrderButton" class="button secondary" type="button">ត្រឡប់ទៅកញ្ចប់</button>
+  <div id="deliveryBox" class="delivery-box" style="display:none">
+    <h3>ព័ត៌មានកញ្ចប់របស់អ្នក</h3>
+
+    <div class="delivery-row">
+      <span class="delivery-label">Gmail</span>
+      <span id="deliveryGmail" class="delivery-value"></span>
+    </div>
+
+    <div class="delivery-row">
+      <span class="delivery-label">Password</span>
+      <span id="deliveryPassword" class="delivery-value"></span>
+    </div>
+
+    <div class="delivery-row">
+      <span class="delivery-label">លេខកូដ ៨ ខ្ទង់</span>
+      <span id="deliveryCode" class="delivery-value"></span>
+    </div>
+  </div>
+
+  <p id="deliveryMessage" class="delivery-warning" role="status" aria-live="polite"></p>
+
+  <p class="note">
+    សូមរក្សាព័ត៌មានចូលគណនីនេះជាការសម្ងាត់។
+    កុំចែករំលែកវាជាសាធារណៈ។
+  </p>
+
+  <button id="newOrderButton" class="button secondary" type="button">
+    ត្រឡប់ទៅកញ្ចប់
+  </button>
 </section>
 
-<p class="note">ស្ថានភាព PAID ត្រូវការការផ្ទៀងផ្ទាត់ពីម៉ាស៊ីនមេ។ កុំបង់ប្រាក់បើចំនួនប្រាក់ ឬព័ត៌មានអ្នកទទួលមិនត្រឹមត្រូវ។</p>
+<p class="note">
+  ស្ថានភាព PAID ត្រូវការការផ្ទៀងផ្ទាត់ពីម៉ាស៊ីនមេ។
+  កុំបង់ប្រាក់បើចំនួនប្រាក់ ឬព័ត៌មានអ្នកទទួលមិនត្រឹមត្រូវ។
+</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -135,9 +240,9 @@ input::placeholder{color:#9299b2}
 "use strict";
 
 // SUPABASE SETTINGS
-const SUPABASE_URL =
-  "https://ckqfewtvpirmxcanmyiu.supabase.co";
+const SUPABASE_URL = "https://ckqfewtvpirmxcanmyiu.supabase.co";
 
+// ប្រើ Publishable key របស់គម្រោងអ្នក
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
 
@@ -153,7 +258,6 @@ const CHECK_PAYMENT_URL =
 const POLL_INTERVAL_MS = 5000;
 const POLL_MAX_DURATION_MS = 10 * 60 * 1000;
 
-// ELEMENTS
 const grid = document.getElementById("products");
 const productStatus = document.getElementById("productStatus");
 const refreshButton = document.getElementById("refreshButton");
@@ -163,8 +267,10 @@ const checkoutMessage = document.getElementById("checkoutMessage");
 const paymentPanel = document.getElementById("paymentPanel");
 const paymentStatus = document.getElementById("paymentStatus");
 const successPanel = document.getElementById("successPanel");
+const checkoutPanel = document.getElementById("checkoutPanel");
+const deliveryBox = document.getElementById("deliveryBox");
+const deliveryMessage = document.getElementById("deliveryMessage");
 
-// STATE
 let products = [];
 let selectedProductId = null;
 let currentOrderCode = null;
@@ -178,7 +284,6 @@ let paymentIsPaid = false;
 let pollTimer = null;
 let pollStartedAt = 0;
 
-// HELPERS
 function stopPaymentPolling() {
   if (pollTimer !== null) {
     clearTimeout(pollTimer);
@@ -203,8 +308,7 @@ async function postFunction(url, payload) {
     data = JSON.parse(text);
   } catch {
     throw new Error(
-      "ម៉ាស៊ីនមេផ្ញើលទ្ធផលមិនត្រឹមត្រូវ (" +
-      response.status + ")"
+      "ម៉ាស៊ីនមេផ្ញើលទ្ធផលមិនត្រឹមត្រូវ (" + response.status + ")"
     );
   }
 
@@ -245,8 +349,7 @@ async function loadProducts() {
 
     if (!response.ok) {
       throw new Error(
-        "Supabase HTTP " + response.status + ": " +
-        text.substring(0, 250)
+        "Supabase HTTP " + response.status + ": " + text.substring(0, 250)
       );
     }
 
@@ -378,8 +481,7 @@ function renderProducts() {
 
     const price = document.createElement("div");
     price.className = "product-price";
-    price.textContent =
-      product.currency + " " + product.amount.toFixed(2);
+    price.textContent = product.currency + " " + product.amount.toFixed(2);
     card.appendChild(price);
 
     if (sold) {
@@ -415,6 +517,36 @@ function renderProducts() {
   });
 }
 
+// DISPLAY DELIVERY INFORMATION
+function showDeliveryInformation(data) {
+  const delivery = data.delivery_info;
+
+  const gmail = delivery?.gmail;
+  const password = delivery?.package_password;
+  const code = delivery?.code_8_digits;
+
+  if (
+    typeof gmail !== "string" || !gmail.trim() ||
+    typeof password !== "string" || !password.trim() ||
+    (typeof code !== "string" && typeof code !== "number") ||
+    String(code).trim() === ""
+  ) {
+    deliveryBox.style.display = "none";
+    deliveryMessage.textContent =
+      "ការទូទាត់បានជោគជ័យ ប៉ុន្តែម៉ាស៊ីនមេមិនទាន់បញ្ជូនព័ត៌មានកញ្ចប់មកទេ។ " +
+      "សូមទាក់ទងអ្នកគ្រប់គ្រង ដោយផ្ដល់លេខបញ្ជាទិញខាងលើ។";
+    return;
+  }
+
+  document.getElementById("deliveryGmail").textContent = gmail;
+  document.getElementById("deliveryPassword").textContent = password;
+  document.getElementById("deliveryCode").textContent = String(code);
+
+  deliveryBox.style.display = "block";
+  deliveryMessage.textContent =
+    "សូមរក្សាទុកព័ត៌មាននេះដោយសុវត្ថិភាព និងកុំចែករំលែកជាសាធារណៈ។";
+}
+
 // SHOW SUCCESS INFORMATION
 function showSuccessInformation(data) {
   if (!currentOrderInfo || !currentOrderCode) {
@@ -435,12 +567,13 @@ function showSuccessInformation(data) {
   document.getElementById("successProduct").textContent =
     currentOrderInfo.productName;
   document.getElementById("successAmount").textContent =
-    currentOrderInfo.currency + " " +
-    currentOrderInfo.amount.toFixed(2);
+    currentOrderInfo.currency + " " + currentOrderInfo.amount.toFixed(2);
   document.getElementById("successPayer").textContent =
     currentOrderInfo.payerName || "មិនបានបញ្ចូល";
   document.getElementById("successUid").textContent =
     currentOrderInfo.gameUid || "មិនបានបញ្ចូល";
+
+  showDeliveryInformation(data);
 
   paymentIsPaid = true;
   stopPaymentPolling();
@@ -455,11 +588,10 @@ function showSuccessInformation(data) {
     block: "start"
   });
 
-  // ធ្វើបច្ចុប្បន្នភាពកញ្ចប់ដោយមិនលាក់ព័ត៌មានជោគជ័យ
   loadProducts();
 }
 
-// SCHEDULE AUTOMATIC CHECK
+// AUTOMATIC PAYMENT CHECK
 function schedulePaymentCheck() {
   stopPaymentPolling();
 
@@ -486,7 +618,8 @@ async function checkPayment(isAutomatic) {
   if (!isAutomatic) {
     checkButton.disabled = true;
     checkButton.textContent = "កំពុងពិនិត្យ...";
-    paymentStatus.textContent = "កំពុងពិនិត្យការទូទាត់ជាមួយម៉ាស៊ីនមេ...";
+    paymentStatus.textContent =
+      "កំពុងពិនិត្យការទូទាត់ជាមួយម៉ាស៊ីនមេ...";
   }
 
   try {
@@ -561,6 +694,8 @@ payButton.addEventListener("click", async () => {
 
   paymentPanel.style.display = "none";
   successPanel.style.display = "none";
+  deliveryBox.style.display = "none";
+  deliveryMessage.textContent = "";
 
   try {
     const data = await postFunction(CREATE_PAYMENT_URL, {
@@ -585,7 +720,7 @@ payButton.addEventListener("click", async () => {
 
     currentOrderInfo = {
       orderCode: currentOrderCode,
-      productName: product.name,
+      productName: data.product.name || product.name,
       amount: Number(data.product.amount),
       currency: data.product.currency || product.currency || "USD",
       payerName: payerName,
@@ -647,8 +782,7 @@ payButton.addEventListener("click", async () => {
 });
 
 // BUTTONS
-
-  checkButton.addEventListener("click", () => {
+checkButton.addEventListener("click", () => {
   checkPayment(false);
 });
 
@@ -664,6 +798,8 @@ document.getElementById("newOrderButton").addEventListener("click", () => {
 
   paymentPanel.style.display = "none";
   successPanel.style.display = "none";
+  deliveryBox.style.display = "none";
+  deliveryMessage.textContent = "";
 
   checkButton.disabled = false;
   checkButton.textContent = "ពិនិត្យការទូទាត់";
@@ -671,7 +807,7 @@ document.getElementById("newOrderButton").addEventListener("click", () => {
 
   loadProducts();
 
-  document.getElementById("checkoutPanel")?.scrollIntoView({
+  checkoutPanel.scrollIntoView({
     behavior: "smooth",
     block: "start"
   });
