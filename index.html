@@ -103,12 +103,14 @@ body{padding:14px 8px}
 <div class="detail-row"><span class="detail-label">ឈ្មោះអ្នកទូទាត់</span><span id="successPayer" class="detail-value"></span></div>
 <div class="detail-row"><span class="detail-label">Player ID</span><span id="successUid" class="detail-value"></span></div>
 </div>
+
 <div id="deliveryBox" class="delivery-box" style="display:none">
 <h3>ព័ត៌មានកញ្ចប់របស់អ្នក</h3>
 <div class="delivery-row"><span class="delivery-label">Gmail</span><span id="deliveryGmail" class="delivery-value"></span></div>
 <div class="delivery-row"><span class="delivery-label">Password</span><span id="deliveryPassword" class="delivery-value"></span></div>
 <div class="delivery-row"><span class="delivery-label">លេខកូដ ៨ ខ្ទង់</span><span id="deliveryCode" class="delivery-value"></span></div>
 </div>
+
 <p id="deliveryMessage" class="delivery-warning" role="status" aria-live="polite"></p>
 <p class="note">សូមរក្សាព័ត៌មានចូលគណនីនេះជាការសម្ងាត់។ កុំចែករំលែកវាជាសាធារណៈ។</p>
 <button id="newOrderButton" class="button secondary" type="button">ត្រឡប់ទៅកញ្ចប់</button>
@@ -124,16 +126,13 @@ body{padding:14px 8px}
 const SUPABASE_URL = "https://ckqfewtvpirmxcanmyiu.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
 
-/*
-  FIX 1:
-  អានពី products ដែលមានស្រាប់ មិនមែន public_products ទេ។
-  image_path ត្រូវបានបន្ថែមទៅក្នុង select។
-*/
 const PRODUCTS_URL = SUPABASE_URL +
   "/rest/v1/products?select=id,name,price,image_url,image_path,is_active,is_sold,created_at,updated_at&order=id.asc";
 
 const CREATE_PAYMENT_URL = SUPABASE_URL + "/functions/v1/bakong-payment";
 const CHECK_PAYMENT_URL = SUPABASE_URL + "/functions/v1/check-payment";
+const DELIVERY_INFO_URL = SUPABASE_URL + "/functions/v1/get-delivery-info";
+
 const POLL_INTERVAL_MS = 5000;
 const POLL_MAX_DURATION_MS = 10 * 60 * 1000;
 
@@ -184,18 +183,22 @@ async function postFunction(url, payload) {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error("ម៉ាស៊ីនមេផ្ញើលទ្ធផលមិនត្រឹមត្រូវ (" + response.status + ")");
+    throw new Error(
+      "ម៉ាស៊ីនមេផ្ញើលទ្ធផលមិនត្រឹមត្រូវ (" + response.status + ")"
+    );
   }
 
   if (!response.ok) {
-    throw new Error(data.error || data.message ||
-      ("សំណើបរាជ័យ (" + response.status + ")"));
+    throw new Error(
+      data.error || data.message ||
+      ("សំណើបរាជ័យ (" + response.status + ")")
+    );
   }
 
   return data;
 }
 
-/* ទាញយក Package ពី public.products */
+/* ទាញយក Package ពី Supabase */
 async function loadProducts() {
   if (isLoading) return;
 
@@ -290,11 +293,7 @@ async function loadProducts() {
   }
 }
 
-/*
-  FIX 2:
-  គាំទ្រ image_url ដែលជាអាសយដ្ឋានពេញ និង image_path
-  ដែលជាផ្លូវឯកសារក្នុង bucket package-images។
-*/
+/* បង្កើត URL រូបភាពក្នុង bucket package-images */
 function getImageUrl(value) {
   if (!value) return "";
 
@@ -318,7 +317,7 @@ function getImageUrl(value) {
     path.split("/").map(encodeURIComponent).join("/");
 }
 
-/* បង្ហាញ Package និងរូបភាព */
+/* បង្ហាញកញ្ចប់ និងរូបភាព */
 function renderProducts() {
   grid.replaceChildren();
 
@@ -372,10 +371,8 @@ function renderProducts() {
     grid.appendChild(card);
 
     const candidates = [];
-
     if (product.imageUrl) candidates.push(product.imageUrl);
-    if (product.imagePath &&
-        product.imagePath !== product.imageUrl) {
+    if (product.imagePath && product.imagePath !== product.imageUrl) {
       candidates.push(product.imagePath);
     }
 
@@ -394,7 +391,9 @@ function renderProducts() {
         } else {
           img.remove();
           placeholder.textContent = "មិនអាចបង្ហាញរូបភាពបាន";
-          if (!placeholder.isConnected) card.insertBefore(placeholder, name);
+          if (!placeholder.isConnected) {
+            card.insertBefore(placeholder, name);
+          }
         }
       };
 
@@ -408,11 +407,12 @@ function renderProducts() {
   });
 }
 
+/* បង្ហាញព័ត៌មានកញ្ចប់ដែលទទួលបានពី Function */
 function showDeliveryInformation(data) {
-  const delivery = data.delivery_info;
-  const gmail = delivery?.gmail;
-  const password = delivery?.package_password;
-  const code = delivery?.code_8_digits;
+  const delivery = data && data.delivery_info;
+  const gmail = delivery && delivery.gmail;
+  const password = delivery && delivery.package_password;
+  const code = delivery && delivery.code_8_digits;
 
   if (
     typeof gmail !== "string" || !gmail.trim() ||
@@ -422,18 +422,20 @@ function showDeliveryInformation(data) {
   ) {
     deliveryBox.style.display = "none";
     deliveryMessage.textContent =
-      "ការទូទាត់បានជោគជ័យ ប៉ុន្តែម៉ាស៊ីនមេមិនទាន់បញ្ជូនព័ត៌មានកញ្ចប់មកទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង ដោយផ្ដល់លេខបញ្ជាទិញខាងលើ។";
+      "ការទូទាត់បានជោគជ័យ ប៉ុន្តែមិនទាន់អាចទាញព័ត៌មានកញ្ចប់បានទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រងដោយផ្ដល់លេខបញ្ជាទិញខាងលើ។";
     return;
   }
 
   document.getElementById("deliveryGmail").textContent = gmail;
   document.getElementById("deliveryPassword").textContent = password;
   document.getElementById("deliveryCode").textContent = String(code);
+
   deliveryBox.style.display = "block";
   deliveryMessage.textContent =
     "សូមរក្សាទុកព័ត៌មាននេះដោយសុវត្ថិភាព និងកុំចែករំលែកជាសាធារណៈ។";
 }
 
+/* បង្ហាញលទ្ធផលក្រោយ check-payment ផ្ទៀងផ្ទាត់ PAID */
 function showSuccessInformation(data) {
   if (!currentOrderInfo || !currentOrderCode) {
     throw new Error("មិនមានព័ត៌មានការបញ្ជាទិញបច្ចុប្បន្នទេ។");
@@ -469,9 +471,11 @@ function showSuccessInformation(data) {
 
   successPanel.style.display = "block";
   successPanel.scrollIntoView({behavior:"smooth", block:"start"});
+
   loadProducts();
 }
 
+/* ពិនិត្យស្ថានភាពដោយស្វ័យប្រវត្តិ */
 function schedulePaymentCheck() {
   stopPaymentPolling();
 
@@ -489,6 +493,7 @@ function schedulePaymentCheck() {
   }, POLL_INTERVAL_MS);
 }
 
+/* ពិនិត្យការទូទាត់ ហើយបន្ទាប់មកទាញព័ត៌មានកញ្ចប់ */
 async function checkPayment(isAutomatic) {
   if (!currentOrderCode || paymentIsPaid || isCheckingPayment) return;
 
@@ -511,7 +516,35 @@ async function checkPayment(isAutomatic) {
       String(data.status || "").toLowerCase() === "paid" &&
       String(data.order_code || "") === String(currentOrderCode)
     ) {
-      showSuccessInformation(data);
+      /*
+       * ហៅ get-delivery-info តែបន្ទាប់ពី check-payment
+       * បានបញ្ជាក់ថាការបញ្ជាទិញនេះ PAID ប៉ុណ្ណោះ។
+       */
+      let deliveryData = null;
+
+      try {
+        deliveryData = await postFunction(DELIVERY_INFO_URL, {
+          order_code: currentOrderCode
+        });
+
+        if (
+          deliveryData.payment_verified !== true ||
+          String(deliveryData.status || "").toLowerCase() !== "paid" ||
+          String(deliveryData.order_code || "") !== String(currentOrderCode)
+        ) {
+          deliveryData = null;
+        }
+      } catch (deliveryError) {
+        console.error("Get delivery information failed:", deliveryError);
+      }
+
+      showSuccessInformation({
+        ...data,
+        delivery_info: deliveryData
+          ? deliveryData.delivery_info
+          : null
+      });
+
       return;
     }
 
@@ -520,6 +553,7 @@ async function checkPayment(isAutomatic) {
 
   } catch (error) {
     console.error("Payment check failed:", error);
+
     paymentStatus.textContent = isAutomatic
       ? "មិនអាចទាក់ទងម៉ាស៊ីនមេបានបណ្ដោះអាសន្ន។ នឹងសាកល្បងម្ដងទៀត។"
       : "ពិនិត្យការទូទាត់មិនបាន៖ " + error.message;
@@ -536,7 +570,7 @@ async function checkPayment(isAutomatic) {
   }
 }
 
-/* បង្កើតការបញ្ជាទិញ និង KHQR តាម Edge Function ដែលមានស្រាប់ */
+/* បង្កើតការបញ្ជាទិញ និង KHQR */
 payButton.addEventListener("click", async () => {
   if (isCreatingPayment) return;
 
@@ -682,6 +716,7 @@ document.getElementById("newOrderButton").addEventListener("click", () => {
   checkoutMessage.textContent = "";
 
   loadProducts();
+
   checkoutPanel.scrollIntoView({
     behavior:"smooth",
     block:"start"
