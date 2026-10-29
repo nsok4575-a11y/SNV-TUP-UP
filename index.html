@@ -1,125 +1,405 @@
-
 <!DOCTYPE html>
 <html lang="km">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SNV Game Top-up</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:20px 12px;background:#10131e;color:#fff;font-family:Arial,sans-serif}
+
+body{
+  margin:0;
+  padding:16px 10px;
+  background:#10131e;
+  color:#fff;
+  font-family:Arial,sans-serif
+}
+
 .container{width:100%;max-width:650px;margin:auto}
-header{padding:22px 12px;margin-bottom:22px;text-align:center;border-radius:14px;background:linear-gradient(135deg,#29285c,#10131e)}
-h1{margin:0;font-size:25px}
-h2{font-size:19px;margin-bottom:12px}
-.subtitle,#productStatus,.info{color:#c8cbe0;font-size:14px;line-height:1.7}
+
+header{
+  padding:18px 10px;
+  margin-bottom:18px;
+  text-align:center;
+  border-radius:12px;
+  background:linear-gradient(135deg,#29285c,#10131e)
+}
+
+h1{margin:0;font-size:23px}
+h2{font-size:18px;margin-bottom:10px}
+
+.subtitle,#productStatus,.info{
+  color:#c8cbe0;
+  font-size:13px;
+  line-height:1.6
+}
+
 #productStatus{text-align:center;overflow-wrap:anywhere}
-.products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
-.product-card{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:10px;background:#22283a;color:#fff;border:2px solid #343b55;border-radius:12px;cursor:pointer;text-align:center;font-family:inherit}
-.product-card.selected{border-color:#6c8cff;outline:1px solid #6c8cff}
-.product-card.sold{border-color:#75404a;opacity:.85;cursor:not-allowed}
-.product-card img,.image-placeholder{display:flex;align-items:center;justify-content:center;width:100%;height:135px;min-height:135px;max-height:135px;object-fit:contain;object-position:center;background:#fff;color:#555;border-radius:8px;font-size:13px;overflow-wrap:anywhere}
-.product-name{margin-top:10px;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
-.product-price{margin-top:auto;padding-top:8px;color:#85f0b1;font-size:19px;font-weight:bold}
-.sold-label{margin-top:8px;color:#ff8b9a;font-weight:bold}
-.panel{margin-top:22px;padding:16px;background:#1b2030;border-radius:12px}
-label{display:block;margin:12px 0 8px;font-size:14px}
-input{display:block;width:100%;padding:12px;border:1px solid #454d68;border-radius:8px;background:#10131e;color:#fff;font-size:16px}
+
+.products-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  width:100%
+}
+
+.product-card{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  min-width:0;
+  padding:5px;
+  background:#22283a;
+  color:#fff;
+  border:1px solid #343b55;
+  border-radius:9px;
+  cursor:pointer;
+  text-align:center;
+  font-family:inherit
+}
+
+.product-card.selected{
+  border-color:#6c8cff;
+  outline:1px solid #6c8cff
+}
+
+.product-card.sold{
+  border-color:#75404a;
+  opacity:.85;
+  cursor:not-allowed
+}
+
+.product-card img,.image-placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:68px;
+  min-height:68px;
+  max-height:68px;
+  object-fit:contain;
+  object-position:center;
+  background:#fff;
+  color:#555;
+  border-radius:5px;
+  font-size:11px;
+  overflow-wrap:anywhere
+}
+
+.product-name{
+  margin-top:5px;
+  font-size:13px;
+  line-height:1.35;
+  overflow-wrap:anywhere
+}
+
+.product-price{
+  margin-top:auto;
+  padding-top:5px;
+  color:#85f0b1;
+  font-size:16px;
+  font-weight:bold
+}
+
+.sold-label{
+  margin-top:5px;
+  color:#ff8b9a;
+  font-weight:bold;
+  font-size:12px
+}
+
+.panel{
+  margin-top:18px;
+  padding:13px;
+  background:#1b2030;
+  border-radius:10px
+}
+
+label{
+  display:block;
+  margin:10px 0 6px;
+  font-size:13px
+}
+
+input{
+  display:block;
+  width:100%;
+  padding:11px;
+  border:1px solid #454d68;
+  border-radius:7px;
+  background:#10131e;
+  color:#fff;
+  font-size:16px
+}
+
 input::placeholder{color:#9299b2}
-.button{display:block;width:100%;margin-top:14px;padding:13px;border:none;border-radius:8px;background:#536bd7;color:#fff;font-size:15px;cursor:pointer}
+
+.button{
+  display:block;
+  width:100%;
+  margin-top:12px;
+  padding:12px;
+  border:none;
+  border-radius:7px;
+  background:#536bd7;
+  color:#fff;
+  font-size:14px;
+  cursor:pointer
+}
+
 .button.secondary{background:#343e69}
 .button:disabled{opacity:.6;cursor:wait}
+
 #paymentPanel,#successPanel{display:none}
 #paymentPanel{text-align:center}
-#qrCode{display:flex;justify-content:center;margin:18px auto;padding:12px;background:#fff;border-radius:10px;width:fit-content;max-width:100%;min-height:20px}
-#qrCode img,#qrCode canvas{display:block;max-width:100%;height:auto}
-.message{margin-top:12px;padding:10px;border-radius:8px;line-height:1.7;overflow-wrap:anywhere;font-size:14px}
-.note{margin-top:18px;color:#aeb4cc;font-size:12px;text-align:center;line-height:1.7}
-.success-title{color:#85f0b1;text-align:center;font-size:22px;font-weight:bold}
-.detail-list{margin-top:16px;padding:12px;background:#101827;border:1px solid #343b55;border-radius:10px}
-.detail-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #343b55;font-size:14px;line-height:1.6}
+
+#qrCode{
+  display:flex;
+  justify-content:center;
+  margin:15px auto;
+  padding:10px;
+  background:#fff;
+  border-radius:9px;
+  width:fit-content;
+  max-width:100%;
+  min-height:20px
+}
+
+#qrCode img,#qrCode canvas{
+  display:block;
+  max-width:100%;
+  height:auto
+}
+
+.message{
+  margin-top:10px;
+  padding:9px;
+  border-radius:7px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+  font-size:13px
+}
+
+.note{
+  margin-top:15px;
+  color:#aeb4cc;
+  font-size:12px;
+  text-align:center;
+  line-height:1.6
+}
+
+.success-title{
+  color:#85f0b1;
+  text-align:center;
+  font-size:21px;
+  font-weight:bold
+}
+
+.detail-list{
+  margin-top:13px;
+  padding:10px;
+  background:#101827;
+  border:1px solid #343b55;
+  border-radius:9px
+}
+
+.detail-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 0;
+  border-bottom:1px solid #343b55;
+  font-size:13px;
+  line-height:1.5
+}
+
 .detail-row:last-child{border-bottom:0}
 .detail-label{color:#aeb4cc;flex:0 0 42%}
 .detail-value{text-align:right;overflow-wrap:anywhere;word-break:break-word}
-.delivery-box{margin-top:16px;padding:14px;background:#142c27;border:1px solid #38745f;border-radius:10px}
-.delivery-box h3{margin:0 0 8px;color:#85f0b1;font-size:17px}
-.delivery-row{padding:10px 0;border-bottom:1px solid #315347;overflow-wrap:anywhere;word-break:break-word}
+
+.delivery-box{
+  margin-top:13px;
+  padding:12px;
+  background:#142c27;
+  border:1px solid #38745f;
+  border-radius:9px
+}
+
+.delivery-box h3{
+  margin:0 0 7px;
+  color:#85f0b1;
+  font-size:16px
+}
+
+.delivery-row{
+  padding:9px 0;
+  border-bottom:1px solid #315347;
+  overflow-wrap:anywhere;
+  word-break:break-word
+}
+
 .delivery-row:last-child{border-bottom:0}
-.delivery-label{display:block;color:#b8d9ce;font-size:13px;margin-bottom:5px}
+
+.delivery-label{
+  display:block;
+  color:#b8d9ce;
+  font-size:12px;
+  margin-bottom:4px
+}
+
 .delivery-value{font-weight:bold;user-select:text}
-.delivery-warning{margin-top:12px;color:#ffd58a;font-size:13px;line-height:1.7}
+
+.delivery-warning{
+  margin-top:10px;
+  color:#ffd58a;
+  font-size:13px;
+  line-height:1.6
+}
+
+@media(min-width:500px){
+  .products-grid{gap:8px}
+  .product-card{padding:7px}
+  .product-card img,.image-placeholder{
+    height:80px;
+    min-height:80px;
+    max-height:80px
+  }
+}
+
 @media(max-width:360px){
-body{padding:14px 8px}
-.products-grid{gap:8px}
-.product-card{padding:7px}
-.product-card img,.image-placeholder{height:115px;min-height:115px;max-height:115px}
-.product-name{font-size:14px}
-.product-price{font-size:17px}
+  body{padding:12px 7px}
+  .products-grid{gap:5px}
+  .product-card{padding:4px}
+  .product-card img,.image-placeholder{
+    height:60px;
+    min-height:60px;
+    max-height:60px
+  }
+  .product-name{font-size:12px}
+  .product-price{font-size:14px}
 }
 </style>
 </head>
+
 <body>
 <div class="container">
+
 <header>
-<h1>SNV Game Top-up</h1>
-<p class="subtitle">ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
+  <h1>SNV Game Top-up</h1>
+  <p class="subtitle">ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
 </header>
 
 <section>
-<h2>ជ្រើសរើសកញ្ចប់</h2>
-<p id="productStatus" role="status" aria-live="polite">កំពុងទាញយកកញ្ចប់...</p>
-<div id="products" class="products-grid"></div>
-<button id="refreshButton" class="button secondary" type="button">ផ្ទុកកញ្ចប់ឡើងវិញ</button>
+  <h2>ជ្រើសរើសកញ្ចប់</h2>
+  <p id="productStatus" role="status" aria-live="polite">
+    កំពុងទាញយកកញ្ចប់...
+  </p>
+  <div id="products" class="products-grid"></div>
+  <button id="refreshButton" class="button secondary" type="button">
+    ផ្ទុកកញ្ចប់ឡើងវិញ
+  </button>
 </section>
 
 <section id="checkoutPanel" class="panel">
-<h2>ព័ត៌មានការបញ្ជាទិញ</h2>
-<label for="bankAccountName">ឈ្មោះគណនីធនាគាររបស់អ្នក</label>
-<input id="bankAccountName" type="text" maxlength="100" autocomplete="name" placeholder="បញ្ចូលឈ្មោះរបស់អ្នក">
-<label for="gameUid">Player ID របស់ហ្គេម (បើចាំបាច់)</label>
-<input id="gameUid" type="text" maxlength="100" placeholder="បញ្ចូល Player ID">
-<button id="payButton" class="button" type="button">បង្កើត KHQR សម្រាប់ទូទាត់</button>
-<p id="checkoutMessage" class="info" role="status" aria-live="polite"></p>
+  <h2>ព័ត៌មានការបញ្ជាទិញ</h2>
+
+  <label for="bankAccountName">ឈ្មោះគណនីធនាគាររបស់អ្នក</label>
+  <input id="bankAccountName" type="text" maxlength="100"
+    autocomplete="name" placeholder="បញ្ចូលឈ្មោះរបស់អ្នក">
+
+  <label for="gameUid">Player ID របស់ហ្គេម (បើចាំបាច់)</label>
+  <input id="gameUid" type="text" maxlength="100"
+    placeholder="បញ្ចូល Player ID">
+
+  <button id="payButton" class="button" type="button">
+    បង្កើត KHQR សម្រាប់ទូទាត់
+  </button>
+
+  <p id="checkoutMessage" class="info" role="status" aria-live="polite"></p>
 </section>
 
 <section id="paymentPanel" class="panel">
-<h2>ទូទាត់តាម Bakong KHQR</h2>
-<p class="info">សូមស្កេន QR ដោយកម្មវិធីធនាគារដែលគាំទ្រ KHQR ហើយពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។</p>
-<div id="qrCode" aria-label="KHQR payment code"></div>
-<p id="paymentAmount" class="product-price"></p>
-<p id="orderCode" class="info"></p>
-<p id="paymentStatus" class="message info" role="status" aria-live="polite"></p>
-<button id="checkButton" class="button" type="button">ពិនិត្យការទូទាត់</button>
+  <h2>ទូទាត់តាម Bakong KHQR</h2>
+  <p class="info">
+    សូមស្កេន QR ដោយកម្មវិធីធនាគារដែលគាំទ្រ KHQR
+    ហើយពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។
+  </p>
+
+  <div id="qrCode" aria-label="KHQR payment code"></div>
+  <p id="paymentAmount" class="product-price"></p>
+  <p id="orderCode" class="info"></p>
+  <p id="paymentStatus" class="message info" role="status" aria-live="polite"></p>
+
+  <button id="checkButton" class="button" type="button">
+    ពិនិត្យការទូទាត់
+  </button>
 </section>
 
 <section id="successPanel" class="panel" aria-live="polite">
-<p class="success-title">✓ ទូទាត់ប្រាក់ជោគជ័យ</p>
-<p class="info">ម៉ាស៊ីនមេបានផ្ទៀងផ្ទាត់ការទូទាត់រួចរាល់។</p>
-<div class="detail-list">
-<div class="detail-row"><span class="detail-label">ស្ថានភាព</span><strong id="successStatus" class="detail-value">PAID</strong></div>
-<div class="detail-row"><span class="detail-label">លេខបញ្ជាទិញ</span><strong id="successOrderCode" class="detail-value"></strong></div>
-<div class="detail-row"><span class="detail-label">កញ្ចប់</span><strong id="successProduct" class="detail-value"></strong></div>
-<div class="detail-row"><span class="detail-label">ចំនួនប្រាក់</span><strong id="successAmount" class="detail-value"></strong></div>
-<div class="detail-row"><span class="detail-label">ឈ្មោះអ្នកទូទាត់</span><span id="successPayer" class="detail-value"></span></div>
-<div class="detail-row"><span class="detail-label">Player ID</span><span id="successUid" class="detail-value"></span></div>
-</div>
+  <p class="success-title">✓ ទូទាត់ប្រាក់ជោគជ័យ</p>
+  <p class="info">ម៉ាស៊ីនមេបានផ្ទៀងផ្ទាត់ការទូទាត់រួចរាល់។</p>
 
-<div id="deliveryBox" class="delivery-box" style="display:none">
-<h3>ព័ត៌មានកញ្ចប់របស់អ្នក</h3>
-<div class="delivery-row"><span class="delivery-label">Gmail</span><span id="deliveryGmail" class="delivery-value"></span></div>
-<div class="delivery-row"><span class="delivery-label">Password</span><span id="deliveryPassword" class="delivery-value"></span></div>
-<div class="delivery-row"><span class="delivery-label">លេខកូដ ៨ ខ្ទង់</span><span id="deliveryCode" class="delivery-value"></span></div>
-</div>
+  <div class="detail-list">
+    <div class="detail-row">
+      <span class="detail-label">ស្ថានភាព</span>
+      <strong id="successStatus" class="detail-value">PAID</strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">លេខបញ្ជាទិញ</span>
+      <strong id="successOrderCode" class="detail-value"></strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">កញ្ចប់</span>
+      <strong id="successProduct" class="detail-value"></strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">ចំនួនប្រាក់</span>
+      <strong id="successAmount" class="detail-value"></strong>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">ឈ្មោះអ្នកទូទាត់</span>
+      <span id="successPayer" class="detail-value"></span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Player ID</span>
+      <span id="successUid" class="detail-value"></span>
+    </div>
+  </div>
 
-<p id="deliveryMessage" class="delivery-warning" role="status" aria-live="polite"></p>
-<p class="note">សូមរក្សាព័ត៌មានចូលគណនីនេះជាការសម្ងាត់។ កុំចែករំលែកវាជាសាធារណៈ។</p>
-<button id="newOrderButton" class="button secondary" type="button">ត្រឡប់ទៅកញ្ចប់</button>
+  <div id="deliveryBox" class="delivery-box" style="display:none">
+    <h3>ព័ត៌មានកញ្ចប់របស់អ្នក</h3>
+    <div class="delivery-row">
+      <span class="delivery-label">Gmail</span>
+      <span id="deliveryGmail" class="delivery-value"></span>
+    </div>
+    <div class="delivery-row">
+      <span class="delivery-label">Password</span>
+      <span id="deliveryPassword" class="delivery-value"></span>
+    </div>
+    <div class="delivery-row">
+      <span class="delivery-label">លេខកូដ ៨ ខ្ទង់</span>
+      <span id="deliveryCode" class="delivery-value"></span>
+    </div>
+  </div>
+
+  <p id="deliveryMessage" class="delivery-warning" role="status" aria-live="polite"></p>
+  <p class="note">សូមរក្សាព័ត៌មានចូលគណនីនេះជាការសម្ងាត់។ កុំចែករំលែកវាជាសាធារណៈ។</p>
+
+  <button id="newOrderButton" class="button secondary" type="button">
+    ត្រឡប់ទៅកញ្ចប់
+  </button>
 </section>
 
-<p class="note">ស្ថានភាព PAID ត្រូវការការផ្ទៀងផ្ទាត់ពីម៉ាស៊ីនមេ។ កុំបង់ប្រាក់បើចំនួនប្រាក់ ឬព័ត៌មានអ្នកទទួលមិនត្រឹមត្រូវ។</p>
+<p class="note">
+  ស្ថានភាព PAID ត្រូវការការផ្ទៀងផ្ទាត់ពីម៉ាស៊ីនមេ។
+  កុំបង់ប្រាក់បើចំនួនប្រាក់ ឬព័ត៌មានអ្នកទទួលមិនត្រឹមត្រូវ។
+</p>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
 "use strict";
 
@@ -133,8 +413,9 @@ const CREATE_PAYMENT_URL = SUPABASE_URL + "/functions/v1/bakong-payment";
 const CHECK_PAYMENT_URL = SUPABASE_URL + "/functions/v1/check-payment";
 const DELIVERY_INFO_URL = SUPABASE_URL + "/functions/v1/get-delivery-info";
 
+/* ពិនិត្យរៀងរាល់ 5 វិនាទី សរុប 90 វិនាទី */
 const POLL_INTERVAL_MS = 5000;
-const POLL_MAX_DURATION_MS = 10 * 60 * 1000;
+const POLL_MAX_DURATION_MS = 90 * 1000;
 
 const grid = document.getElementById("products");
 const productStatus = document.getElementById("productStatus");
@@ -198,7 +479,7 @@ async function postFunction(url, payload) {
   return data;
 }
 
-/* ទាញយក Package ពី Supabase */
+/* ទាញយកកញ្ចប់ពី Supabase */
 async function loadProducts() {
   if (isLoading) return;
 
@@ -230,6 +511,7 @@ async function loadProducts() {
     }
 
     let data;
+
     try {
       data = JSON.parse(text);
     } catch {
@@ -317,7 +599,7 @@ function getImageUrl(value) {
     path.split("/").map(encodeURIComponent).join("/");
 }
 
-/* បង្ហាញកញ្ចប់ និងរូបភាព */
+/* បង្ហាញកញ្ចប់ */
 function renderProducts() {
   grid.replaceChildren();
 
@@ -371,7 +653,9 @@ function renderProducts() {
     grid.appendChild(card);
 
     const candidates = [];
+
     if (product.imageUrl) candidates.push(product.imageUrl);
+
     if (product.imagePath && product.imagePath !== product.imageUrl) {
       candidates.push(product.imagePath);
     }
@@ -391,6 +675,7 @@ function renderProducts() {
         } else {
           img.remove();
           placeholder.textContent = "មិនអាចបង្ហាញរូបភាពបាន";
+
           if (!placeholder.isConnected) {
             card.insertBefore(placeholder, name);
           }
@@ -407,7 +692,7 @@ function renderProducts() {
   });
 }
 
-/* បង្ហាញព័ត៌មានកញ្ចប់ដែលទទួលបានពី Function */
+/* បង្ហាញព័ត៌មានកញ្ចប់ដែលបានទាញយកពី Function */
 function showDeliveryInformation(data) {
   const delivery = data && data.delivery_info;
   const gmail = delivery && delivery.gmail;
@@ -435,7 +720,7 @@ function showDeliveryInformation(data) {
     "សូមរក្សាទុកព័ត៌មាននេះដោយសុវត្ថិភាព និងកុំចែករំលែកជាសាធារណៈ។";
 }
 
-/* បង្ហាញលទ្ធផលក្រោយ check-payment ផ្ទៀងផ្ទាត់ PAID */
+/* បង្ហាញលទ្ធផលក្រោយការផ្ទៀងផ្ទាត់ជោគជ័យ */
 function showSuccessInformation(data) {
   if (!currentOrderInfo || !currentOrderCode) {
     throw new Error("មិនមានព័ត៌មានការបញ្ជាទិញបច្ចុប្បន្នទេ។");
@@ -475,7 +760,7 @@ function showSuccessInformation(data) {
   loadProducts();
 }
 
-/* ពិនិត្យស្ថានភាពដោយស្វ័យប្រវត្តិ */
+/* កំណត់ពេលពិនិត្យស្វ័យប្រវត្តិ */
 function schedulePaymentCheck() {
   stopPaymentPolling();
 
@@ -493,7 +778,7 @@ function schedulePaymentCheck() {
   }, POLL_INTERVAL_MS);
 }
 
-/* ពិនិត្យការទូទាត់ ហើយបន្ទាប់មកទាញព័ត៌មានកញ្ចប់ */
+/* ពិនិត្យការទូទាត់ និងទាញព័ត៌មានកញ្ចប់ */
 async function checkPayment(isAutomatic) {
   if (!currentOrderCode || paymentIsPaid || isCheckingPayment) return;
 
@@ -516,10 +801,6 @@ async function checkPayment(isAutomatic) {
       String(data.status || "").toLowerCase() === "paid" &&
       String(data.order_code || "") === String(currentOrderCode)
     ) {
-      /*
-       * ហៅ get-delivery-info តែបន្ទាប់ពី check-payment
-       * បានបញ្ជាក់ថាការបញ្ជាទិញនេះ PAID ប៉ុណ្ណោះ។
-       */
       let deliveryData = null;
 
       try {
@@ -586,6 +867,7 @@ payButton.addEventListener("click", async () => {
 
   const payerName =
     document.getElementById("bankAccountName").value.trim();
+
   const gameUid =
     document.getElementById("gameUid").value.trim();
 
