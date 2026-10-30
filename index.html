@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="km">
 <head>
@@ -5,187 +6,453 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SNV Game Top-up</title>
   <meta name="theme-color" content="#080d24">
+
   <style>
-    :root{color-scheme:dark;--bg:#080d24;--panel:#111a39;--line:#293762;--cyan:#39dcff;--purple:#9d69ff;--text:#f5f7ff;--muted:#b8c2e4}
-    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17265a 0,#080d24 52%,#050816 100%);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Khmer",sans-serif}
-    .wrap{width:min(960px,100% - 24px);margin:auto;padding:20px 0 42px}
-    header{text-align:center;padding:18px 0 26px}
-    .logo{width:min(260px,75vw);max-height:240px;object-fit:contain;filter:drop-shadow(0 0 18px #177bff66)}
-    h1{margin:12px 0 6px;font-size:clamp(24px,5vw,36px);letter-spacing:.5px}
-    .sub{color:var(--muted);margin:0}
-    .notice{background:#152047;border:1px solid var(--line);padding:12px 14px;border-radius:14px;color:var(--muted);font-size:14px;margin:12px 0 20px}
-    h2{font-size:21px;margin:20px 0 12px}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .product{background:linear-gradient(160deg,#17234a,#0e1530);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;min-width:0}
-    .product img{width:100%;aspect-ratio:4/3;object-fit:contain;border-radius:10px;background:#090f24}
-    .product h3{margin:10px 0 4px;font-size:17px;overflow-wrap:anywhere}
-    .details{color:var(--muted);font-size:13px;min-height:1.4em}
-    .price{font-size:21px;font-weight:800;color:#7ceaff;margin:8px 0 12px}
-    button{border:0;border-radius:11px;padding:12px 14px;font-weight:750;color:#061024;background:linear-gradient(100deg,var(--cyan),#9b8cff);cursor:pointer}
-    button:disabled{opacity:.55;cursor:wait}
-    .secondary{background:#202d55;color:var(--text);border:1px solid #40518b}
-    .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:22px}
-    .panel.show{display:block}.panel p{overflow-wrap:anywhere}
-    #qr{background:white;border-radius:12px;padding:12px;width:max-content;max-width:100%;margin:14px auto;min-height:20px}
-    #qr img,#qr canvas{max-width:100%;height:auto}
-    .center{text-align:center}.muted{color:var(--muted);font-size:14px}
-    .field{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#080d24;color:white;margin:8px 0 12px}
-    .status{padding:10px;border-radius:10px;background:#0a122c;margin:12px 0;overflow-wrap:anywhere}
-    footer{text-align:center;color:var(--muted);font-size:12px;padding-top:28px}
-    @media(min-width:680px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    :root {
+      color-scheme: dark;
+      --bg:#080d24;
+      --panel:#111a39;
+      --line:#293762;
+      --cyan:#39dcff;
+      --purple:#9d69ff;
+      --text:#f5f7ff;
+      --muted:#b8c2e4;
+    }
+
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      background:radial-gradient(ellipse at top,#17265a 0,#080d24 52%,#050816 100%);
+      color:var(--text);
+      font-family:system-ui,-apple-system,"Noto Sans Khmer",sans-serif;
+    }
+
+    .wrap {
+      width:min(960px,100% - 24px);
+      margin:auto;
+      padding:20px 0 42px;
+    }
+
+    header {
+      text-align:center;
+      padding:18px 0 26px;
+    }
+
+    .logo {
+      width:min(260px,75vw);
+      max-height:240px;
+      object-fit:contain;
+      filter:drop-shadow(0 0 18px #177bff66);
+    }
+
+    h1 {
+      margin:12px 0 6px;
+      font-size:clamp(24px,5vw,36px);
+    }
+
+    .sub { color:var(--muted); margin:0; }
+
+    .notice {
+      background:#152047;
+      border:1px solid var(--line);
+      padding:12px 14px;
+      border-radius:14px;
+      color:var(--muted);
+      font-size:14px;
+      margin:12px 0 20px;
+    }
+
+    h2 { font-size:21px; margin:20px 0 12px; }
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .product {
+      background:linear-gradient(160deg,#17234a,#0e1530);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .product img {
+      width:100%;
+      aspect-ratio:4/3;
+      object-fit:contain;
+      border-radius:10px;
+      background:#090f24;
+    }
+
+    .product h3 {
+      margin:10px 0 4px;
+      font-size:17px;
+      overflow-wrap:anywhere;
+    }
+
+    .details {
+      color:var(--muted);
+      font-size:13px;
+      min-height:1.4em;
+    }
+
+    .price {
+      font-size:21px;
+      font-weight:800;
+      color:#7ceaff;
+      margin:8px 0 12px;
+    }
+
+    button {
+      border:0;
+      border-radius:11px;
+      padding:12px 14px;
+      font-weight:750;
+      color:#061024;
+      background:linear-gradient(100deg,var(--cyan),#9b8cff);
+      cursor:pointer;
+    }
+
+    button:disabled { opacity:.55; cursor:wait; }
+
+    .secondary {
+      background:#202d55;
+      color:var(--text);
+      border:1px solid #40518b;
+    }
+
+    .panel {
+      display:none;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      margin-top:22px;
+    }
+
+    .panel.show { display:block; }
+
+    .panel p { overflow-wrap:anywhere; }
+
+    #qr {
+      background:white;
+      border-radius:12px;
+      padding:12px;
+      width:max-content;
+      max-width:100%;
+      margin:14px auto;
+      min-height:20px;
+    }
+
+    #qr img, #qr canvas {
+      max-width:100%;
+      height:auto;
+    }
+
+    .center { text-align:center; }
+
+    .muted {
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .status {
+      padding:10px;
+      border-radius:10px;
+      background:#0a122c;
+      margin:12px 0;
+      overflow-wrap:anywhere;
+    }
+
+    footer {
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      padding-top:28px;
+    }
+
+    @media(min-width:680px) {
+      .grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    }
   </style>
 </head>
+
 <body>
 <div class="wrap">
+
   <header>
-    <img class="logo" src="./logo.png" alt="SNV Game Top-up logo" onerror="this.style.display='none'">
+    <img class="logo" src="./logo.png" alt="SNV Game Top-up logo"
+         onerror="this.style.display='none'">
     <h1>SNV GAME TOP-UP</h1>
     <p class="sub">ជ្រើសរើសកញ្ចប់ ហើយទូទាត់តាម KHQR</p>
   </header>
 
-  <div class="notice">សូមពិនិត្យឈ្មោះកញ្ចប់ និងតម្លៃមុនបង្កើត QR។ ការបង្ហាញ QR មិនមានន័យថាការទូទាត់បានជោគជ័យទេ។</div>
+  <div class="notice">
+    សូមពិនិត្យឈ្មោះកញ្ចប់ និងតម្លៃមុនបង្កើត QR។
+    QR ដែលបង្ហាញមិនមែនជាភស្តុតាងថាបានទូទាត់ជោគជ័យទេ។
+  </div>
 
   <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
     <h2>កញ្ចប់ដែលមាន</h2>
-    <button id="reload" class="secondary" type="button">ផ្ទុកឡើងវិញ</button>
+    <button id="reload" class="secondary" type="button">
+      ផ្ទុកឡើងវិញ
+    </button>
   </div>
-  <div id="products" class="grid"><p class="muted">កំពុងផ្ទុកកញ្ចប់...</p></div>
-  <div id="mainStatus" class="status" role="status">កំពុងតភ្ជាប់ទៅ Supabase...</div>
+
+  <div id="products" class="grid">
+    <p class="muted">កំពុងផ្ទុកកញ្ចប់...</p>
+  </div>
+
+  <div id="mainStatus" class="status" role="status">
+    កំពុងតភ្ជាប់ទៅ Supabase...
+  </div>
 
   <section id="paymentPanel" class="panel">
     <h2>ទូទាត់តាម KHQR</h2>
+
     <p id="orderInfo"></p>
+
     <div id="qr" class="center"></div>
-    <p class="muted center">បើកកម្មវិធីធនាគាររបស់អ្នក រួចស្កេន QR។ សូមបង់តាមចំនួនដែលបង្ហាញ។</p>
-    <label for="payerName">ឈ្មោះអ្នកបង់ (ជាជម្រើស)</label>
-    <input id="payerName" class="field" maxlength="80" placeholder="ឈ្មោះអ្នកបង់ប្រាក់">
-    <button id="verifyBtn" type="button" style="width:100%">ខ្ញុំបានបង់ប្រាក់ — ពិនិត្យស្ថានភាព</button>
-    <div id="paymentStatus" class="status" role="status">ស្ថានភាព៖ រង់ចាំការទូទាត់</div>
-    <p class="muted">បើការទូទាត់មិនទាន់បង្ហាញ សូមរង់ចាំបន្តិចហើយពិនិត្យម្ដងទៀត។ កុំបង់ប្រាក់ម្ដងទៀត ប្រសិនបើមិនប្រាកដថាប្រតិបត្តិការមុនបរាជ័យ។</p>
+
+    <div id="paymentStatus" class="status" role="status">
+      កំពុងរង់ចាំ...
+    </div>
+
+    <p class="muted center">
+      QR នេះសម្រាប់សាកល្បងការបង្ហាញប៉ុណ្ណោះ។
+      សូមកុំស្កេនបង់ប្រាក់ពិត រហូតដល់ការផ្ទៀងផ្ទាត់
+      និងការអនុញ្ញាតប្រើប្រាស់គណនីត្រូវបានពិនិត្យរួច។
+    </p>
   </section>
-  <footer>SNV Game Top-up · ទូទាត់ត្រូវបានផ្ទៀងផ្ទាត់តាមម៉ាស៊ីនមេ</footer>
+
+  <footer>
+    SNV Game Top-up
+  </footer>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-/*
-  កែតែ ២ តម្លៃខាងក្រោម។
-  ប្រើ Project URL និង publishable/anon key ប៉ុណ្ណោះ។
-  កុំដាក់ service_role key ឬ BAKONG_TOKEN នៅទីនេះ។
-*/
-const SUPABASE_URL = "https://ckqfewtvpirmxcanmyiu.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
 
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<script>
+const SUPABASE_URL =
+  "https://ckqfewtvpirmxcanmyiu.supabase.co";
+
+/*
+  ដាក់ Publishable / anon key ដដែលរបស់អ្នកនៅទីនេះ។
+  កុំដាក់ service_role key ឬ BAKONG_TOKEN។
+*/
+const SUPABASE_ANON_KEY = "YOUR_EXISTING_PUBLISHABLE_KEY";
+
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
 const productsEl = document.getElementById("products");
 const mainStatus = document.getElementById("mainStatus");
 const paymentPanel = document.getElementById("paymentPanel");
 const paymentStatus = document.getElementById("paymentStatus");
-let currentPurchaseId = null;
+const qrEl = document.getElementById("qr");
+
 let busy = false;
 
 function money(value, currency) {
   const n = Number(value);
-  return (currency === "KHR" ? n.toLocaleString("en-US",{maximumFractionDigits:0}) : n.toFixed(2)) + " " + currency;
+
+  if (!Number.isFinite(n)) return "—";
+
+  const amount = currency === "KHR"
+    ? n.toLocaleString("en-US", {maximumFractionDigits:0})
+    : n.toFixed(2);
+
+  return amount + " " + currency;
 }
+
 function safeText(value) {
-  return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
 }
-function setMain(message) { mainStatus.textContent = message; }
+
+function setMain(message) {
+  mainStatus.textContent = message;
+}
 
 async function loadProducts() {
-  productsEl.innerHTML = '<p class="muted">កំពុងផ្ទុកកញ្ចប់...</p>';
+  productsEl.innerHTML =
+    '<p class="muted">កំពុងផ្ទុកកញ្ចប់...</p>';
+
   setMain("កំពុងទាញយកកញ្ចប់ពី Supabase...");
-  const {data, error} = await client.from("snv_catalog")
+
+  const {data, error} = await client
+    .from("snv_catalog")
     .select("id,title,details,price,currency,image_url")
-    .eq("available", true).order("created_at", {ascending:true});
+    .eq("available", true)
+    .order("created_at", {ascending:true});
+
   if (error) {
     productsEl.innerHTML = "";
-    setMain("មិនអាចផ្ទុកកញ្ចប់បានទេ។ សូមពិនិត្យ Project URL, key និង RLS policy។");
+    setMain("មិនអាចផ្ទុកកញ្ចប់បានទេ។ សូមពិនិត្យ URL, key និង RLS policy។");
     console.error(error);
     return;
   }
+
   if (!data || data.length === 0) {
-    productsEl.innerHTML = '<p class="muted">មិនទាន់មានកញ្ចប់ទេ។ សូមបន្ថែមក្នុងតារាង snv_catalog។</p>';
-    setMain("តភ្ជាប់ Supabase បាន ប៉ុន្តែមិនទាន់មានផលិតផល available។");
+    productsEl.innerHTML =
+      '<p class="muted">មិនទាន់មានកញ្ចប់ទេ។</p>';
+
+    setMain("តភ្ជាប់ Supabase បាន ប៉ុន្តែមិនមាន Package available។");
     return;
   }
+
   productsEl.innerHTML = "";
+
   for (const p of data) {
     const card = document.createElement("article");
     card.className = "product";
-    const image = p.image_url ? `<img src="${safeText(p.image_url)}" alt="${safeText(p.title)}" loading="lazy" onerror="this.style.display='none'">` : "";
-    card.innerHTML = `${image}<h3>${safeText(p.title)}</h3><div class="details">${safeText(p.details || "")}</div><div class="price">${money(p.price,p.currency)}</div><button type="button">ទិញកញ្ចប់នេះ</button>`;
-    card.querySelector("button").addEventListener("click", () => createPayment(p.id, card.querySelector("button")));
+
+    const image = p.image_url
+      ? `<img src="${safeText(p.image_url)}"
+              alt="${safeText(p.title)}"
+              loading="lazy"
+              onerror="this.style.display='none'">`
+      : "";
+
+    card.innerHTML = `
+      ${image}
+      <h3>${safeText(p.title)}</h3>
+      <div class="details">${safeText(p.details || "")}</div>
+      <div class="price">${money(p.price,p.currency)}</div>
+      <button type="button">បញ្ជាទិញ</button>
+    `;
+
+    const button = card.querySelector("button");
+
+    button.addEventListener("click", () => {
+      createPayment(p.id, p, button);
+    });
+
     productsEl.appendChild(card);
   }
+
   setMain("បានផ្ទុកកញ្ចប់ " + data.length + " មុខ។");
 }
 
-async function createPayment(productId, button) {
+async function createPayment(productId, product, button) {
   if (busy) return;
-  busy = true; button.disabled = true; button.textContent = "កំពុងបង្កើត QR...";
+
+  busy = true;
+  button.disabled = true;
+  button.textContent = "កំពុងបង្កើត QR...";
+
   paymentPanel.classList.add("show");
-  paymentStatus.textContent = "កំពុងបង្កើតការបញ្ជាទិញ និង KHQR...";
-  document.getElementById("qr").innerHTML = "";
+  paymentStatus.textContent = "កំពុងបង្កើត KHQR...";
+  qrEl.innerHTML = "";
+
+  document.getElementById("orderInfo").textContent = "";
+
+  paymentPanel.scrollIntoView({
+    behavior:"smooth",
+    block:"start"
+  });
+
   try {
-    const {data, error} = await client.functions.invoke("snv-create-khqr", {
-      body: {product_id: productId}
-    });
-    if (error) throw new Error(error.message || "Function request failed");
-    if (!data || !data.success || !data.qr || !data.purchase_id) {
-      throw new Error(data?.error || "មិនអាចបង្កើត KHQR បានទេ");
+    const {data, error} = await client.functions.invoke(
+      "snv-create-khqr",
+      {
+        body: {product_id: productId}
+      }
+    );
+
+    if (error) {
+      console.error("Function error:", error);
+      throw new Error(error.message || "Function request failed");
     }
-    currentPurchaseId = data.purchase_id;
+
+    /*
+      ទម្រង់ទិន្នន័យពិតពី Function របស់យើង៖
+      data.purchase.id
+      data.purchase.receipt_code
+      data.purchase.product_name
+      data.purchase.amount
+      data.purchase.currency
+      data.payment.qr
+      data.payment.md5
+    */
+
+    if (
+      !data ||
+      !data.purchase ||
+      !data.payment ||
+      !data.payment.qr ||
+      !data.purchase.id
+    ) {
+      console.error("Unexpected response:", data);
+      throw new Error(
+        data?.error || "ទិន្នន័យ QR មិនត្រឹមត្រូវទេ"
+      );
+    }
+
+    const purchase = data.purchase;
+    const qrText = data.payment.qr;
+
     document.getElementById("orderInfo").textContent =
-      data.product.title + " · " + money(data.product.amount, data.product.currency) +
-      " · លេខបញ្ជាទិញ " + data.receipt_code;
-    new QRCode(document.getElementById("qr"), {
-      text: data.qr, width: 230, height: 230,
-      colorDark: "#000000", colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.M
+      purchase.product_name +
+      " · " +
+      money(purchase.amount, purchase.currency) +
+      " · លេខបញ្ជាទិញ " +
+      purchase.receipt_code;
+
+    new QRCode(qrEl, {
+      text: qrText,
+      width:230,
+      height:230,
+      colorDark:"#000000",
+      colorLight:"#ffffff",
+      correctLevel:QRCode.CorrectLevel.M
     });
-    paymentStatus.textContent = "បានបង្កើត QR រួច។ សូមស្កេនបង់ប្រាក់ ហើយចុចពិនិត្យស្ថានភាព។";
-    paymentPanel.scrollIntoView({behavior:"smooth", block:"start"});
+
+    paymentStatus.textContent =
+      "បង្កើត QR បានជោគជ័យ។ ស្ថានភាព៖ " +
+      (purchase.payment_status || "awaiting_payment");
+
+    paymentPanel.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
   } catch (e) {
     console.error(e);
-    paymentStatus.textContent = "កំហុស៖ " + (e.message || "មិនអាចបង្កើត QR បានទេ");
+
+    paymentStatus.textContent =
+      "កំហុស៖ " + (e.message || "មិនអាចបង្កើត QR បានទេ");
+
   } finally {
-    busy = false; button.disabled = false; button.textContent = "ទិញកញ្ចប់នេះ";
+    busy = false;
+    button.disabled = false;
+    button.textContent = "បញ្ជាទិញ";
   }
 }
 
-document.getElementById("verifyBtn").addEventListener("click", async () => {
-  if (!currentPurchaseId || busy) {
-    paymentStatus.textContent = "សូមបង្កើតការបញ្ជាទិញ និង KHQR ជាមុនសិន។";
-    return;
-  }
-  busy = true;
-  const btn = document.getElementById("verifyBtn");
-  btn.disabled = true; btn.textContent = "កំពុងពិនិត្យ...";
-  paymentStatus.textContent = "កំពុងសួរ Bakong ដើម្បីផ្ទៀងផ្ទាត់ការទូទាត់...";
-  try {
-    const {data, error} = await client.functions.invoke("snv-verify-payment", {
-      body: {purchase_id: currentPurchaseId}
-    });
-    if (error) throw new Error(error.message || "Verify request failed");
-    if (data?.paid === true) {
-      paymentStatus.textContent = "ទូទាត់ជោគជ័យ! លេខបញ្ជាទិញ៖ " + (data.receipt_code || "");
-    } else {
-      paymentStatus.textContent = data?.message || "មិនទាន់រកឃើញការទូទាត់ទេ។ សូមរង់ចាំហើយសាកម្ដងទៀត។";
-    }
-  } catch (e) {
-    console.error(e);
-    paymentStatus.textContent = "មិនអាចផ្ទៀងផ្ទាត់បាន៖ " + (e.message || "កំហុសមិនស្គាល់");
-  } finally {
-    busy = false; btn.disabled = false; btn.textContent = "ខ្ញុំបានបង់ប្រាក់ — ពិនិត្យស្ថានភាព";
-  }
-});
+document.getElementById("reload").addEventListener(
+  "click",
+  loadProducts
+);
 
-document.getElementById("reload").addEventListener("click", loadProducts);
-if (SUPABASE_URL.includes("YOUR_PROJECT_REF") || SUPABASE_ANON_KEY.includes("YOUR_SUPABASE")) {
-  setMain("សូមកែ SUPABASE_URL និង SUPABASE_ANON_KEY នៅក្នុង index.html ជាមុនសិន។");
+if (
+  SUPABASE_ANON_KEY === "YOUR_EXISTING_PUBLISHABLE_KEY"
+) {
+  setMain("សូមដាក់ Publishable key របស់អ្នកជាមុនសិន។");
 } else {
   loadProducts();
 }
