@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="km">
 <head>
@@ -174,6 +173,11 @@
       font-weight: bold;
     }
 
+    .paid-status {
+      color: #62e6a5;
+      font-weight: bold;
+    }
+
     .qr-area {
       background: white;
       border-radius: 12px;
@@ -270,16 +274,16 @@
 
     <div class="order-line">
       ស្ថានភាព៖
-      <span id="order-status" class="order-value"></span>
+      <span id="order-status" class="order-value">awaiting_payment</span>
     </div>
 
-    <div class="qr-area">
+    <div class="qr-area" id="qr-area">
       <div id="qrcode"></div>
       <div class="qr-label">SCAN TO PAY - KHQR</div>
     </div>
 
     <div class="countdown">
-      ផុតកំណត់ក្នុង៖ <span id="countdown">15:00</span>
+      ពេលរាប់ថយក្រោយ៖ <span id="countdown">01:30</span>
     </div>
 
     <p class="payment-note" id="payment-instruction">
@@ -293,7 +297,7 @@
   <div class="notice">
     <strong>ចំណាំ៖</strong>
     ការបង្កើត KHQR មិនមានន័យថាការទូទាត់បានជោគជ័យទេ។
-    ស្ថានភាពនឹងនៅរង់ចាំរហូតដល់មានការផ្ទៀងផ្ទាត់ការទូទាត់។
+    ស្ថានភាពនឹងប្ដូរទៅ paid បន្ទាប់ពី Bakong ផ្ទៀងផ្ទាត់ជោគជ័យ។
   </div>
 
   <footer>SNV Game Top-up</footer>
@@ -309,14 +313,26 @@
     "https://ckqfewtvpirmxcanmyiu.supabase.co";
 
   const SUPABASE_KEY =
-    "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
+    "YOUR_SUPABASE_PUBLISHABLE_KEY";
 
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
   );
 
+  // =====================================
+  // PAYMENT SETTINGS
+  // =====================================
+
+  const COUNTDOWN_SECONDS = 90;
+  const VERIFY_INTERVAL_MS = 5000;
+
   let countdownInterval = null;
+  let verificationInterval = null;
+  let activePurchaseId = null;
+  let actualQrExpiry = null;
+  let isCheckingPayment = false;
+  let paymentFinished = false;
 
   // =====================================
   // MESSAGE
@@ -334,6 +350,24 @@
     box.textContent = "";
     box.className = "message";
     box.style.display = "none";
+  }
+
+  // =====================================
+  // STOP PAYMENT TIMERS
+  // =====================================
+
+  function stopPaymentTimers() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+
+    if (verificationInterval) {
+      clearInterval(verificationInterval);
+      verificationInterval = null;
+    }
+
+    isCheckingPayment = false;
   }
 
   // =====================================
@@ -486,12 +520,9 @@
       typeof khqrText !== "string" ||
       !khqrText.trim()
     ) {
-      throw new Error(
-        "KHQR ទទេ ឬទិន្នន័យ QR មិនត្រឹមត្រូវទេ។"
-      );
+      throw new Error("KHQR មិនត្រឹមត្រូវទេ។");
     }
 
-    // Use the actual KHQR string returned by Bakong.
     new QRCode(qrElement, {
       text: khqrText,
       width: 250,
@@ -503,10 +534,10 @@
   }
 
   // =====================================
-  // COUNTDOWN
+  // COUNTDOWN: 1 MINUTE 30 SECONDS
   // =====================================
 
-  function startCountdown(expiresAt) {
+  function startCountdown() {
     if (countdownInterval) {
       clearInterval(countdownInterval);
     }
@@ -514,17 +545,13 @@
     const countdownElement =
       document.getElementById("countdown");
 
-    const expiry = new Date(expiresAt).getTime();
-
-    if (!Number.isFinite(expiry)) {
-      countdownElement.textContent = "--:--";
-      return;
-    }
+    const endTime = Date.now() +
+      COUNTDOWN_SECONDS * 1000;
 
     function updateCountdown() {
       const remaining = Math.max(
         0,
-        Math.floor((expiry - Date.now()) / 1000)
+        Math.ceil((endTime - Date.now()) / 1000)
       );
 
       const minutes = Math.floor(remaining / 60);
@@ -539,12 +566,14 @@
         clearInterval(countdownInterval);
         countdownInterval = null;
 
-        countdownElement.textContent = "ផុតកំណត់";
+        countdownElement.textContent = "00:00";
 
-        document.getElementById(
-          "payment-instruction"
-        ).textContent =
-          "KHQR នេះបានផុតកំណត់ហើយ។ សូមបង្កើតការបញ្ជាទិញថ្មី។";
+        if (!paymentFinished) {
+          document.getElementById(
+            "payment-instruction"
+          ).textContent =
+            "ពេលរាប់ថយក្រោយ 1 នាទី 30 វិនាទីបានបញ្ចប់។ ប្រព័ន្ធនៅបន្តពិនិត្យស្ថានភាពការទូទាត់។";
+        }
       }
     }
 
@@ -553,6 +582,155 @@
     countdownInterval = setInterval(
       updateCountdown,
       1000
+    );
+  }
+
+  // =====================================
+  // PAYMENT SUCCESS DISPLAY
+  // =====================================
+
+  function showPaymentSuccess(data) {
+    paymentFinished = true;
+
+    stopPaymentTimers();
+
+    document.getElementById("order-status").textContent =
+      "PAID ✓";
+
+    document.getElementById("order-status").className =
+      "paid-status";
+
+    document.getElementById("payment-instruction").textContent =
+      "ការទូទាត់បានជោគជ័យ! ប្រព័ន្ធបានផ្ទៀងផ្ទាត់ប្រាក់រួចរាល់។";
+
+    document.getElementById("countdown").textContent =
+      "PAID ✓";
+
+    document.getElementById("qr-area").style.display =
+      "none";
+
+    showMessage(
+      "PAYMENT SUCCESSFUL! លេខបញ្ជាទិញ " +
+      (data.receipt_code || "") +
+      " បានទូទាត់ជោគជ័យ។",
+      "success"
+    );
+  }
+
+  // =====================================
+  // VERIFY PAYMENT WITH SUPABASE
+  // =====================================
+
+  async function verifyPayment() {
+    if (
+      !activePurchaseId ||
+      paymentFinished ||
+      isCheckingPayment
+    ) {
+      return;
+    }
+
+    // Stop checking after the actual KHQR expiry
+    // returned by the create function.
+    if (
+      actualQrExpiry &&
+      Date.now() >= actualQrExpiry
+    ) {
+      stopPaymentTimers();
+
+      document.getElementById("order-status").textContent =
+        "expired";
+
+      document.getElementById(
+        "payment-instruction"
+      ).textContent =
+        "KHQR បានផុតកំណត់ហើយ។ ប្រសិនបើអ្នកបានបង់ប្រាក់ សូមទាក់ទងអ្នកគ្រប់គ្រងដើម្បីផ្ទៀងផ្ទាត់។";
+
+      showMessage(
+        "KHQR បានផុតកំណត់។ សូមកុំបង់តាម QR នេះទៀត។",
+        "error"
+      );
+
+      return;
+    }
+
+    isCheckingPayment = true;
+
+    try {
+      const { data, error } =
+        await supabaseClient.functions.invoke(
+          "snv-verify-payment",
+          {
+            body: {
+              purchase_id: activePurchaseId
+            }
+          }
+        );
+
+      if (error) {
+        console.warn(
+          "Payment verification request error:",
+          error.message
+        );
+        return;
+      }
+
+      console.log("Payment verification result:", data);
+
+      if (
+        data &&
+        (
+          data.paid === true ||
+          data.payment_status === "paid"
+        )
+      ) {
+        showPaymentSuccess(data);
+        return;
+      }
+
+      if (
+        data &&
+        data.payment_status === "awaiting_payment"
+      ) {
+        document.getElementById(
+          "order-status"
+        ).textContent = "awaiting_payment";
+      }
+
+    } catch (error) {
+      console.error("Verify payment error:", error);
+
+    } finally {
+      isCheckingPayment = false;
+    }
+  }
+
+  // =====================================
+  // START AUTOMATIC VERIFICATION
+  // =====================================
+
+  function startPaymentVerification(
+    purchaseId,
+    expiresAt
+  ) {
+    stopPaymentTimers();
+
+    activePurchaseId = purchaseId;
+    paymentFinished = false;
+
+    const expiry = new Date(expiresAt).getTime();
+
+    actualQrExpiry = Number.isFinite(expiry)
+      ? expiry
+      : Date.now() + 15 * 60 * 1000;
+
+    // Check immediately.
+    verifyPayment();
+
+    // Check again every 5 seconds.
+    verificationInterval = setInterval(
+      verifyPayment,
+      VERIFY_INTERVAL_MS
     );
   }
 
@@ -567,10 +745,10 @@
     button.textContent = "កំពុងបង្កើត KHQR...";
 
     try {
-      if (countdownInterval) {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
-      }
+      stopPaymentTimers();
+
+      activePurchaseId = null;
+      paymentFinished = false;
 
       document.getElementById("order-box").style.display =
         "none";
@@ -586,15 +764,15 @@
         );
 
       if (error) {
-        console.error("Function error:", error);
+        console.error("Create function error:", error);
 
         throw new Error(
-          "មិនអាចហៅ bakong-payment បានទេ។ " +
+          "មិនអាចបង្កើត KHQR បានទេ។ " +
           (error.message || "")
         );
       }
 
-      console.log("Bakong response:", data);
+      console.log("KHQR response:", data);
 
       if (
         !data ||
@@ -606,14 +784,19 @@
         throw new Error(
           data && data.error
             ? data.error
-            : "ទិន្នន័យ KHQR ត្រឡប់មកមិនត្រឹមត្រូវទេ។"
+            : "ទិន្នន័យ KHQR មិនត្រឹមត្រូវទេ។"
         );
       }
 
       const purchase = data.purchase;
       const payment = data.payment;
 
-      // Display purchase information.
+      if (!purchase.id) {
+        throw new Error(
+          "មិនមាន Purchase ID ពី Server ទេ។"
+        );
+      }
+
       document.getElementById("receipt-code").textContent =
         purchase.receipt_code || "-";
 
@@ -635,21 +818,36 @@
       document.getElementById("order-status").textContent =
         purchase.payment_status || "awaiting_payment";
 
-      // IMPORTANT:
-      // Render the REAL KHQR returned by Bakong.
+      document.getElementById("order-status").className =
+        "order-value";
+
       displayKHQR(payment.qr);
 
-      // Start countdown from server expiry time.
       const expiresAt = payment.expires_at ||
         new Date(
           Date.now() +
-          Number(payment.expires_in_minutes || 15) * 60000
+          Number(payment.expires_in_minutes || 15) *
+          60000
         ).toISOString();
 
-      startCountdown(expiresAt);
+      document.getElementById("countdown").textContent =
+        "01:30";
+
+      document.getElementById("payment-instruction").textContent =
+        "សូមស្កេន QR និងបញ្ជាក់ការទូទាត់។ ប្រព័ន្ធនឹងពិនិត្យស្ថានភាពដោយស្វ័យប្រវត្តិ។";
+
+      document.getElementById("qr-area").style.display =
+        "block";
 
       document.getElementById("order-box").style.display =
         "block";
+
+      startCountdown();
+
+      startPaymentVerification(
+        purchase.id,
+        expiresAt
+      );
 
       showMessage(
         "បានបង្កើត KHQR ដោយជោគជ័យ។ សូមស្កេនដើម្បីទូទាត់។",
