@@ -173,11 +173,6 @@
       font-weight: bold;
     }
 
-    .paid-status {
-      color: #62e6a5;
-      font-weight: bold;
-    }
-
     .qr-area {
       background: white;
       border-radius: 12px;
@@ -283,7 +278,7 @@
     </div>
 
     <div class="countdown">
-      ពេលរាប់ថយក្រោយ៖ <span id="countdown">01:30</span>
+      ម៉ោងបង្ហាញ៖ <span id="countdown">01:00</span>
     </div>
 
     <p class="payment-note" id="payment-instruction">
@@ -297,7 +292,8 @@
   <div class="notice">
     <strong>ចំណាំ៖</strong>
     ការបង្កើត KHQR មិនមានន័យថាការទូទាត់បានជោគជ័យទេ។
-    ស្ថានភាពនឹងប្ដូរទៅ paid បន្ទាប់ពី Bakong ផ្ទៀងផ្ទាត់ជោគជ័យ។
+    ស្ថានភាពនឹងត្រូវផ្ទៀងផ្ទាត់ជាមួយ Bakong
+    មុនបង្ហាញថាបានទូទាត់រួច។
   </div>
 
   <footer>SNV Game Top-up</footer>
@@ -324,13 +320,13 @@
   // PAYMENT SETTINGS
   // =====================================
 
-  const COUNTDOWN_SECONDS = 90;
+  const COUNTDOWN_SECONDS = 60;
   const VERIFY_INTERVAL_MS = 5000;
 
   let countdownInterval = null;
-  let verificationInterval = null;
-  let activePurchaseId = null;
-  let actualQrExpiry = null;
+  let verifyInterval = null;
+  let currentPurchaseId = null;
+  let serverExpiresAt = null;
   let isCheckingPayment = false;
   let paymentFinished = false;
 
@@ -350,24 +346,6 @@
     box.textContent = "";
     box.className = "message";
     box.style.display = "none";
-  }
-
-  // =====================================
-  // STOP PAYMENT TIMERS
-  // =====================================
-
-  function stopPaymentTimers() {
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-    }
-
-    if (verificationInterval) {
-      clearInterval(verificationInterval);
-      verificationInterval = null;
-    }
-
-    isCheckingPayment = false;
   }
 
   // =====================================
@@ -520,7 +498,9 @@
       typeof khqrText !== "string" ||
       !khqrText.trim()
     ) {
-      throw new Error("KHQR មិនត្រឹមត្រូវទេ។");
+      throw new Error(
+        "KHQR ទទេ ឬទិន្នន័យ QR មិនត្រឹមត្រូវទេ។"
+      );
     }
 
     new QRCode(qrElement, {
@@ -534,7 +514,23 @@
   }
 
   // =====================================
-  // COUNTDOWN: 1 MINUTE 30 SECONDS
+  // STOP PAYMENT TIMERS
+  // =====================================
+
+  function stopPaymentTimers() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+
+    if (verifyInterval) {
+      clearInterval(verifyInterval);
+      verifyInterval = null;
+    }
+  }
+
+  // =====================================
+  // COUNTDOWN - 1 MINUTE
   // =====================================
 
   function startCountdown() {
@@ -545,13 +541,13 @@
     const countdownElement =
       document.getElementById("countdown");
 
-    const endTime = Date.now() +
-      COUNTDOWN_SECONDS * 1000;
+    const startedAt = Date.now();
+    const endAt = startedAt + COUNTDOWN_SECONDS * 1000;
 
     function updateCountdown() {
       const remaining = Math.max(
         0,
-        Math.ceil((endTime - Date.now()) / 1000)
+        Math.ceil((endAt - Date.now()) / 1000)
       );
 
       const minutes = Math.floor(remaining / 60);
@@ -566,13 +562,13 @@
         clearInterval(countdownInterval);
         countdownInterval = null;
 
-        countdownElement.textContent = "00:00";
+        countdownElement.textContent = "01:00 បានផុត";
 
         if (!paymentFinished) {
           document.getElementById(
             "payment-instruction"
           ).textContent =
-            "ពេលរាប់ថយក្រោយ 1 នាទី 30 វិនាទីបានបញ្ចប់។ ប្រព័ន្ធនៅបន្តពិនិត្យស្ថានភាពការទូទាត់។";
+            "ម៉ោងបង្ហាញ 1 នាទីបានបញ្ចប់។ ប្រព័ន្ធនៅតែបន្តពិនិត្យស្ថានភាពការទូទាត់ដោយស្វ័យប្រវត្តិ រហូតដល់ KHQR ផុតកំណត់តាម Server។";
         }
       }
     }
@@ -586,34 +582,69 @@
   }
 
   // =====================================
-  // PAYMENT SUCCESS DISPLAY
+  // PAYMENT SUCCESS
   // =====================================
 
-  function showPaymentSuccess(data) {
+  function showPaymentSuccess(result) {
     paymentFinished = true;
-
     stopPaymentTimers();
 
     document.getElementById("order-status").textContent =
       "PAID ✓";
 
-    document.getElementById("order-status").className =
-      "paid-status";
-
-    document.getElementById("payment-instruction").textContent =
-      "ការទូទាត់បានជោគជ័យ! ប្រព័ន្ធបានផ្ទៀងផ្ទាត់ប្រាក់រួចរាល់។";
-
-    document.getElementById("countdown").textContent =
-      "PAID ✓";
+    document.getElementById("order-status").style.color =
+      "#62e6a5";
 
     document.getElementById("qr-area").style.display =
       "none";
 
+    document.getElementById("countdown").textContent =
+      "បានទូទាត់រួច";
+
+    document.getElementById(
+      "payment-instruction"
+    ).textContent =
+      "ការទូទាត់របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។ សូមរក្សាទុកលេខបញ្ជាទិញ។";
+
     showMessage(
-      "PAYMENT SUCCESSFUL! លេខបញ្ជាទិញ " +
-      (data.receipt_code || "") +
-      " បានទូទាត់ជោគជ័យ។",
+      "ការទូទាត់ជោគជ័យ! លេខបញ្ជាទិញ៖ " +
+      (result.receipt_code || ""),
       "success"
+    );
+
+    console.log("Payment confirmed:", result);
+  }
+
+  // =====================================
+  // PAYMENT EXPIRED
+  // =====================================
+
+  function showPaymentExpired() {
+    if (paymentFinished) return;
+
+    paymentFinished = true;
+    stopPaymentTimers();
+
+    document.getElementById("order-status").textContent =
+      "EXPIRED";
+
+    document.getElementById("order-status").style.color =
+      "#ff8d8d";
+
+    document.getElementById("qr-area").style.display =
+      "none";
+
+    document.getElementById("countdown").textContent =
+      "ផុតកំណត់";
+
+    document.getElementById(
+      "payment-instruction"
+    ).textContent =
+      "KHQR នេះបានផុតកំណត់តាម Server។ សូមកុំប្រើ QR នេះទៀត។";
+
+    showMessage(
+      "KHQR បានផុតកំណត់ហើយ។",
+      "error"
     );
   }
 
@@ -623,34 +654,19 @@
 
   async function verifyPayment() {
     if (
-      !activePurchaseId ||
-      paymentFinished ||
-      isCheckingPayment
+      !currentPurchaseId ||
+      isCheckingPayment ||
+      paymentFinished
     ) {
       return;
     }
 
-    // Stop checking after the actual KHQR expiry
-    // returned by the create function.
+    // Stop checking when the actual server QR expires.
     if (
-      actualQrExpiry &&
-      Date.now() >= actualQrExpiry
+      serverExpiresAt &&
+      Date.now() >= new Date(serverExpiresAt).getTime()
     ) {
-      stopPaymentTimers();
-
-      document.getElementById("order-status").textContent =
-        "expired";
-
-      document.getElementById(
-        "payment-instruction"
-      ).textContent =
-        "KHQR បានផុតកំណត់ហើយ។ ប្រសិនបើអ្នកបានបង់ប្រាក់ សូមទាក់ទងអ្នកគ្រប់គ្រងដើម្បីផ្ទៀងផ្ទាត់។";
-
-      showMessage(
-        "KHQR បានផុតកំណត់។ សូមកុំបង់តាម QR នេះទៀត។",
-        "error"
-      );
-
+      showPaymentExpired();
       return;
     }
 
@@ -662,23 +678,21 @@
           "snv-verify-payment",
           {
             body: {
-              purchase_id: activePurchaseId
+              purchase_id: currentPurchaseId
             }
           }
         );
 
       if (error) {
-        console.warn(
-          "Payment verification request error:",
-          error.message
-        );
+        console.error("Verify function error:", error);
         return;
       }
 
-      console.log("Payment verification result:", data);
+      console.log("Verify response:", data);
 
       if (
         data &&
+        data.success === true &&
         (
           data.paid === true ||
           data.payment_status === "paid"
@@ -688,13 +702,8 @@
         return;
       }
 
-      if (
-        data &&
-        data.payment_status === "awaiting_payment"
-      ) {
-        document.getElementById(
-          "order-status"
-        ).textContent = "awaiting_payment";
+      if (data && data.error) {
+        console.warn("Payment verification:", data.error);
       }
 
     } catch (error) {
@@ -709,26 +718,19 @@
   // START AUTOMATIC VERIFICATION
   // =====================================
 
-  function startPaymentVerification(
-    purchaseId,
-    expiresAt
-  ) {
+  function startPaymentVerification(purchaseId, expiresAt) {
     stopPaymentTimers();
 
-    activePurchaseId = purchaseId;
+    currentPurchaseId = purchaseId;
+    serverExpiresAt = expiresAt;
     paymentFinished = false;
-
-    const expiry = new Date(expiresAt).getTime();
-
-    actualQrExpiry = Number.isFinite(expiry)
-      ? expiry
-      : Date.now() + 15 * 60 * 1000;
+    isCheckingPayment = false;
 
     // Check immediately.
     verifyPayment();
 
     // Check again every 5 seconds.
-    verificationInterval = setInterval(
+    verifyInterval = setInterval(
       verifyPayment,
       VERIFY_INTERVAL_MS
     );
@@ -747,8 +749,10 @@
     try {
       stopPaymentTimers();
 
-      activePurchaseId = null;
+      currentPurchaseId = null;
+      serverExpiresAt = null;
       paymentFinished = false;
+      isCheckingPayment = false;
 
       document.getElementById("order-box").style.display =
         "none";
@@ -764,15 +768,15 @@
         );
 
       if (error) {
-        console.error("Create function error:", error);
+        console.error("Function error:", error);
 
         throw new Error(
-          "មិនអាចបង្កើត KHQR បានទេ។ " +
+          "មិនអាចហៅ snv-create-khqr បានទេ។ " +
           (error.message || "")
         );
       }
 
-      console.log("KHQR response:", data);
+      console.log("Bakong response:", data);
 
       if (
         !data ||
@@ -784,7 +788,7 @@
         throw new Error(
           data && data.error
             ? data.error
-            : "ទិន្នន័យ KHQR មិនត្រឹមត្រូវទេ។"
+            : "ទិន្នន័យ KHQR ត្រឡប់មកមិនត្រឹមត្រូវទេ។"
         );
       }
 
@@ -793,7 +797,7 @@
 
       if (!purchase.id) {
         throw new Error(
-          "មិនមាន Purchase ID ពី Server ទេ។"
+          "Server មិនបានផ្ញើ purchase ID មកទេ។"
         );
       }
 
@@ -818,32 +822,31 @@
       document.getElementById("order-status").textContent =
         purchase.payment_status || "awaiting_payment";
 
-      document.getElementById("order-status").className =
-        "order-value";
-
-      displayKHQR(payment.qr);
-
-      const expiresAt = payment.expires_at ||
-        new Date(
-          Date.now() +
-          Number(payment.expires_in_minutes || 15) *
-          60000
-        ).toISOString();
-
-      document.getElementById("countdown").textContent =
-        "01:30";
-
-      document.getElementById("payment-instruction").textContent =
-        "សូមស្កេន QR និងបញ្ជាក់ការទូទាត់។ ប្រព័ន្ធនឹងពិនិត្យស្ថានភាពដោយស្វ័យប្រវត្តិ។";
+      document.getElementById("order-status").style.color =
+        "#62e6a5";
 
       document.getElementById("qr-area").style.display =
         "block";
 
+      document.getElementById("payment-instruction").textContent =
+        "សូមស្កេន KHQR។ ប្រព័ន្ធនឹងពិនិត្យការទូទាត់រៀងរាល់ 5 វិនាទី។";
+
+      displayKHQR(payment.qr);
+
+      // Actual expiration comes from the server.
+      const expiresAt = payment.expires_at ||
+        new Date(
+          Date.now() +
+          Number(payment.expires_in_minutes || 15) * 60000
+        ).toISOString();
+
       document.getElementById("order-box").style.display =
         "block";
 
+      // Display countdown for one minute.
       startCountdown();
 
+      // Verify payment automatically until server expiry.
       startPaymentVerification(
         purchase.id,
         expiresAt
