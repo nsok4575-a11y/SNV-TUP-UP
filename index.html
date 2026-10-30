@@ -7,6 +7,7 @@
   <title>SNV Game Top-up</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     * {
@@ -28,7 +29,7 @@
 
     header {
       text-align: center;
-      padding: 22px 10px;
+      padding: 24px 10px;
       background: linear-gradient(135deg, #29285c, #10131e);
       border-radius: 16px;
       margin-bottom: 20px;
@@ -36,7 +37,6 @@
 
     header h1 {
       margin: 0 0 8px;
-      color: #ffffff;
       font-size: 25px;
     }
 
@@ -163,16 +163,56 @@
     .order-box h3 {
       margin-top: 0;
       color: #9eabff;
+      text-align: center;
     }
 
     .order-line {
-      margin: 9px 0;
+      margin: 10px 0;
       font-size: 14px;
     }
 
     .order-value {
       color: #62e6a5;
       font-weight: bold;
+    }
+
+    .qr-area {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      width: fit-content;
+      max-width: 100%;
+      margin: 18px auto;
+      text-align: center;
+    }
+
+    #qrcode {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 220px;
+      min-height: 220px;
+    }
+
+    #qrcode img,
+    #qrcode canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .qr-label {
+      color: #222222;
+      font-weight: bold;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .demo-label {
+      text-align: center;
+      color: #ffcf70;
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: 12px;
     }
 
     footer {
@@ -209,7 +249,8 @@
     </button>
 
     <section id="order-box" class="order-box">
-      <h3>ការបញ្ជាទិញសាកល្បងត្រូវបានបង្កើត</h3>
+
+      <h3>ការបញ្ជាទិញសាកល្បង</h3>
 
       <div class="order-line">
         លេខបញ្ជាទិញ៖
@@ -231,17 +272,26 @@
         <span id="order-status" class="order-value"></span>
       </div>
 
-      <p>
-        នេះជាការសាកល្បងបង្កើតការបញ្ជាទិញប៉ុណ្ណោះ។
-        មិនទាន់មានការទូទាត់ប្រាក់ ឬបញ្ជាក់ការទូទាត់ទេ។
+      <div class="qr-area">
+        <div id="qrcode"></div>
+        <div class="qr-label">SNV TEST QR</div>
+      </div>
+
+      <div class="demo-label">
+        QR សាកល្បងប៉ុណ្ណោះ — មិនមែន KHQR ទូទាត់ប្រាក់ទេ
+      </div>
+
+      <p style="font-size:13px; color:#bfc6df; line-height:1.6;">
+        QR នេះបង្កើតឡើងសម្រាប់សាកល្បងការបង្ហាញលើវេបសាយ។
+        វាមិនអាចប្រើផ្ទេរប្រាក់ ឬបញ្ជាក់ការទូទាត់បានទេ។
       </p>
+
     </section>
 
     <div class="notice">
       <strong>ចំណាំ៖</strong>
-      បច្ចុប្បន្នគេហទំព័រនេះស្ថិតក្នុង Test Mode។
+      គេហទំព័រនេះកំពុងដំណើរការក្នុង Test Mode។
       ការបង្កើតការបញ្ជាទិញមិនមានន័យថាបានទូទាត់ប្រាក់ទេ។
-      មិនត្រូវប្រើសម្រាប់ទទួលប្រាក់ពិតឡើយ។
     </div>
 
     <footer>
@@ -258,9 +308,10 @@
     const SUPABASE_URL =
       "https://ckqfewtvpirmxcanmyiu.supabase.co";
 
-    // ដាក់ Publishable Key ដែលអ្នកមាននៅទីនេះ
-    // កុំដាក់ Service Role Key ឬ Bakong Token នៅទីនេះ
-    const SUPABASE_KEY = "sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
+    // ដាក់ Publishable Key របស់អ្នកនៅទីនេះ
+    // កុំដាក់ Service Role Key ឬ Bakong Token
+    const SUPABASE_KEY =
+      "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
 
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
@@ -268,7 +319,7 @@
     );
 
     // =====================================
-    // DISPLAY MESSAGE
+    // MESSAGE
     // =====================================
 
     function showMessage(text, type) {
@@ -292,9 +343,7 @@
     // =====================================
 
     function getImageUrl(path) {
-      if (!path) {
-        return "";
-      }
+      if (!path) return "";
 
       if (
         path.startsWith("https://") ||
@@ -326,6 +375,10 @@
 
       grid.innerHTML = "<p>កំពុងផ្ទុកកញ្ចប់...</p>";
       refreshButton.disabled = true;
+
+      document.getElementById("order-box").style.display =
+        "none";
+
       clearMessage();
 
       try {
@@ -337,9 +390,7 @@
           .eq("available", true)
           .order("created_at", { ascending: true });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         grid.innerHTML = "";
 
@@ -356,7 +407,6 @@
           const image = document.createElement("img");
           image.className = "product-image";
           image.alt = product.title || "Package";
-
           image.src = getImageUrl(product.image_url);
 
           image.onerror = function() {
@@ -403,6 +453,7 @@
         console.error("Load products error:", error);
 
         grid.innerHTML = "";
+
         showMessage(
           "មិនអាចផ្ទុកកញ្ចប់បានទេ។ សូមពិនិត្យ Supabase និង Internet។",
           "error"
@@ -411,6 +462,29 @@
       } finally {
         refreshButton.disabled = false;
       }
+    }
+
+    // =====================================
+    // DISPLAY DEMO QR
+    // =====================================
+
+    function displayDemoQR(qrText) {
+      const qrElement = document.getElementById("qrcode");
+
+      qrElement.innerHTML = "";
+
+      if (typeof QRCode === "undefined") {
+        throw new Error("មិនអាចផ្ទុក QR Code Library បានទេ។");
+      }
+
+      new QRCode(qrElement, {
+        text: qrText,
+        width: 220,
+        height: 220,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
     }
 
     // =====================================
@@ -451,6 +525,17 @@
 
         const purchase = data.purchase;
 
+        if (
+          !data.payment ||
+          !data.payment.qr ||
+          data.payment.mode !== "demo" ||
+          data.payment.real_payment !== false
+        ) {
+          throw new Error(
+            "មិនមាន QR សាកល្បងត្រឹមត្រូវពី Function ទេ។"
+          );
+        }
+
         document.getElementById("receipt-code").textContent =
           purchase.receipt_code || "-";
 
@@ -465,11 +550,13 @@
         document.getElementById("order-status").textContent =
           purchase.payment_status || "awaiting_payment";
 
+        displayDemoQR(data.payment.qr);
+
         document.getElementById("order-box").style.display =
           "block";
 
         showMessage(
-          "បានបង្កើតការបញ្ជាទិញសាកល្បងដោយជោគជ័យ។",
+          "បានបង្កើតការបញ្ជាទិញសាកល្បង និង QR ដោយជោគជ័យ។",
           "success"
         );
 
@@ -480,7 +567,8 @@
         console.error("Create purchase error:", error);
 
         showMessage(
-          error.message || "មានបញ្ហាក្នុងការបង្កើតការបញ្ជាទិញ។",
+          error.message ||
+          "មានបញ្ហាក្នុងការបង្កើតការបញ្ជាទិញ។",
           "error"
         );
 
@@ -491,7 +579,7 @@
     }
 
     // =====================================
-    // START
+    // START WEBSITE
     // =====================================
 
     loadProducts();
