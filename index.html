@@ -205,12 +205,19 @@
       margin-top: 10px;
     }
 
-    .demo-label {
+    .countdown {
       text-align: center;
       color: #ffcf70;
-      font-size: 13px;
+      font-size: 19px;
       font-weight: bold;
-      margin-top: 12px;
+      margin: 14px 0;
+    }
+
+    .payment-note {
+      color: #bfc6df;
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: center;
     }
 
     footer {
@@ -238,15 +245,13 @@
     <p>កំពុងផ្ទុកកញ្ចប់...</p>
   </div>
 
-  <button type="button"
-          class="refresh-button"
-          id="refresh-button">
+  <button type="button" class="refresh-button" id="refresh-button">
     ផ្ទុកកញ្ចប់ឡើងវិញ
   </button>
 
   <section id="order-box" class="order-box">
 
-    <h3>ការបញ្ជាទិញសាកល្បង</h3>
+    <h3>ការទូទាត់ KHQR</h3>
 
     <div class="order-line">
       លេខបញ្ជាទិញ៖
@@ -270,24 +275,25 @@
 
     <div class="qr-area">
       <div id="qrcode"></div>
-      <div class="qr-label">SNV DEMO QR</div>
+      <div class="qr-label">SCAN TO PAY - KHQR</div>
     </div>
 
-    <div class="demo-label">
-      QR សាកល្បងប៉ុណ្ណោះ — មិនមែន KHQR ទូទាត់ប្រាក់ទេ
+    <div class="countdown">
+      ផុតកំណត់ក្នុង៖ <span id="countdown">15:00</span>
     </div>
 
-    <p style="font-size:13px;color:#bfc6df;line-height:1.6;">
-      QR នេះមានតែព័ត៌មានសម្រាប់សាកល្បងការបង្ហាញប៉ុណ្ណោះ។
-      វាមិនអាចប្រើផ្ទេរប្រាក់ ឬបញ្ជាក់ការទូទាត់បានទេ។
+    <p class="payment-note" id="payment-instruction">
+      សូមបើកកម្មវិធីធនាគារដែលគាំទ្រ KHQR
+      ហើយស្កេន QR ខាងលើ។
+      សូមពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។
     </p>
 
   </section>
 
   <div class="notice">
     <strong>ចំណាំ៖</strong>
-    គេហទំព័រនេះកំពុងដំណើរការក្នុង Test Mode។
-    ការបង្កើតការបញ្ជាទិញមិនមានន័យថាបានទូទាត់ប្រាក់ទេ។
+    ការបង្កើត KHQR មិនមានន័យថាការទូទាត់បានជោគជ័យទេ។
+    ស្ថានភាពនឹងនៅរង់ចាំរហូតដល់មានការផ្ទៀងផ្ទាត់ការទូទាត់។
   </div>
 
   <footer>SNV Game Top-up</footer>
@@ -309,6 +315,8 @@
     SUPABASE_URL,
     SUPABASE_KEY
   );
+
+  let countdownInterval = null;
 
   // =====================================
   // MESSAGE
@@ -365,9 +373,6 @@
 
     grid.innerHTML = "<p>កំពុងផ្ទុកកញ្ចប់...</p>";
     refreshButton.disabled = true;
-
-    document.getElementById("order-box").style.display =
-      "none";
 
     clearMessage();
 
@@ -431,10 +436,10 @@
 
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = "បញ្ជាទិញសាកល្បង";
+        button.textContent = "បញ្ជាទិញ";
 
         button.addEventListener("click", function() {
-          createTestPurchase(product.id, button);
+          createPayment(product.id, button);
         });
 
         card.appendChild(image);
@@ -448,10 +453,11 @@
 
     } catch (error) {
       console.error("Load products error:", error);
+
       grid.innerHTML = "";
 
       showMessage(
-        "មិនអាចផ្ទុកកញ្ចប់បានទេ។ សូមពិនិត្យ Supabase និង Internet។ " +
+        "មិនអាចផ្ទុកកញ្ចប់បានទេ។ " +
         (error.message || ""),
         "error"
       );
@@ -462,11 +468,12 @@
   }
 
   // =====================================
-  // DISPLAY NON-PAYMENT DEMO QR
+  // DISPLAY REAL BAKONG KHQR
   // =====================================
 
-  function displayDemoQR(receiptCode, purchaseId) {
+  function displayKHQR(khqrText) {
     const qrElement = document.getElementById("qrcode");
+
     qrElement.innerHTML = "";
 
     if (typeof QRCode === "undefined") {
@@ -475,38 +482,102 @@
       );
     }
 
-    // This is NOT a Bakong payment QR.
-    // It contains only demo identification text.
-    const demoText =
-      "SNV-DEMO|" +
-      String(receiptCode || "NO-RECEIPT") +
-      "|" +
-      String(purchaseId || "NO-ID");
+    if (
+      typeof khqrText !== "string" ||
+      !khqrText.trim()
+    ) {
+      throw new Error(
+        "KHQR ទទេ ឬទិន្នន័យ QR មិនត្រឹមត្រូវទេ។"
+      );
+    }
 
+    // Use the actual KHQR string returned by Bakong.
     new QRCode(qrElement, {
-      text: demoText,
-      width: 220,
-      height: 220,
+      text: khqrText,
+      width: 250,
+      height: 250,
       colorDark: "#000000",
       colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.M
+      correctLevel: QRCode.CorrectLevel.L
     });
   }
 
   // =====================================
-  // CREATE TEST PURCHASE
+  // COUNTDOWN
   // =====================================
 
-  async function createTestPurchase(productId, button) {
+  function startCountdown(expiresAt) {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+
+    const countdownElement =
+      document.getElementById("countdown");
+
+    const expiry = new Date(expiresAt).getTime();
+
+    if (!Number.isFinite(expiry)) {
+      countdownElement.textContent = "--:--";
+      return;
+    }
+
+    function updateCountdown() {
+      const remaining = Math.max(
+        0,
+        Math.floor((expiry - Date.now()) / 1000)
+      );
+
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+
+      countdownElement.textContent =
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+
+      if (remaining <= 0) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+
+        countdownElement.textContent = "ផុតកំណត់";
+
+        document.getElementById(
+          "payment-instruction"
+        ).textContent =
+          "KHQR នេះបានផុតកំណត់ហើយ។ សូមបង្កើតការបញ្ជាទិញថ្មី។";
+      }
+    }
+
+    updateCountdown();
+
+    countdownInterval = setInterval(
+      updateCountdown,
+      1000
+    );
+  }
+
+  // =====================================
+  // CREATE PAYMENT
+  // =====================================
+
+  async function createPayment(productId, button) {
     clearMessage();
 
     button.disabled = true;
-    button.textContent = "កំពុងដំណើរការ...";
+    button.textContent = "កំពុងបង្កើត KHQR...";
 
     try {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+
+      document.getElementById("order-box").style.display =
+        "none";
+
       const { data, error } =
         await supabaseClient.functions.invoke(
-          "snv-create-khqr",
+          "bakong-payment",
           {
             body: {
               product_id: productId
@@ -518,42 +589,42 @@
         console.error("Function error:", error);
 
         throw new Error(
-          "មិនអាចហៅ Edge Function បានទេ។ " +
+          "មិនអាចហៅ bakong-payment បានទេ។ " +
           (error.message || "")
         );
       }
 
-      console.log("Function response:", data);
+      console.log("Bakong response:", data);
 
-      if (!data || data.success !== true || !data.purchase) {
-        throw new Error(
-          data && data.error
-            ? data.error
-            : "ទិន្នន័យត្រឡប់មកពី Function មិនត្រឹមត្រូវទេ។"
-        );
-      }
-
-      // Require the known test response.
       if (
-        data.test_mode !== true ||
-        data.payment_verified !== false ||
+        !data ||
+        data.success !== true ||
+        !data.purchase ||
         !data.payment ||
         !data.payment.qr
       ) {
         throw new Error(
-          "Function មិនបានត្រឡប់លទ្ធផល Test Mode ដែលរំពឹងទុកទេ។"
+          data && data.error
+            ? data.error
+            : "ទិន្នន័យ KHQR ត្រឡប់មកមិនត្រឹមត្រូវទេ។"
         );
       }
 
       const purchase = data.purchase;
+      const payment = data.payment;
 
+      // Display purchase information.
       document.getElementById("receipt-code").textContent =
         purchase.receipt_code || "-";
 
       document.getElementById("order-product").textContent =
-        purchase.product_name || purchase.item_title || "-";
+        purchase.product_name ||
+        purchase.item_title ||
+        "-";
 
-      const amount = Number(purchase.amount ?? purchase.total);
+      const amount = Number(
+        purchase.amount ?? purchase.total
+      );
 
       document.getElementById("order-amount").textContent =
         Number.isFinite(amount)
@@ -564,18 +635,24 @@
       document.getElementById("order-status").textContent =
         purchase.payment_status || "awaiting_payment";
 
-      // Do not display the raw Bakong KHQR string.
-      // Render a separate, non-payment demo QR instead.
-      displayDemoQR(
-        purchase.receipt_code,
-        purchase.id
-      );
+      // IMPORTANT:
+      // Render the REAL KHQR returned by Bakong.
+      displayKHQR(payment.qr);
+
+      // Start countdown from server expiry time.
+      const expiresAt = payment.expires_at ||
+        new Date(
+          Date.now() +
+          Number(payment.expires_in_minutes || 15) * 60000
+        ).toISOString();
+
+      startCountdown(expiresAt);
 
       document.getElementById("order-box").style.display =
         "block";
 
       showMessage(
-        "បានបង្កើតការបញ្ជាទិញសាកល្បង និង QR Demo ដោយជោគជ័យ។",
+        "បានបង្កើត KHQR ដោយជោគជ័យ។ សូមស្កេនដើម្បីទូទាត់។",
         "success"
       );
 
@@ -583,17 +660,17 @@
         .scrollIntoView({ behavior: "smooth" });
 
     } catch (error) {
-      console.error("Create purchase error:", error);
+      console.error("Create payment error:", error);
 
       showMessage(
         error.message ||
-        "មានបញ្ហាក្នុងការបង្កើតការបញ្ជាទិញ។",
+        "មានបញ្ហាក្នុងការបង្កើត KHQR។",
         "error"
       );
 
     } finally {
       button.disabled = false;
-      button.textContent = "បញ្ជាទិញសាកល្បង";
+      button.textContent = "បញ្ជាទិញ";
     }
   }
 
