@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="km">
 <head>
@@ -11,219 +10,470 @@
 
 <style>
 *{box-sizing:border-box}
+
 body{
-  margin:0;padding:12px;background:#10131e;color:white;
+  margin:0;
+  padding:12px;
+  background:#10131e;
+  color:white;
   font-family:Arial,sans-serif
 }
-.container{max-width:650px;margin:auto}
+
+.container{
+  max-width:650px;
+  margin:auto
+}
+
 header{
-  text-align:center;padding:20px 10px;
+  text-align:center;
+  padding:20px 10px;
   background:linear-gradient(135deg,#29285c,#10131e);
-  border-radius:16px;margin-bottom:18px;
+  border-radius:16px;
+  margin-bottom:18px;
   border:1px solid #44416f
 }
-header h1{margin:0 0 8px;font-size:23px}
-header p{margin:0;color:#bfc6df;font-size:13px}
-.section-title{font-size:18px;margin:18px 0 12px}
 
-/* ONE FRAME FOR ALL PACKAGES */
+header h1{
+  margin:0 0 8px;
+  font-size:23px
+}
+
+header p{
+  margin:0;
+  color:#bfc6df;
+  font-size:13px
+}
+
+.section-title{
+  font-size:18px;
+  margin:18px 0 12px
+}
+
+/* ស៊ុមធំសម្រាប់កញ្ចប់ទាំងអស់ */
 .packages-panel{
   background:#1b2030;
   border:1px solid #6558e8;
   border-radius:14px;
-  padding:7px;
+  padding:8px;
   overflow:hidden
 }
+
 .products-grid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:0
+  gap:8px
 }
+
+/* ស៊ុមផ្ទាល់ខ្លួនរបស់កញ្ចប់នីមួយៗ */
 .product-card{
   min-width:0;
-  padding:13px 10px;
+  padding:10px;
   cursor:pointer;
-  background:transparent;
-  border:0;
-  border-bottom:1px solid #394158;
-  transition:background .2s
+  background:#22283b;
+  border:1px solid #454d68;
+  border-radius:12px;
+  transition:background .2s;
+  overflow:hidden
 }
-.product-card:nth-child(odd){
-  border-right:1px solid #394158
+
+.product-card:active{
+  background:#303750
 }
-.product-card:active{background:#292d45}
+
+/* រូបភាពកញ្ចប់ */
+.product-image-frame{
+  width:100%;
+  height:145px;
+  background:#101827;
+  border-radius:9px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:10px;
+  border:1px solid #454d68
+}
+
+.product-auto-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block
+}
+
+.product-no-image{
+  color:#8993ae;
+  font-size:12px;
+  text-align:center;
+  padding:8px
+}
+
 .product-title{
-  font-size:15px;font-weight:bold;margin-bottom:7px;
+  font-size:15px;
+  font-weight:bold;
+  margin-bottom:7px;
   overflow-wrap:anywhere
 }
+
 .product-details{
-  color:#aeb7ce;font-size:12px;
-  min-height:16px;margin-bottom:8px;
+  color:#aeb7ce;
+  font-size:12px;
+  min-height:16px;
+  margin-bottom:8px;
   overflow-wrap:anywhere
 }
+
 .product-price{
-  color:#62e6a5;font-size:17px;
-  font-weight:bold
+  color:#62e6a5;
+  font-size:17px;
+  font-weight:bold;
+  margin-bottom:10px
 }
+
 .product-hint{
-  color:#8993ae;font-size:11px;margin-top:8px
+  color:#8993ae;
+  font-size:11px;
+  margin-top:8px;
+  text-align:center
 }
+
+/* ប៊ូតុងបញ្ជាទិញលើកញ្ចប់ */
+.card-buy-button{
+  width:100%;
+  border:0;
+  border-radius:8px;
+  padding:10px 7px;
+  background:linear-gradient(135deg,#6558e8,#4938bd);
+  color:white;
+  font-size:13px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:8px
+}
+
+.card-buy-button:disabled{
+  opacity:.55;
+  cursor:not-allowed
+}
+
 .empty-message{
-  grid-column:1/-1;padding:15px;
-  color:#aeb7ce;text-align:center
+  grid-column:1/-1;
+  padding:15px;
+  color:#aeb7ce;
+  text-align:center
 }
+
 button{
-  width:100%;border:0;border-radius:8px;
-  padding:10px 7px;background:#6558e8;
-  color:white;font-size:13px;font-weight:bold;
+  width:100%;
+  border:0;
+  border-radius:8px;
+  padding:10px 7px;
+  background:#6558e8;
+  color:white;
+  font-size:13px;
+  font-weight:bold;
   cursor:pointer
 }
-button:disabled{opacity:.55;cursor:not-allowed}
-.refresh-button{background:#303950;margin-top:14px}
+
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed
+}
+
+.refresh-button{
+  background:#303950;
+  margin-top:14px
+}
 
 .message{
-  display:none;padding:12px;border-radius:10px;
-  margin:14px 0;line-height:1.6;overflow-wrap:anywhere
+  display:none;
+  padding:12px;
+  border-radius:10px;
+  margin:14px 0;
+  line-height:1.6;
+  overflow-wrap:anywhere
 }
+
 .error{
-  display:block;background:#46252d;
-  border:1px solid #a64b5b;color:#ffd7dc
+  display:block;
+  background:#46252d;
+  border:1px solid #a64b5b;
+  color:#ffd7dc
 }
+
 .success{
-  display:block;background:#173d32;
-  border:1px solid #3d9c78;color:#d2ffeb
+  display:block;
+  background:#173d32;
+  border:1px solid #3d9c78;
+  color:#d2ffeb
 }
 
 /* PRODUCT POPUP */
 .modal{
-  display:none;position:fixed;inset:0;z-index:1000;
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:1000;
   background:rgba(0,0,0,.82);
-  padding:14px;overflow-y:auto;
-  align-items:center;justify-content:center
+  padding:14px;
+  overflow-y:auto;
+  align-items:center;
+  justify-content:center
 }
-.modal.show{display:flex}
+
+.modal.show{
+  display:flex
+}
+
 .modal-content{
-  width:100%;max-width:520px;
-  max-height:94vh;overflow-y:auto;
-  background:#1b2030;border:1px solid #6558e8;
-  border-radius:16px;padding:15px;
+  width:100%;
+  max-width:520px;
+  max-height:94vh;
+  overflow-y:auto;
+  background:#1b2030;
+  border:1px solid #6558e8;
+  border-radius:16px;
+  padding:15px;
   position:relative
 }
+
 .modal-header{
-  display:flex;align-items:center;
-  justify-content:space-between;gap:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
   margin-bottom:12px
 }
-.modal-header h3{margin:0;color:#aeb7ff;font-size:18px}
+
+.modal-header h3{
+  margin:0;
+  color:#aeb7ff;
+  font-size:18px
+}
+
 .close-modal{
-  width:38px;height:38px;padding:0;
-  background:#303950;font-size:22px;
+  width:38px;
+  height:38px;
+  padding:0;
+  background:#303950;
+  font-size:22px;
   flex:0 0 38px
 }
+
 .modal-image-frame{
-  width:100%;height:300px;
-  background:#101827;border:1px solid #454d68;
-  border-radius:12px;overflow:hidden;
-  display:flex;align-items:center;justify-content:center
+  width:100%;
+  height:300px;
+  background:#101827;
+  border:1px solid #454d68;
+  border-radius:12px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center
 }
+
 .modal-image{
-  width:100%;height:100%;object-fit:contain;
+  width:100%;
+  height:100%;
+  object-fit:contain;
   display:none
 }
+
 .modal-placeholder{
-  color:#8993ae;font-size:13px;text-align:center;
+  color:#8993ae;
+  font-size:13px;
+  text-align:center;
   padding:15px
 }
+
 .image-navigation{
-  display:flex;align-items:center;gap:12px;
+  display:flex;
+  align-items:center;
+  gap:12px;
   margin-top:10px
 }
+
 .image-navigation button{
-  width:48px;flex:0 0 48px;
-  background:#303950;font-size:18px
+  width:48px;
+  flex:0 0 48px;
+  background:#303950;
+  font-size:18px
 }
+
 .image-counter{
-  flex:1;text-align:center;
-  color:#bfc6df;font-size:13px
+  flex:1;
+  text-align:center;
+  color:#bfc6df;
+  font-size:13px
 }
+
 .modal-title{
-  font-size:18px;font-weight:bold;
-  margin:15px 0 7px;overflow-wrap:anywhere
+  font-size:18px;
+  font-weight:bold;
+  margin:15px 0 7px;
+  overflow-wrap:anywhere
 }
+
 .modal-details{
-  color:#bfc6df;font-size:13px;
-  line-height:1.6;overflow-wrap:anywhere
+  color:#bfc6df;
+  font-size:13px;
+  line-height:1.6;
+  overflow-wrap:anywhere
 }
+
 .modal-price{
-  color:#62e6a5;font-size:21px;
-  font-weight:bold;margin:13px 0
+  color:#62e6a5;
+  font-size:21px;
+  font-weight:bold;
+  margin:13px 0
 }
-.buy-button{padding:13px;font-size:15px}
+
+.buy-button{
+  padding:13px;
+  font-size:15px
+}
+
 .modal-note{
-  text-align:center;color:#8993ae;
-  font-size:11px;margin-top:9px
+  text-align:center;
+  color:#8993ae;
+  font-size:11px;
+  margin-top:9px
 }
 
 /* PAYMENT */
 .notice{
-  background:#282b3d;border:1px solid #515a78;
-  color:#d5dcf5;border-radius:10px;
-  padding:12px;margin-top:18px;
-  font-size:13px;line-height:1.6
+  background:#282b3d;
+  border:1px solid #515a78;
+  color:#d5dcf5;
+  border-radius:10px;
+  padding:12px;
+  margin-top:18px;
+  font-size:13px;
+  line-height:1.6
 }
+
 .order-box{
-  display:none;background:#1b2030;
-  border:1px solid #6558e8;border-radius:13px;
-  padding:15px;margin-top:18px;overflow-wrap:anywhere
+  display:none;
+  background:#1b2030;
+  border:1px solid #6558e8;
+  border-radius:13px;
+  padding:15px;
+  margin-top:18px;
+  overflow-wrap:anywhere
 }
+
 .order-box h3{
-  margin-top:0;color:#9eabff;text-align:center
+  margin-top:0;
+  color:#9eabff;
+  text-align:center
 }
-.order-line{margin:10px 0;font-size:14px}
-.order-value{color:#62e6a5;font-weight:bold}
+
+.order-line{
+  margin:10px 0;
+  font-size:14px
+}
+
+.order-value{
+  color:#62e6a5;
+  font-weight:bold
+}
+
 .qr-area{
-  background:white;border-radius:12px;padding:12px;
-  width:fit-content;max-width:100%;
-  margin:16px auto;text-align:center
+  background:white;
+  border-radius:12px;
+  padding:12px;
+  width:fit-content;
+  max-width:100%;
+  margin:16px auto;
+  text-align:center
 }
+
 #qrcode{
-  display:flex;justify-content:center;align-items:center;
-  width:250px;max-width:100%;min-height:220px;margin:auto
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:250px;
+  max-width:100%;
+  min-height:220px;
+  margin:auto
 }
-#qrcode img,#qrcode canvas{max-width:100%;height:auto}
-.qr-label{color:#222;font-weight:bold;font-size:13px;margin-top:10px}
+
+#qrcode img,#qrcode canvas{
+  max-width:100%;
+  height:auto
+}
+
+.qr-label{
+  color:#222;
+  font-weight:bold;
+  font-size:13px;
+  margin-top:10px
+}
+
 .countdown{
-  text-align:center;color:#ffcf70;
-  font-size:19px;font-weight:bold;margin:14px 0
+  text-align:center;
+  color:#ffcf70;
+  font-size:19px;
+  font-weight:bold;
+  margin:14px 0
 }
+
 .payment-note{
-  color:#bfc6df;font-size:13px;
-  line-height:1.7;text-align:center
+  color:#bfc6df;
+  font-size:13px;
+  line-height:1.7;
+  text-align:center
 }
+
 .delivery-box{
-  display:none;background:#173d32;
-  border:1px solid #3d9c78;border-radius:12px;
-  padding:15px;margin-top:18px;overflow-wrap:anywhere
+  display:none;
+  background:#173d32;
+  border:1px solid #3d9c78;
+  border-radius:12px;
+  padding:15px;
+  margin-top:18px;
+  overflow-wrap:anywhere
 }
+
 .delivery-box h3{
-  color:#62e6a5;text-align:center;margin-top:0
+  color:#62e6a5;
+  text-align:center;
+  margin-top:0
 }
+
 .delivery-line{
-  background:#101f1b;padding:11px;
-  border-radius:8px;margin:9px 0;font-size:14px
+  background:#101f1b;
+  padding:11px;
+  border-radius:8px;
+  margin:9px 0;
+  font-size:14px
 }
-.delivery-label{color:#aeb7ce;display:block;margin-bottom:5px}
+
+.delivery-label{
+  color:#aeb7ce;
+  display:block;
+  margin-bottom:5px
+}
+
 .delivery-value{
-  color:#62e6a5;font-weight:bold;
-  overflow-wrap:anywhere;user-select:text
+  color:#62e6a5;
+  font-weight:bold;
+  overflow-wrap:anywhere;
+  user-select:text
 }
+
 .copy-button{
-  background:#303950;margin-top:8px;
-  padding:7px;font-size:12px
+  background:#303950;
+  margin-top:8px;
+  padding:7px;
+  font-size:12px
 }
+
 footer{
-  text-align:center;color:#78819c;
-  font-size:12px;margin:25px 0 10px
+  text-align:center;
+  color:#78819c;
+  font-size:12px;
+  margin:25px 0 10px
 }
 
 @media screen and (orientation:landscape) and (max-height:500px){
@@ -233,12 +483,15 @@ footer{
   header{padding:12px 8px}
   header h1{font-size:19px}
   .modal-image-frame{height:220px}
+  .product-image-frame{height:110px}
 }
+
 @media screen and (max-width:350px){
   body{padding:7px}
-  .product-card{padding:10px 7px}
+  .product-card{padding:8px 6px}
   .product-title{font-size:13px}
   .product-price{font-size:15px}
+  .product-image-frame{height:120px}
   .modal-image-frame{height:240px}
 }
 </style>
@@ -256,7 +509,7 @@ footer{
 
 <div id="message" class="message"></div>
 
-<!-- ONE OUTER PANEL -->
+<!-- ស៊ុមធំសម្រាប់កញ្ចប់ទាំងអស់ -->
 <section class="packages-panel">
   <div id="products-grid" class="products-grid">
     <p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p>
@@ -410,10 +663,12 @@ let serverExpiresAt = null;
 let isCheckingPayment = false;
 let paymentFinished = false;
 
-// Selected package for popup
 let selectedProduct = null;
 let selectedImages = [];
 let selectedImageIndex = 0;
+
+// រក្សាទុក timer រូបភាព ដើម្បីអាចបញ្ឈប់ពេលផ្ទុកឡើងវិញ
+let slideshowTimers = [];
 
 // =====================================
 // MESSAGE
@@ -498,6 +753,70 @@ function getProductImages(product){
 }
 
 // =====================================
+// PACKAGE SLIDESHOW
+// =====================================
+
+function stopAllSlideshows(){
+  slideshowTimers.forEach(function(timer){
+    clearInterval(timer);
+  });
+
+  slideshowTimers=[];
+}
+
+function createPackageSlideshow(product,frame){
+  const images=getProductImages(product);
+
+  const image=document.createElement("img");
+  image.className="product-auto-image";
+  image.alt=product.title || "Package image";
+
+  const placeholder=document.createElement("div");
+  placeholder.className="product-no-image";
+  placeholder.textContent="មិនមានរូបភាព";
+
+  frame.appendChild(image);
+  frame.appendChild(placeholder);
+
+  if(images.length===0){
+    image.style.display="none";
+    placeholder.style.display="block";
+    return;
+  }
+
+  let index=0;
+
+  function showImage(){
+    image.style.display="block";
+    placeholder.style.display="none";
+
+    image.src=images[index];
+
+    index=(index+1)%images.length;
+  }
+
+  image.onerror=function(){
+    image.style.display="none";
+    placeholder.textContent="មិនអាចបង្ហាញរូបភាពបានទេ";
+    placeholder.style.display="block";
+  };
+
+  image.onload=function(){
+    image.style.display="block";
+    placeholder.style.display="none";
+  };
+
+  // បង្ហាញរូបភាពដំបូងភ្លាមៗ
+  showImage();
+
+  // ប្ដូររូបរៀងរាល់ 3 វិនាទី
+  if(images.length>1){
+    const timer=setInterval(showImage,3000);
+    slideshowTimers.push(timer);
+  }
+}
+
+// =====================================
 // OPEN PACKAGE POPUP
 // =====================================
 
@@ -538,8 +857,10 @@ function updateModalImage(){
   if(selectedImages.length===0){
     image.style.display="none";
     image.removeAttribute("src");
+    placeholder.textContent="មិនមានរូបភាព";
     placeholder.style.display="block";
     counter.textContent="គ្មានរូបភាព";
+
     document.getElementById("previous-image").disabled=true;
     document.getElementById("next-image").disabled=true;
     return;
@@ -547,6 +868,7 @@ function updateModalImage(){
 
   image.style.display="block";
   placeholder.style.display="none";
+
   image.onerror=function(){
     image.style.display="none";
     placeholder.textContent="មិនអាចបង្ហាញរូបភាពនេះបានទេ";
@@ -593,6 +915,9 @@ async function loadProducts(){
   const grid=document.getElementById("products-grid");
   const refreshButton=document.getElementById("refresh-button");
 
+  // បញ្ឈប់ timer ចាស់មុនផ្ទុកកញ្ចប់ថ្មី
+  stopAllSlideshows();
+
   grid.innerHTML='<p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p>';
   refreshButton.disabled=true;
   clearMessage();
@@ -620,14 +945,23 @@ async function loadProducts(){
       card.tabIndex=0;
       card.setAttribute("role","button");
 
+      // ស៊ុមរូបភាព
+      const imageFrame=document.createElement("div");
+      imageFrame.className="product-image-frame";
+
+      createPackageSlideshow(product,imageFrame);
+
+      // ឈ្មោះកញ្ចប់
       const title=document.createElement("div");
       title.className="product-title";
       title.textContent=product.title || "Package";
 
+      // ព័ត៌មានកញ្ចប់
       const details=document.createElement("div");
       details.className="product-details";
       details.textContent=product.details || "";
 
+      // តម្លៃ
       const price=document.createElement("div");
       price.className="product-price";
 
@@ -637,15 +971,31 @@ async function loadProducts(){
         ? amount.toFixed(2)+" "+(product.currency || "USD")
         : "តម្លៃមិនត្រឹមត្រូវ";
 
+      // ប៊ូតុងបញ្ជាទិញនៅលើកញ្ចប់
+      const buyButton=document.createElement("button");
+      buyButton.type="button";
+      buyButton.className="card-buy-button";
+      buyButton.textContent="បញ្ជាទិញ";
+
+      buyButton.addEventListener("click",function(event){
+        event.stopPropagation();
+
+        createPayment(product.id,this);
+      });
+
+      // សេចក្ដីណែនាំ
       const hint=document.createElement("div");
       hint.className="product-hint";
-      hint.textContent="ចុចដើម្បីមើលព័ត៌មាន និងរូបភាព";
+      hint.textContent="ចុចកញ្ចប់ដើម្បីមើលព័ត៌មានលម្អិត";
 
+      card.appendChild(imageFrame);
       card.appendChild(title);
       card.appendChild(details);
       card.appendChild(price);
+      card.appendChild(buyButton);
       card.appendChild(hint);
 
+      // ចុចលើកាតបើកផ្ទាំងព័ត៌មាន
       card.addEventListener("click",function(){
         openProductModal(product);
       });
@@ -663,10 +1013,12 @@ async function loadProducts(){
   }catch(error){
     console.error("Load products error:",error);
     grid.innerHTML="";
+
     showMessage(
       "មិនអាចផ្ទុកកញ្ចប់បានទេ។ "+(error.message || ""),
       "error"
     );
+
   }finally{
     refreshButton.disabled=false;
   }
@@ -1026,7 +1378,6 @@ async function createPayment(productId,button){
 
     document.getElementById("order-box").style.display="block";
 
-    // Close package popup after KHQR is created successfully.
     closeProductModal();
 
     startCountdown();
