@@ -10,11 +10,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
-      padding: 16px;
+      padding: 12px;
       background: #10131e;
       color: white;
       font-family: Arial, sans-serif;
@@ -27,79 +29,173 @@
 
     header {
       text-align: center;
-      padding: 24px 10px;
+      padding: 20px 10px;
       background: linear-gradient(135deg, #29285c, #10131e);
       border-radius: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+      border: 1px solid #44416f;
     }
 
     header h1 {
       margin: 0 0 8px;
-      font-size: 25px;
+      font-size: 23px;
     }
 
     header p {
       margin: 0;
       color: #bfc6df;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .section-title {
-      font-size: 19px;
-      margin: 20px 0 12px;
+      font-size: 18px;
+      margin: 18px 0 12px;
     }
 
     .products-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 10px;
     }
 
     .product-card {
       background: #1b2030;
-      border: 1px solid #343b54;
+      border: 1px solid #45405f;
       border-radius: 13px;
-      padding: 10px;
+      padding: 9px;
       min-width: 0;
+      overflow: hidden;
+    }
+
+    /* MAIN IMAGE FRAME */
+
+    .image-frame {
+      width: 100%;
+      min-height: 112px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      background: #121827;
+      border: 1px solid #6558e8;
+      border-radius: 11px;
+      overflow: hidden;
     }
 
     .product-image {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      object-fit: cover;
-      background: #292f42;
-      border-radius: 9px;
       display: block;
+      width: 90px;
+      height: 90px;
+      max-width: 100%;
+      object-fit: contain;
+      background: #252b3d;
+      border: 1px solid #3b4561;
+      border-radius: 8px;
+    }
+
+    .image-placeholder {
+      width: 90px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #8993ae;
+      font-size: 12px;
+      border: 1px dashed #59627e;
+      border-radius: 8px;
+      background: #202638;
+    }
+
+    /* THUMBNAILS */
+
+    .thumbnail-list {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      overflow-x: auto;
+      padding: 2px 1px 5px;
+      scrollbar-width: thin;
+    }
+
+    .thumbnail {
+      flex: 0 0 38px;
+      width: 38px;
+      height: 38px;
+      padding: 2px;
+      background: #252b3d;
+      border: 1px solid #454d68;
+      border-radius: 6px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .thumbnail.active {
+      border: 2px solid #8b7fff;
+      background: #39316f;
+    }
+
+    .thumbnail img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 3px;
+    }
+
+    .thumbnail-empty {
+      flex: 0 0 38px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #65708d;
+      font-size: 11px;
+      background: #202638;
+      border: 1px dashed #454d68;
+      border-radius: 6px;
+    }
+
+    .image-count {
+      color: #8993ae;
+      text-align: center;
+      font-size: 10px;
+      margin-top: 3px;
     }
 
     .product-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
-      margin: 10px 0 5px;
+      margin: 9px 0 5px;
+      overflow-wrap: anywhere;
     }
 
     .product-details {
       color: #aeb7ce;
-      font-size: 13px;
-      min-height: 18px;
-      margin-bottom: 8px;
+      font-size: 12px;
+      min-height: 16px;
+      margin-bottom: 7px;
+      overflow-wrap: anywhere;
     }
 
     .product-price {
       color: #62e6a5;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 9px;
     }
 
     button {
       width: 100%;
       border: 0;
-      border-radius: 9px;
-      padding: 11px 8px;
+      border-radius: 8px;
+      padding: 10px 7px;
       background: #6558e8;
       color: white;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
       cursor: pointer;
     }
@@ -116,9 +212,9 @@
 
     .message {
       display: none;
-      padding: 13px;
+      padding: 12px;
       border-radius: 10px;
-      margin: 15px 0;
+      margin: 14px 0;
       line-height: 1.6;
       overflow-wrap: anywhere;
     }
@@ -177,10 +273,10 @@
     .qr-area {
       background: white;
       border-radius: 12px;
-      padding: 16px;
+      padding: 12px;
       width: fit-content;
       max-width: 100%;
-      margin: 18px auto;
+      margin: 16px auto;
       text-align: center;
     }
 
@@ -188,8 +284,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      min-width: 220px;
+      width: 250px;
+      max-width: 100%;
       min-height: 220px;
+      margin: auto;
     }
 
     #qrcode img,
@@ -269,6 +367,102 @@
       color: #78819c;
       font-size: 12px;
       margin: 25px 0 10px;
+    }
+
+    /* PHONE LANDSCAPE */
+
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+      body {
+        padding: 7px;
+      }
+
+      .container {
+        max-width: 850px;
+      }
+
+      .products-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .product-card {
+        padding: 7px;
+      }
+
+      .image-frame {
+        min-height: 90px;
+        padding: 5px;
+      }
+
+      .product-image,
+      .image-placeholder {
+        width: 70px;
+        height: 70px;
+      }
+
+      .thumbnail {
+        flex-basis: 30px;
+        width: 30px;
+        height: 30px;
+      }
+
+      .thumbnail-empty {
+        flex-basis: 30px;
+        width: 30px;
+        height: 30px;
+      }
+
+      .product-title {
+        font-size: 13px;
+      }
+
+      .product-price {
+        font-size: 15px;
+      }
+
+      header {
+        padding: 12px 8px;
+      }
+
+      header h1 {
+        font-size: 19px;
+      }
+    }
+
+    @media screen and (max-width: 350px) {
+      body {
+        padding: 7px;
+      }
+
+      .products-grid {
+        gap: 7px;
+      }
+
+      .product-card {
+        padding: 6px;
+      }
+
+      .product-image,
+      .image-placeholder {
+        width: 75px;
+        height: 75px;
+      }
+
+      .image-frame {
+        min-height: 95px;
+      }
+
+      .thumbnail {
+        flex-basis: 32px;
+        width: 32px;
+        height: 32px;
+      }
+
+      .thumbnail-empty {
+        flex-basis: 32px;
+        width: 32px;
+        height: 32px;
+      }
     }
   </style>
 </head>
@@ -415,6 +609,7 @@
   const COUNTDOWN_SECONDS = 60;
   const VERIFY_INTERVAL_MS = 5000;
   const MAX_PACKAGES = 6;
+  const MAX_IMAGES = 5;
 
   let countdownInterval = null;
   let verifyInterval = null;
@@ -450,6 +645,12 @@
   // =====================================
 
   function getImageUrl(path) {
+    if (!path || typeof path !== "string") {
+      return "";
+    }
+
+    path = path.trim();
+
     if (!path) return "";
 
     if (
@@ -472,6 +673,173 @@
   }
 
   // =====================================
+  // GET PACKAGE IMAGES
+  // Supports image_urls and old image_url
+  // =====================================
+
+  function getProductImages(product) {
+    let images = [];
+
+    if (Array.isArray(product.image_urls)) {
+      images = product.image_urls;
+    } else if (typeof product.image_urls === "string") {
+      try {
+        const parsed = JSON.parse(product.image_urls);
+
+        if (Array.isArray(parsed)) {
+          images = parsed;
+        }
+      } catch (error) {
+        console.warn("Invalid image_urls:", error);
+      }
+    }
+
+    // Support array items that are strings or objects.
+    images = images.map(function(item) {
+      if (typeof item === "string") {
+        return item;
+      }
+
+      if (item && typeof item === "object") {
+        return item.image_url || item.url || item.path || "";
+      }
+
+      return "";
+    });
+
+    images = images
+      .map(function(item) {
+        return getImageUrl(item);
+      })
+      .filter(Boolean)
+      .slice(0, MAX_IMAGES);
+
+    // Backward compatibility for old packages.
+    if (
+      images.length === 0 &&
+      product.image_url
+    ) {
+      const oldImage = getImageUrl(product.image_url);
+
+      if (oldImage) {
+        images.push(oldImage);
+      }
+    }
+
+    return images;
+  }
+
+  // =====================================
+  // CREATE PRODUCT IMAGE GALLERY
+  // =====================================
+
+  function createProductGallery(product) {
+    const images = getProductImages(product);
+
+    const gallery = document.createElement("div");
+
+    const frame = document.createElement("div");
+    frame.className = "image-frame";
+
+    const mainImage = document.createElement("img");
+    mainImage.className = "product-image";
+    mainImage.alt = product.title || "Package";
+
+    const placeholder = document.createElement("div");
+    placeholder.className = "image-placeholder";
+    placeholder.textContent = "No Image";
+
+    if (images.length > 0) {
+      mainImage.src = images[0];
+
+      mainImage.onerror = function() {
+        mainImage.style.display = "none";
+        placeholder.style.display = "flex";
+      };
+
+      frame.appendChild(mainImage);
+      frame.appendChild(placeholder);
+      placeholder.style.display = "none";
+    } else {
+      frame.appendChild(placeholder);
+      mainImage.style.display = "none";
+    }
+
+    gallery.appendChild(frame);
+
+    if (images.length > 1) {
+      const thumbnailList = document.createElement("div");
+      thumbnailList.className = "thumbnail-list";
+
+      images.forEach(function(url, index) {
+        const thumb = document.createElement("button");
+
+        thumb.type = "button";
+        thumb.className =
+          "thumbnail" + (index === 0 ? " active" : "");
+
+        thumb.title = "រូបភាព " + (index + 1);
+
+        const thumbImage = document.createElement("img");
+        thumbImage.src = url;
+        thumbImage.alt = "Image " + (index + 1);
+
+        thumbImage.onerror = function() {
+          thumb.style.display = "none";
+        };
+
+        thumb.appendChild(thumbImage);
+
+        thumb.addEventListener("click", function() {
+          mainImage.src = url;
+          mainImage.style.display = "block";
+          placeholder.style.display = "none";
+
+          const allThumbs =
+            thumbnailList.querySelectorAll(".thumbnail");
+
+          allThumbs.forEach(function(item) {
+            item.classList.remove("active");
+          });
+
+          thumb.classList.add("active");
+        });
+
+        thumbnailList.appendChild(thumb);
+      });
+
+      gallery.appendChild(thumbnailList);
+
+    } else if (images.length === 1) {
+      const thumbnailList = document.createElement("div");
+      thumbnailList.className = "thumbnail-list";
+
+      const thumb = document.createElement("button");
+      thumb.type = "button";
+      thumb.className = "thumbnail active";
+
+      const thumbImage = document.createElement("img");
+      thumbImage.src = images[0];
+      thumbImage.alt = "Image 1";
+
+      thumb.appendChild(thumbImage);
+      thumbnailList.appendChild(thumb);
+      gallery.appendChild(thumbnailList);
+    }
+
+    if (images.length > 0) {
+      const count = document.createElement("div");
+      count.className = "image-count";
+      count.textContent =
+        "រូបភាព " + images.length + "/" + MAX_IMAGES;
+
+      gallery.appendChild(count);
+    }
+
+    return gallery;
+  }
+
+  // =====================================
   // LOAD PACKAGES
   // =====================================
 
@@ -489,7 +857,7 @@
       const { data, error } = await supabaseClient
         .from("snv_catalog")
         .select(
-          "id, title, details, price, currency, image_url, created_at"
+          "id, title, details, price, currency, image_url, image_urls, created_at"
         )
         .eq("available", true)
         .order("created_at", { ascending: true })
@@ -506,25 +874,11 @@
       }
 
       data.forEach(function(product) {
-
         const card = document.createElement("article");
         card.className = "product-card";
 
-        const image = document.createElement("img");
-        image.className = "product-image";
-        image.alt = product.title || "Package";
-
-        const imageUrl = getImageUrl(product.image_url);
-
-        if (imageUrl) {
-          image.src = imageUrl;
-        } else {
-          image.style.display = "none";
-        }
-
-        image.onerror = function() {
-          image.style.display = "none";
-        };
+        // Image gallery
+        const gallery = createProductGallery(product);
 
         const title = document.createElement("div");
         title.className = "product-title";
@@ -553,7 +907,7 @@
           createPayment(product.id, button);
         });
 
-        card.appendChild(image);
+        card.appendChild(gallery);
         card.appendChild(title);
         card.appendChild(details);
         card.appendChild(price);
@@ -640,7 +994,7 @@
   }
 
   // =====================================
-  // COUNTDOWN - ONE MINUTE
+  // COUNTDOWN
   // =====================================
 
   function startCountdown() {
@@ -653,7 +1007,6 @@
       Date.now() + COUNTDOWN_SECONDS * 1000;
 
     function updateCountdown() {
-
       const remaining = Math.max(
         0,
         Math.ceil((endAt - Date.now()) / 1000)
@@ -740,10 +1093,6 @@
       (result.receipt_code || ""),
       "success"
     );
-
-    // =================================
-    // SHOW DELIVERY INFORMATION
-    // =================================
 
     const deliveryBox =
       document.getElementById("delivery-box");
@@ -865,8 +1214,6 @@
         return;
       }
 
-      // Do not print delivery credentials to the console.
-
       if (
         data &&
         data.success === true &&
@@ -900,10 +1247,6 @@
     purchaseId,
     expiresAt
   ) {
-    // IMPORTANT:
-    // Stop verification timer only.
-    // Do NOT stop the one-minute countdown here.
-
     stopVerification();
 
     currentPurchaseId = purchaseId;
@@ -912,10 +1255,8 @@
     paymentFinished = false;
     isCheckingPayment = false;
 
-    // Check immediately.
     verifyPayment();
 
-    // Check every 5 seconds.
     verifyInterval = setInterval(
       verifyPayment,
       VERIFY_INTERVAL_MS
@@ -1025,7 +1366,6 @@
 
       displayKHQR(payment.qr);
 
-      // Get real expiry time from server.
       const expiresAt = payment.expires_at ||
         new Date(
           Date.now() +
@@ -1035,11 +1375,8 @@
       document.getElementById("order-box")
         .style.display = "block";
 
-      // Start countdown FIRST.
       startCountdown();
 
-      // Start verification separately.
-      // This no longer stops the countdown.
       startPaymentVerification(
         purchase.id,
         expiresAt
