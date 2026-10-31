@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="km">
 <head>
@@ -219,6 +220,50 @@
       text-align: center;
     }
 
+    .delivery-box {
+      display: none;
+      background: #173d32;
+      border: 1px solid #3d9c78;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .delivery-box h3 {
+      color: #62e6a5;
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .delivery-line {
+      background: #101f1b;
+      padding: 11px;
+      border-radius: 8px;
+      margin: 9px 0;
+      font-size: 14px;
+    }
+
+    .delivery-label {
+      color: #aeb7ce;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .delivery-value {
+      color: #62e6a5;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+      user-select: text;
+    }
+
+    .copy-button {
+      background: #303950;
+      margin-top: 8px;
+      padding: 7px;
+      font-size: 12px;
+    }
+
     footer {
       text-align: center;
       color: #78819c;
@@ -248,6 +293,8 @@
     ផ្ទុកកញ្ចប់ឡើងវិញ
   </button>
 
+  <!-- PAYMENT BOX -->
+
   <section id="order-box" class="order-box">
 
     <h3>ការទូទាត់ KHQR</h3>
@@ -269,7 +316,9 @@
 
     <div class="order-line">
       ស្ថានភាព៖
-      <span id="order-status" class="order-value">awaiting_payment</span>
+      <span id="order-status" class="order-value">
+        awaiting_payment
+      </span>
     </div>
 
     <div class="qr-area" id="qr-area">
@@ -278,13 +327,56 @@
     </div>
 
     <div class="countdown">
-      ម៉ោងបង្ហាញ៖ <span id="countdown">01:00</span>
+      ម៉ោងបង្ហាញ៖
+      <span id="countdown">01:00</span>
     </div>
 
     <p class="payment-note" id="payment-instruction">
       សូមបើកកម្មវិធីធនាគារដែលគាំទ្រ KHQR
       ហើយស្កេន QR ខាងលើ។
-      សូមពិនិត្យចំនួនប្រាក់មុនបញ្ជាក់ការទូទាត់។
+    </p>
+
+  </section>
+
+  <!-- DELIVERY INFORMATION -->
+
+  <section id="delivery-box" class="delivery-box">
+
+    <h3>ការទូទាត់ជោគជ័យ ✓</h3>
+
+    <p style="text-align:center;color:#d2ffeb">
+      ព័ត៌មានកញ្ចប់របស់អ្នក
+    </p>
+
+    <div class="delivery-line">
+      <span class="delivery-label">Gmail</span>
+      <span id="delivery-gmail" class="delivery-value"></span>
+      <button class="copy-button"
+        onclick="copyDelivery('delivery-gmail')">
+        ចម្លង Gmail
+      </button>
+    </div>
+
+    <div class="delivery-line">
+      <span class="delivery-label">Password</span>
+      <span id="delivery-password" class="delivery-value"></span>
+      <button class="copy-button"
+        onclick="copyDelivery('delivery-password')">
+        ចម្លង Password
+      </button>
+    </div>
+
+    <div class="delivery-line">
+      <span class="delivery-label">លេខកូដ 8 ខ្ទង់</span>
+      <span id="delivery-code" class="delivery-value"></span>
+      <button class="copy-button"
+        onclick="copyDelivery('delivery-code')">
+        ចម្លងលេខកូដ
+      </button>
+    </div>
+
+    <p id="delivery-message"
+      style="text-align:center;color:#d2ffeb;font-size:13px">
     </p>
 
   </section>
@@ -292,8 +384,8 @@
   <div class="notice">
     <strong>ចំណាំ៖</strong>
     ការបង្កើត KHQR មិនមានន័យថាការទូទាត់បានជោគជ័យទេ។
-    ស្ថានភាពនឹងត្រូវផ្ទៀងផ្ទាត់ជាមួយ Bakong
-    មុនបង្ហាញថាបានទូទាត់រួច។
+    ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ជាមួយ Bakong
+    មុនបង្ហាញព័ត៌មានកញ្ចប់។
   </div>
 
   <footer>SNV Game Top-up</footer>
@@ -317,16 +409,19 @@
   );
 
   // =====================================
-  // PAYMENT SETTINGS
+  // SETTINGS
   // =====================================
 
   const COUNTDOWN_SECONDS = 60;
   const VERIFY_INTERVAL_MS = 5000;
+  const MAX_PACKAGES = 6;
 
   let countdownInterval = null;
   let verifyInterval = null;
+
   let currentPurchaseId = null;
   let serverExpiresAt = null;
+
   let isCheckingPayment = false;
   let paymentFinished = false;
 
@@ -336,6 +431,7 @@
 
   function showMessage(text, type) {
     const box = document.getElementById("message");
+
     box.textContent = text;
     box.className = "message " + type;
     box.style.display = "block";
@@ -343,6 +439,7 @@
 
   function clearMessage() {
     const box = document.getElementById("message");
+
     box.textContent = "";
     box.className = "message";
     box.style.display = "none";
@@ -375,7 +472,7 @@
   }
 
   // =====================================
-  // LOAD PRODUCTS
+  // LOAD PACKAGES
   // =====================================
 
   async function loadProducts() {
@@ -392,10 +489,11 @@
       const { data, error } = await supabaseClient
         .from("snv_catalog")
         .select(
-          "id, title, details, price, currency, image_url"
+          "id, title, details, price, currency, image_url, created_at"
         )
         .eq("available", true)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .limit(MAX_PACKAGES);
 
       if (error) throw error;
 
@@ -408,6 +506,7 @@
       }
 
       data.forEach(function(product) {
+
         const card = document.createElement("article");
         card.className = "product-card";
 
@@ -480,7 +579,7 @@
   }
 
   // =====================================
-  // DISPLAY REAL BAKONG KHQR
+  // DISPLAY KHQR
   // =====================================
 
   function displayKHQR(khqrText) {
@@ -489,18 +588,14 @@
     qrElement.innerHTML = "";
 
     if (typeof QRCode === "undefined") {
-      throw new Error(
-        "មិនអាចផ្ទុក QR Code Library បានទេ។"
-      );
+      throw new Error("មិនអាចផ្ទុក QR Code Library បានទេ។");
     }
 
     if (
       typeof khqrText !== "string" ||
       !khqrText.trim()
     ) {
-      throw new Error(
-        "KHQR ទទេ ឬទិន្នន័យ QR មិនត្រឹមត្រូវទេ។"
-      );
+      throw new Error("KHQR មិនត្រឹមត្រូវទេ។");
     }
 
     new QRCode(qrElement, {
@@ -514,15 +609,21 @@
   }
 
   // =====================================
-  // STOP PAYMENT TIMERS
+  // STOP COUNTDOWN ONLY
   // =====================================
 
-  function stopPaymentTimers() {
+  function stopCountdown() {
     if (countdownInterval) {
       clearInterval(countdownInterval);
       countdownInterval = null;
     }
+  }
 
+  // =====================================
+  // STOP VERIFICATION ONLY
+  // =====================================
+
+  function stopVerification() {
     if (verifyInterval) {
       clearInterval(verifyInterval);
       verifyInterval = null;
@@ -530,21 +631,29 @@
   }
 
   // =====================================
-  // COUNTDOWN - 1 MINUTE
+  // STOP ALL TIMERS
+  // =====================================
+
+  function stopPaymentTimers() {
+    stopCountdown();
+    stopVerification();
+  }
+
+  // =====================================
+  // COUNTDOWN - ONE MINUTE
   // =====================================
 
   function startCountdown() {
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-    }
+    stopCountdown();
 
     const countdownElement =
       document.getElementById("countdown");
 
-    const startedAt = Date.now();
-    const endAt = startedAt + COUNTDOWN_SECONDS * 1000;
+    const endAt =
+      Date.now() + COUNTDOWN_SECONDS * 1000;
 
     function updateCountdown() {
+
       const remaining = Math.max(
         0,
         Math.ceil((endAt - Date.now()) / 1000)
@@ -559,16 +668,15 @@
         String(seconds).padStart(2, "0");
 
       if (remaining <= 0) {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
+        stopCountdown();
 
-        countdownElement.textContent = "01:00 បានផុត";
+        countdownElement.textContent = "00:00";
 
         if (!paymentFinished) {
           document.getElementById(
             "payment-instruction"
           ).textContent =
-            "ម៉ោងបង្ហាញ 1 នាទីបានបញ្ចប់។ ប្រព័ន្ធនៅតែបន្តពិនិត្យស្ថានភាពការទូទាត់ដោយស្វ័យប្រវត្តិ រហូតដល់ KHQR ផុតកំណត់តាម Server។";
+            "ការរាប់ថយក្រោយមួយនាទីបានបញ្ចប់។ ប្រព័ន្ធនៅតែបន្តពិនិត្យការទូទាត់រហូតដល់ KHQR ផុតកំណត់តាម Server។";
         }
       }
     }
@@ -579,6 +687,27 @@
       updateCountdown,
       1000
     );
+  }
+
+  // =====================================
+  // COPY DELIVERY INFORMATION
+  // =====================================
+
+  async function copyDelivery(elementId) {
+    const text = document.getElementById(elementId)
+      .textContent;
+
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      showMessage("បានចម្លងព័ត៌មានរួចហើយ។", "success");
+    } catch (error) {
+      showMessage(
+        "មិនអាចចម្លងដោយស្វ័យប្រវត្តិបានទេ។ សូមជ្រើសរើសអត្ថបទដើម្បីចម្លង។",
+        "error"
+      );
+    }
   }
 
   // =====================================
@@ -604,7 +733,7 @@
     document.getElementById(
       "payment-instruction"
     ).textContent =
-      "ការទូទាត់របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។ សូមរក្សាទុកលេខបញ្ជាទិញ។";
+      "ការទូទាត់របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។";
 
     showMessage(
       "ការទូទាត់ជោគជ័យ! លេខបញ្ជាទិញ៖ " +
@@ -612,7 +741,56 @@
       "success"
     );
 
-    console.log("Payment confirmed:", result);
+    // =================================
+    // SHOW DELIVERY INFORMATION
+    // =================================
+
+    const deliveryBox =
+      document.getElementById("delivery-box");
+
+    const delivery = result.delivery;
+
+    if (
+      result.delivery_available === true &&
+      delivery &&
+      typeof delivery === "object"
+    ) {
+      document.getElementById("delivery-gmail")
+        .textContent = delivery.gmail || "";
+
+      document.getElementById("delivery-password")
+        .textContent = delivery.package_password || "";
+
+      document.getElementById("delivery-code")
+        .textContent = delivery.code_8_digits || "";
+
+      document.getElementById("delivery-message")
+        .textContent =
+          "សូមរក្សាទុកព័ត៌មានកញ្ចប់របស់អ្នក។";
+
+      deliveryBox.style.display = "block";
+
+    } else {
+      deliveryBox.style.display = "block";
+
+      document.getElementById("delivery-gmail")
+        .textContent = "មិនទាន់មានព័ត៌មាន";
+
+      document.getElementById("delivery-password")
+        .textContent = "មិនទាន់មានព័ត៌មាន";
+
+      document.getElementById("delivery-code")
+        .textContent = "មិនទាន់មានព័ត៌មាន";
+
+      document.getElementById("delivery-message")
+        .textContent =
+          "ការទូទាត់ជោគជ័យ ប៉ុន្តែព័ត៌មានកញ្ចប់មិនទាន់មានក្នុងប្រព័ន្ធទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។";
+    }
+
+    deliveryBox.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
   }
 
   // =====================================
@@ -649,7 +827,7 @@
   }
 
   // =====================================
-  // VERIFY PAYMENT WITH SUPABASE
+  // VERIFY PAYMENT
   // =====================================
 
   async function verifyPayment() {
@@ -661,7 +839,6 @@
       return;
     }
 
-    // Stop checking when the actual server QR expires.
     if (
       serverExpiresAt &&
       Date.now() >= new Date(serverExpiresAt).getTime()
@@ -688,22 +865,23 @@
         return;
       }
 
-      console.log("Verify response:", data);
+      // Do not print delivery credentials to the console.
 
       if (
         data &&
         data.success === true &&
-        (
-          data.paid === true ||
-          data.payment_status === "paid"
-        )
+        data.paid === true &&
+        data.payment_status === "paid"
       ) {
         showPaymentSuccess(data);
         return;
       }
 
       if (data && data.error) {
-        console.warn("Payment verification:", data.error);
+        console.warn(
+          "Payment verification:",
+          data.error
+        );
       }
 
     } catch (error) {
@@ -715,21 +893,29 @@
   }
 
   // =====================================
-  // START AUTOMATIC VERIFICATION
+  // START PAYMENT VERIFICATION
   // =====================================
 
-  function startPaymentVerification(purchaseId, expiresAt) {
-    stopPaymentTimers();
+  function startPaymentVerification(
+    purchaseId,
+    expiresAt
+  ) {
+    // IMPORTANT:
+    // Stop verification timer only.
+    // Do NOT stop the one-minute countdown here.
+
+    stopVerification();
 
     currentPurchaseId = purchaseId;
     serverExpiresAt = expiresAt;
+
     paymentFinished = false;
     isCheckingPayment = false;
 
     // Check immediately.
     verifyPayment();
 
-    // Check again every 5 seconds.
+    // Check every 5 seconds.
     verifyInterval = setInterval(
       verifyPayment,
       VERIFY_INTERVAL_MS
@@ -751,11 +937,15 @@
 
       currentPurchaseId = null;
       serverExpiresAt = null;
+
       paymentFinished = false;
       isCheckingPayment = false;
 
-      document.getElementById("order-box").style.display =
-        "none";
+      document.getElementById("delivery-box")
+        .style.display = "none";
+
+      document.getElementById("order-box")
+        .style.display = "none";
 
       const { data, error } =
         await supabaseClient.functions.invoke(
@@ -776,8 +966,6 @@
         );
       }
 
-      console.log("Bakong response:", data);
-
       if (
         !data ||
         data.success !== true ||
@@ -788,7 +976,7 @@
         throw new Error(
           data && data.error
             ? data.error
-            : "ទិន្នន័យ KHQR ត្រឡប់មកមិនត្រឹមត្រូវទេ។"
+            : "ទិន្នន័យ KHQR មិនត្រឹមត្រូវទេ។"
         );
       }
 
@@ -801,52 +989,57 @@
         );
       }
 
-      document.getElementById("receipt-code").textContent =
-        purchase.receipt_code || "-";
+      document.getElementById("receipt-code")
+        .textContent = purchase.receipt_code || "-";
 
-      document.getElementById("order-product").textContent =
-        purchase.product_name ||
-        purchase.item_title ||
-        "-";
+      document.getElementById("order-product")
+        .textContent =
+          purchase.product_name ||
+          purchase.item_title ||
+          "-";
 
       const amount = Number(
         purchase.amount ?? purchase.total
       );
 
-      document.getElementById("order-amount").textContent =
-        Number.isFinite(amount)
-          ? amount.toFixed(2) + " " +
-            (purchase.currency || "USD")
-          : "-";
+      document.getElementById("order-amount")
+        .textContent =
+          Number.isFinite(amount)
+            ? amount.toFixed(2) + " " +
+              (purchase.currency || "USD")
+            : "-";
 
-      document.getElementById("order-status").textContent =
-        purchase.payment_status || "awaiting_payment";
+      document.getElementById("order-status")
+        .textContent =
+          purchase.payment_status || "awaiting_payment";
 
-      document.getElementById("order-status").style.color =
-        "#62e6a5";
+      document.getElementById("order-status")
+        .style.color = "#62e6a5";
 
-      document.getElementById("qr-area").style.display =
-        "block";
+      document.getElementById("qr-area")
+        .style.display = "block";
 
-      document.getElementById("payment-instruction").textContent =
-        "សូមស្កេន KHQR។ ប្រព័ន្ធនឹងពិនិត្យការទូទាត់រៀងរាល់ 5 វិនាទី។";
+      document.getElementById("payment-instruction")
+        .textContent =
+          "សូមស្កេន KHQR។ ប្រព័ន្ធនឹងពិនិត្យការទូទាត់រៀងរាល់ 5 វិនាទី។";
 
       displayKHQR(payment.qr);
 
-      // Actual expiration comes from the server.
+      // Get real expiry time from server.
       const expiresAt = payment.expires_at ||
         new Date(
           Date.now() +
           Number(payment.expires_in_minutes || 15) * 60000
         ).toISOString();
 
-      document.getElementById("order-box").style.display =
-        "block";
+      document.getElementById("order-box")
+        .style.display = "block";
 
-      // Display countdown for one minute.
+      // Start countdown FIRST.
       startCountdown();
 
-      // Verify payment automatically until server expiry.
+      // Start verification separately.
+      // This no longer stops the countdown.
       startPaymentVerification(
         purchase.id,
         expiresAt
@@ -858,7 +1051,9 @@
       );
 
       document.getElementById("order-box")
-        .scrollIntoView({ behavior: "smooth" });
+        .scrollIntoView({
+          behavior: "smooth"
+        });
 
     } catch (error) {
       console.error("Create payment error:", error);
@@ -887,6 +1082,7 @@
   // =====================================
 
   loadProducts();
+
 </script>
 
 </body>
