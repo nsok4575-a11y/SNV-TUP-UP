@@ -33,21 +33,57 @@ function extraShowView(show){
  // Both shops remain visible as separate sections on the same page.
  byId("extra-shop-view").style.display="block";
 }
-function extraRenderCategories(){
- const nav=byId("extra-categories");nav.innerHTML="";
- EXTRA_CATEGORIES.forEach(cat=>{
-  const b=document.createElement("button");b.type="button";b.className="extra-category"+(cat===extraActiveCategory?" active":"");
-  b.addEventListener("click",()=>{
- extraActiveCategory=cat.replace(/^[⭐🕐🏐🎽🔥🏆]\s*/u,"").trim().toUpperCase();
- extraRenderCategories();
- extraRenderProducts();
-});nav.appendChild(b);
- });
+function extraCategoryValue(label) {
+    return String(label || "")
+        .replace(/^[⭐🕐🏐🎽🔥🏆]\s*/u, "")
+        .trim()
+        .toUpperCase();
 }
-function extraRenderProducts(){
- const grid=byId("extra-products-grid");grid.innerHTML="";
- const rows=extraProducts.filter(p=>String(p.category||"BASIC").trim().toUpperCase()===extraActiveCategory);
- if(!rows.length){grid.innerHTML='<p class="empty-message">មិនមានកញ្ចប់ក្នុងប្រភេទនេះទេ។</p>';return}
+
+function extraRenderCategories() {
+    const nav = byId("extra-categories");
+    nav.innerHTML = "";
+
+    EXTRA_CATEGORIES.forEach(cat => {
+        const categoryValue = extraCategoryValue(cat);
+
+        const b = document.createElement("button");
+        b.type = "button";
+
+        b.className = "extra-category" +
+            (categoryValue === extraActiveCategory ? " active" : "");
+
+        b.textContent = cat;
+
+        b.addEventListener("click", () => {
+            extraActiveCategory = categoryValue;
+
+            extraRenderCategories();
+            extraRenderProducts();
+        });
+
+        nav.appendChild(b);
+    });
+}
+
+function extraRenderProducts() {
+    const grid = byId("extra-products-grid");
+    grid.innerHTML = "";
+
+    const rows = extraProducts.filter(p =>
+        String(p.category || "BASIC")
+            .trim()
+            .toUpperCase() === extraActiveCategory
+    );
+
+    if (!rows.length) {
+        grid.innerHTML =
+            '<p class="empty-message">មិនមានកញ្ចប់ក្នុងប្រភេទនេះទេ។</p>';
+        return;
+    }
+
+    // កូដបង្ហាញផលិតផលដែលនៅសល់ ត្រូវបន្តនៅខាងក្រោមនេះ
+}
  rows.forEach(p=>{
   const card=document.createElement("article");card.className="extra-card";
   const img=document.createElement("img");img.alt=extraDisplayTitle(p.title);const urls=extraImages(p);
