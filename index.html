@@ -22,6 +22,7 @@ function extraImageUrl(value){
  const clean=v.replace(/^\/+/,"").replace(/^snv-extra-images\//,"");
  return SUPABASE_URL+"/storage/v1/object/public/snv-extra-images/"+clean.split("/").map(encodeURIComponent).join("/");
 }
+function extraDisplayTitle(value){return String(value||"").replace(/^\s*package\s*/i,"").trim()||String(value||"")}
 function extraImages(p){
  let list=Array.isArray(p.image_urls)?p.image_urls:[];
  if(typeof p.image_urls==="string"){try{list=JSON.parse(p.image_urls)}catch(e){list=[]}}
@@ -45,9 +46,9 @@ function extraRenderProducts(){
  if(!rows.length){grid.innerHTML='<p class="empty-message">មិនមានកញ្ចប់ក្នុងប្រភេទនេះទេ។</p>';return}
  rows.forEach(p=>{
   const card=document.createElement("article");card.className="extra-card";
-  const img=document.createElement("img");img.alt=p.title||"Package";const urls=extraImages(p);
-  if(urls.length){img.src=urls[0];img.onerror=()=>{img.style.display="none"}}
-  const title=document.createElement("div");title.className="extra-card-title";title.textContent=p.title||"Package";
+  const img=document.createElement("img");img.alt=extraDisplayTitle(p.title);const urls=extraImages(p);
+  if(urls.length){img.src=urls[0];img.style.cursor="zoom-in";img.addEventListener("click",()=>extraOpenImage(p));img.onerror=()=>{img.style.display="none"}}
+  const title=document.createElement("div");title.className="extra-card-title";title.textContent=extraDisplayTitle(p.title);
   const price=document.createElement("div");price.className="extra-card-price";const n=Number(p.price);price.textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-";
   const buy=document.createElement("button");buy.type="button";buy.className="extra-buy";buy.textContent="ទិញ";
   buy.addEventListener("click",()=>extraOpenBuy(p));
@@ -61,8 +62,15 @@ async function extraLoadProducts(){
   if(error)throw error;extraProducts=data||[];extraRenderCategories();extraRenderProducts();
  }catch(e){console.error(e);grid.innerHTML="";extraMsg("មិនអាចផ្ទុក Game Package បានទេ៖ "+(e.message||""))}
 }
+function extraOpenImage(p){
+ const urls=extraImages(p);if(!urls.length)return;
+ byId("extra-image-preview").src=urls[0];
+ byId("extra-image-preview-title").textContent=extraDisplayTitle(p.title);
+ byId("extra-image-modal").classList.add("show");document.body.style.overflow="hidden";
+}
+function extraCloseImage(){byId("extra-image-modal").classList.remove("show");byId("extra-image-preview").src="";document.body.style.overflow=""}
 function extraOpenBuy(p){
- extraSelectedProduct=p;byId("extra-selected-name").textContent=p.title||"Package";
+ extraSelectedProduct=p;byId("extra-selected-name").textContent=extraDisplayTitle(p.title);
  byId("extra-selected-price").textContent=Number(p.price).toFixed(2)+" "+(p.currency||"USD");
  ["extra-game-uid","extra-game-email","extra-game-case","extra-game-reference"].forEach(id=>byId(id).value="");
  byId("extra-buy-modal").classList.add("show");document.body.style.overflow="hidden";
@@ -138,9 +146,14 @@ function extraRestorePending(){
  byId("extra-payment-note").textContent="QR មិនអាចស្ដារឡើងវិញក្រោយ Refresh បានទេ។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាព។";
  extraStartVerify(p.purchaseId,p.expiresAt);
 }
-byId("extra-close-buy").addEventListener("click",extraCloseBuy);
-byId("extra-buy-modal").addEventListener("click",e=>{if(e.target===byId("extra-buy-modal"))extraCloseBuy()});
-byId("extra-confirm-buy").addEventListener("click",extraCreatePayment);
+document.addEventListener("DOMContentLoaded",()=>{
+ byId("extra-close-buy").addEventListener("click",extraCloseBuy);
+ byId("extra-close-image").addEventListener("click",extraCloseImage);
+ byId("extra-image-modal").addEventListener("click",e=>{if(e.target===byId("extra-image-modal"))extraCloseImage()});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape")extraCloseImage()});
+ byId("extra-buy-modal").addEventListener("click",e=>{if(e.target===byId("extra-buy-modal"))extraCloseBuy()});
+ byId("extra-confirm-buy").addEventListener("click",extraCreatePayment);
+});
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -229,6 +242,8 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 .extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .extra-card{min-width:0;background:#22283b;border:1px solid #454d68;border-radius:10px;padding:6px}
 .extra-card img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#101827;border-radius:7px}
+.extra-image-content{max-width:560px}
+.extra-image-preview{display:block;width:100%;max-height:75vh;object-fit:contain;border-radius:10px;background:#101827}
 .extra-card-title{text-align:center;font-size:12px;font-weight:bold;margin:6px 0;overflow-wrap:anywhere}
 .extra-card-price{text-align:center;color:#ffb35c;font-weight:bold;margin:5px 0}
 .extra-buy{background:linear-gradient(135deg,#ef8b2c,#c85b16);padding:9px 4px}
@@ -252,6 +267,13 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 
 
 
+<div class="modal" id="extra-image-modal">
+ <div class="modal-content extra-image-content">
+  <div class="modal-header"><h3 id="extra-image-preview-title">រូបភាព</h3><button type="button" class="close-modal" id="extra-close-image">×</button></div>
+  <img id="extra-image-preview" class="extra-image-preview" alt="រូបភាពកញ្ចប់">
+ </div>
+</div>
+
 <div class="modal" id="extra-buy-modal">
  <div class="modal-content">
   <div class="modal-header"><h3>ព័ត៌មានសម្រាប់ Top-up</h3><button type="button" class="close-modal" id="extra-close-buy">×</button></div>
@@ -259,7 +281,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
   <div id="extra-selected-price" class="modal-price"></div>
   <label class="extra-field-label" for="extra-game-uid">Game UID *</label><input class="extra-field" id="extra-game-uid" autocomplete="off" placeholder="បញ្ចូល Game UID">
   <label class="extra-field-label" for="extra-game-email">Game Email *</label><input class="extra-field" id="extra-game-email" type="email" autocomplete="email" placeholder="បញ្ចូល Game Email">
-  <label class="extra-field-label" for="extra-game-case">Game Case ID (មិនចាំបាច់)</label><input class="extra-field" id="extra-game-case" class="extra-field" autocomplete="off" placeholder="បើមាន">
+  <label class="extra-field-label" for="extra-game-case">Game Case ID (មិនចាំបាច់)</label><input class="extra-field" id="extra-game-case" autocomplete="off" placeholder="បើមាន">
   <label class="extra-field-label" for="extra-game-reference">Game Reference Code (មិនចាំបាច់)</label><input class="extra-field" id="extra-game-reference" autocomplete="off" placeholder="បើមាន">
   <button type="button" class="extra-buy" id="extra-confirm-buy">បង្កើត KHQR</button>
   <p class="modal-note">មិនត្រូវបញ្ចូល Password ឬ OTP ទេ។</p>
@@ -281,7 +303,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
   <div id="extra-shop-message" class="message"></div>
   <section id="extra-payment-box">
     <div class="order-line">Receipt: <span id="extra-receipt" class="order-value"></span></div>
-    <div class="order-line">Package: <span id="extra-order-product"></span></div>
+    <div class="order-line"><span id="extra-order-product"></span></div>
     <div class="order-line">Amount: <span id="extra-order-amount" class="order-value"></span></div>
     <div class="order-line">Status: <span id="extra-order-status" class="order-value">awaiting_payment</span></div>
     <div id="extra-qr-area"><div id="extra-qrcode"></div><div class="qr-label">SCAN TO PAY - KHQR</div></div>
