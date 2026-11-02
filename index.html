@@ -37,12 +37,16 @@ function extraRenderCategories(){
  const nav=byId("extra-categories");nav.innerHTML="";
  EXTRA_CATEGORIES.forEach(cat=>{
   const b=document.createElement("button");b.type="button";b.className="extra-category"+(cat===extraActiveCategory?" active":"");
-  b.textContent=cat;b.addEventListener("click",()=>{extraActiveCategory=cat;extraRenderCategories();extraRenderProducts()});nav.appendChild(b);
+  b.addEventListener("click",()=>{
+ extraActiveCategory=cat.replace(/^[⭐🕐🏐🎽🔥🏆]\s*/u,"").trim().toUpperCase();
+ extraRenderCategories();
+ extraRenderProducts();
+});nav.appendChild(b);
  });
 }
 function extraRenderProducts(){
  const grid=byId("extra-products-grid");grid.innerHTML="";
- const rows=extraProducts.filter(p=>String(p.category||"BASIC").toUpperCase()===extraActiveCategory);
+ const rows=extraProducts.filter(p=>String(p.category||"BASIC").trim().toUpperCase()===extraActiveCategory);
  if(!rows.length){grid.innerHTML='<p class="empty-message">មិនមានកញ្ចប់ក្នុងប្រភេទនេះទេ។</p>';return}
  rows.forEach(p=>{
   const card=document.createElement("article");card.className="extra-card";
