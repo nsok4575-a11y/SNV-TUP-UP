@@ -28,13 +28,8 @@ function extraImages(p){
  return [...new Set(urls.map(extraImageUrl).filter(Boolean))];
 }
 function extraShowView(show){
- byId("extra-shop-view").style.display=show?"block":"none";
- ["products-grid","refresh-button","message","order-box","delivery-box"].forEach(id=>{
-   const el=byId(id);if(el)el.style.display=show?"none":(id==="products-grid"?"grid":"");
- });
- document.querySelector(".section-title").style.display=show?"none":"";
- document.querySelector(".notice").style.display=show?"none":"";
- document.querySelector("footer").style.display=show?"none":"";
+ // Both shops remain visible as separate sections on the same page.
+ byId("extra-shop-view").style.display="block";
 }
 function extraRenderCategories(){
  const nav=byId("extra-categories");nav.innerHTML="";
@@ -142,8 +137,6 @@ function extraRestorePending(){
  byId("extra-payment-note").textContent="QR មិនអាចស្ដារឡើងវិញក្រោយ Refresh បានទេ។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាព។";
  extraStartVerify(p.purchaseId,p.expiresAt);
 }
-byId("extra-shop-entry").addEventListener("click",()=>{extraShowView(true);extraLoadProducts();extraRestorePending()});
-byId("extra-shop-back").addEventListener("click",()=>extraShowView(false));
 byId("extra-close-buy").addEventListener("click",extraCloseBuy);
 byId("extra-buy-modal").addEventListener("click",e=>{if(e.target===byId("extra-buy-modal"))extraCloseBuy()});
 byId("extra-confirm-buy").addEventListener("click",extraCreatePayment);
@@ -227,7 +220,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 
 /* Separate Game Package Shop */
 #extra-shop-entry{margin-top:10px;background:linear-gradient(135deg,#ef8b2c,#c85b16)}
-#extra-shop-view{display:none;margin-top:14px}
+#extra-shop-view{display:block;margin-top:18px;background:#1b2030;border:1px solid #d87929;border-radius:14px;padding:10px}
 .extra-layout{display:grid;grid-template-columns:112px minmax(0,1fr);gap:9px;align-items:start}
 .extra-categories{display:flex;flex-direction:column;gap:7px;position:sticky;top:8px}
 .extra-category{background:#293044;border:1px solid #48516a;color:#dce3f5;padding:10px 5px;font-size:11px;line-height:1.35}
@@ -256,28 +249,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 <h1>SNV Game Top-up</h1><p>ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
 </header>
 
-<button type="button" id="extra-shop-entry">បើក Game Package Shop</button>
 
-<section id="extra-shop-view">
-  <button type="button" class="extra-back" id="extra-shop-back">← ត្រឡប់ទៅ Account Shop</button>
-  <div class="extra-layout">
-    <nav class="extra-categories" id="extra-categories" aria-label="Package categories"></nav>
-    <div>
-      <div class="extra-grid" id="extra-products-grid"><p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p></div>
-    </div>
-  </div>
-  <div id="extra-shop-message" class="message"></div>
-  <section id="extra-payment-box">
-    <div class="order-line">Receipt: <span id="extra-receipt" class="order-value"></span></div>
-    <div class="order-line">Package: <span id="extra-order-product"></span></div>
-    <div class="order-line">Amount: <span id="extra-order-amount" class="order-value"></span></div>
-    <div class="order-line">Status: <span id="extra-order-status" class="order-value">awaiting_payment</span></div>
-    <div id="extra-qr-area"><div id="extra-qrcode"></div><div class="qr-label">SCAN TO PAY - KHQR</div></div>
-    <div class="countdown">ពេលវេលា៖ <span id="extra-countdown">02:30</span></div>
-    <p class="payment-note" id="extra-payment-note">សូមស្កេន KHQR ដើម្បីទូទាត់។</p>
-    <div id="extra-game-info" class="history-note"></div>
-  </section>
-</section>
 
 <div class="modal" id="extra-buy-modal">
  <div class="modal-content">
@@ -297,6 +269,26 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 <div id="message" class="message"></div>
 <section class="packages-panel"><div id="products-grid" class="products-grid"><p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p></div></section>
 <button type="button" class="refresh-button" id="refresh-button">ផ្ទុកកញ្ចប់ឡើងវិញ</button>
+
+<section id="extra-shop-view">
+  <div class="extra-layout">
+    <nav class="extra-categories" id="extra-categories" aria-label="Package categories"></nav>
+    <div>
+      <div class="extra-grid" id="extra-products-grid"><p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p></div>
+    </div>
+  </div>
+  <div id="extra-shop-message" class="message"></div>
+  <section id="extra-payment-box">
+    <div class="order-line">Receipt: <span id="extra-receipt" class="order-value"></span></div>
+    <div class="order-line">Package: <span id="extra-order-product"></span></div>
+    <div class="order-line">Amount: <span id="extra-order-amount" class="order-value"></span></div>
+    <div class="order-line">Status: <span id="extra-order-status" class="order-value">awaiting_payment</span></div>
+    <div id="extra-qr-area"><div id="extra-qrcode"></div><div class="qr-label">SCAN TO PAY - KHQR</div></div>
+    <div class="countdown">ពេលវេលា៖ <span id="extra-countdown">02:30</span></div>
+    <p class="payment-note" id="extra-payment-note">សូមស្កេន KHQR ដើម្បីទូទាត់។</p>
+    <div id="extra-game-info" class="history-note"></div>
+  </section>
+</section>
 
 <div class="modal" id="product-modal"><div class="modal-content">
 <div class="modal-header"><h3>ព័ត៌មានកញ្ចប់</h3><button type="button" class="close-modal" id="close-modal">×</button></div>
@@ -626,7 +618,7 @@ byId("copy-pin").addEventListener("click",async()=>{
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeProductModal();closeHistoryModal()}});
 (function startWebsite(){
  const c=getCustomerCredentials();if(c.historyPin)byId("saved-pin").textContent=c.historyPin;
- loadProducts();restorePendingPurchase()
+ loadProducts();restorePendingPurchase();extraLoadProducts();extraRestorePending()
 })();
 </script>
 </body>
