@@ -4,7 +4,151 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SNV Game Top-up</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// Separate Game Package Shop: uses only snv_extra_* resources.
+const EXTRA_CATEGORIES=["RECOMMENDED","WEEKLY & MONTHLY","BASIC","S POINT","COLOSSEUM","LEAGUE"];
+const EXTRA_PENDING_KEY="snv_extra_pending_purchase_v1";
+let extraProducts=[],extraSelectedProduct=null,extraActiveCategory="RECOMMENDED";
+let extraPurchaseId=null,extraExpiry=null,extraVerifyTimer=null,extraCountdownTimer=null;
+let extraChecking=false,extraPaid=false,extraCreating=false,extraVerifyStarted=0;
+
+function extraMsg(text,type="error"){
+ const el=byId("extra-shop-message");el.textContent=text;el.className="message "+type;el.style.display="block";
+}
+function extraImageUrl(value){
+ if(!value||typeof value!=="string")return "";
+ const v=value.trim();if(/^https?:\/\//i.test(v))return v;
+ const clean=v.replace(/^\/+/,"").replace(/^snv-extra-images\//,"");
+ return SUPABASE_URL+"/storage/v1/object/public/snv-extra-images/"+clean.split("/").map(encodeURIComponent).join("/");
+}
+function extraImages(p){
+ let list=Array.isArray(p.image_urls)?p.image_urls:[];
+ if(typeof p.image_urls==="string"){try{list=JSON.parse(p.image_urls)}catch(e){list=[]}}
+ const urls=[p.image_url,...list.map(x=>typeof x==="string"?x:(x?.image_url||x?.url||x?.path||""))];
+ return [...new Set(urls.map(extraImageUrl).filter(Boolean))];
+}
+function extraShowView(show){
+ byId("extra-shop-view").style.display=show?"block":"none";
+ ["products-grid","refresh-button","message","order-box","delivery-box"].forEach(id=>{
+   const el=byId(id);if(el)el.style.display=show?"none":(id==="products-grid"?"grid":"");
+ });
+ document.querySelector(".section-title").style.display=show?"none":"";
+ document.querySelector(".notice").style.display=show?"none":"";
+ document.querySelector("footer").style.display=show?"none":"";
+}
+function extraRenderCategories(){
+ const nav=byId("extra-categories");nav.innerHTML="";
+ EXTRA_CATEGORIES.forEach(cat=>{
+  const b=document.createElement("button");b.type="button";b.className="extra-category"+(cat===extraActiveCategory?" active":"");
+  b.textContent=cat;b.addEventListener("click",()=>{extraActiveCategory=cat;extraRenderCategories();extraRenderProducts()});nav.appendChild(b);
+ });
+}
+function extraRenderProducts(){
+ const grid=byId("extra-products-grid");grid.innerHTML="";
+ const rows=extraProducts.filter(p=>String(p.category||"BASIC").toUpperCase()===extraActiveCategory);
+ if(!rows.length){grid.innerHTML='<p class="empty-message">មិនមានកញ្ចប់ក្នុងប្រភេទនេះទេ។</p>';return}
+ rows.forEach(p=>{
+  const card=document.createElement("article");card.className="extra-card";
+  const img=document.createElement("img");img.alt=p.title||"Package";const urls=extraImages(p);
+  if(urls.length){img.src=urls[0];img.onerror=()=>{img.style.display="none"}}
+  const title=document.createElement("div");title.className="extra-card-title";title.textContent=p.title||"Package";
+  const price=document.createElement("div");price.className="extra-card-price";const n=Number(p.price);price.textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-";
+  const buy=document.createElement("button");buy.type="button";buy.className="extra-buy";buy.textContent="ទិញ";
+  buy.addEventListener("click",()=>extraOpenBuy(p));
+  card.append(img,title,price,buy);grid.appendChild(card);
+ });
+}
+async function extraLoadProducts(){
+ const grid=byId("extra-products-grid");grid.innerHTML='<p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p>';
+ try{
+  const {data,error}=await supabaseClient.from("snv_extra_catalog").select("id,title,details,price,currency,image_url,image_urls,available,category,sort_order").eq("available",true).order("sort_order",{ascending:true});
+  if(error)throw error;extraProducts=data||[];extraRenderCategories();extraRenderProducts();
+ }catch(e){console.error(e);grid.innerHTML="";extraMsg("មិនអាចផ្ទុក Game Package បានទេ៖ "+(e.message||""))}
+}
+function extraOpenBuy(p){
+ extraSelectedProduct=p;byId("extra-selected-name").textContent=p.title||"Package";
+ byId("extra-selected-price").textContent=Number(p.price).toFixed(2)+" "+(p.currency||"USD");
+ ["extra-game-uid","extra-game-email","extra-game-case","extra-game-reference"].forEach(id=>byId(id).value="");
+ byId("extra-buy-modal").classList.add("show");document.body.style.overflow="hidden";
+}
+function extraCloseBuy(){byId("extra-buy-modal").classList.remove("show");document.body.style.overflow=""}
+function extraSavePending(p){localStorage.setItem(EXTRA_PENDING_KEY,JSON.stringify(p))}
+function extraGetPending(){try{return JSON.parse(localStorage.getItem(EXTRA_PENDING_KEY)||"null")}catch(e){return null}}
+function extraStopTimers(){if(extraVerifyTimer)clearTimeout(extraVerifyTimer);if(extraCountdownTimer)clearInterval(extraCountdownTimer);extraVerifyTimer=null;extraCountdownTimer=null}
+function extraStartCountdown(){
+ if(extraCountdownTimer)clearInterval(extraCountdownTimer);
+ const tick=()=>{const sec=Math.max(0,Math.ceil((new Date(extraExpiry).getTime()-Date.now())/1000));byId("extra-countdown").textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");if(sec<=0)clearInterval(extraCountdownTimer)};
+ tick();extraCountdownTimer=setInterval(tick,1000);
+}
+async function extraVerify(){
+ if(!extraPurchaseId||extraChecking||extraPaid)return;
+ extraChecking=true;
+ try{
+  const {data,error}=await supabaseClient.functions.invoke("snv-extra-verify",{body:{purchase_id:extraPurchaseId}});
+  if(error)throw error;
+  if(data?.success&&data?.paid===true&&data?.payment_status==="paid"){
+   extraPaid=true;extraStopTimers();byId("extra-order-status").textContent="PAID ✓";byId("extra-order-status").className="extra-paid";
+   byId("extra-qr-area").style.display="none";byId("extra-countdown").textContent="បានទូទាត់រួច";
+   byId("extra-payment-note").textContent="ការទូទាត់ត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។";
+   const saved=extraGetPending();if(saved){saved.status="paid";extraSavePending(saved)}
+   extraMsg("ការទូទាត់ជោគជ័យ!","success");return;
+  }
+  const status=data?.payment_status||"awaiting_payment";byId("extra-order-status").textContent=status;
+  const saved=extraGetPending();if(saved){saved.status=status;extraSavePending(saved)}
+ }catch(e){console.warn("Extra payment verification:",e)}
+ finally{extraChecking=false}
+}
+function extraScheduleVerify(){
+ if(!extraPurchaseId||extraPaid)return;
+ const delay=Date.now()-extraVerifyStarted<30000?10000:30000;
+ extraVerifyTimer=setTimeout(async()=>{await extraVerify();extraScheduleVerify()},delay);
+}
+function extraStartVerify(id,expiry){
+ extraStopTimers();extraPurchaseId=id;extraExpiry=expiry;extraPaid=false;extraVerifyStarted=Date.now();
+ extraStartCountdown();extraVerify().finally(()=>extraScheduleVerify());
+}
+async function extraCreatePayment(){
+ if(extraCreating||!extraSelectedProduct)return;
+ const uid=byId("extra-game-uid").value.trim(),email=byId("extra-game-email").value.trim();
+ if(!uid||!email){extraMsg("សូមបំពេញ Game UID និង Game Email ជាមុនសិន។");return}
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){extraMsg("Game Email មិនត្រឹមត្រូវទេ។");return}
+ const old=extraGetPending();if(old?.purchaseId&&old.status!=="paid"){extraMsg("មានការបញ្ជាទិញ Game Package មួយកំពុងរង់ចាំ។ សូមពិនិត្យវាជាមុន។");return}
+ extraCreating=true;byId("extra-confirm-buy").disabled=true;byId("extra-confirm-buy").textContent="កំពុងបង្កើត...";
+ try{
+  const body={product_id:extraSelectedProduct.id,game_uid:uid,game_email:email,game_case_id:byId("extra-game-case").value.trim(),game_reference_code:byId("extra-game-reference").value.trim()};
+  const {data,error}=await supabaseClient.functions.invoke("snv-extra-create",{body});
+  if(error)throw error;if(!data?.success||!data.purchase||!data.payment?.qr)throw new Error(data?.error||"ទិន្នន័យ KHQR មិនត្រឹមត្រូវទេ។");
+  const p=data.purchase,pay=data.payment;extraPurchaseId=p.id;
+  byId("extra-receipt").textContent=p.receipt_code||"-";byId("extra-order-product").textContent=p.product_name||extraSelectedProduct.title;
+  byId("extra-order-amount").textContent=Number(p.amount).toFixed(2)+" "+(p.currency||"USD");
+  byId("extra-order-status").textContent=p.payment_status||"awaiting_payment";byId("extra-order-status").className="";
+  byId("extra-qrcode").innerHTML="";new QRCode(byId("extra-qrcode"),{text:pay.qr,width:230,height:230,correctLevel:QRCode.CorrectLevel.L});
+  byId("extra-qr-area").style.display="block";byId("extra-payment-note").textContent="សូមស្កេន KHQR។ ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ការទូទាត់ដោយស្វ័យប្រវត្តិ។";
+  byId("extra-game-info").textContent="Game UID: "+uid+" | Game Email: "+email;
+  byId("extra-payment-box").style.display="block";extraCloseBuy();
+  const expiry=pay.expires_at||new Date(Date.now()+Number(pay.expires_in_seconds||150)*1000).toISOString();
+  extraSavePending({purchaseId:p.id,receiptCode:p.receipt_code||"",productName:p.product_name||extraSelectedProduct.title,amount:p.amount,currency:p.currency||"USD",expiresAt:expiry,status:"awaiting_payment"});
+  extraStartVerify(p.id,expiry);byId("extra-payment-box").scrollIntoView({behavior:"smooth"});
+  extraMsg("បានបង្កើត KHQR ដោយជោគជ័យ។","success");
+ }catch(e){console.error(e);extraMsg("បង្កើត KHQR មិនបាន៖ "+(e.message||""))}
+ finally{extraCreating=false;byId("extra-confirm-buy").disabled=false;byId("extra-confirm-buy").textContent="បង្កើត KHQR"}
+}
+function extraRestorePending(){
+ const p=extraGetPending();if(!p?.purchaseId)return;
+ extraPurchaseId=p.purchaseId;extraExpiry=p.expiresAt;byId("extra-payment-box").style.display="block";
+ byId("extra-receipt").textContent=p.receiptCode||"-";byId("extra-order-product").textContent=p.productName||"-";
+ byId("extra-order-amount").textContent=Number(p.amount).toFixed(2)+" "+(p.currency||"USD");
+ byId("extra-order-status").textContent=p.status||"awaiting_payment";byId("extra-qr-area").style.display="none";
+ byId("extra-payment-note").textContent="QR មិនអាចស្ដារឡើងវិញក្រោយ Refresh បានទេ។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាព។";
+ extraStartVerify(p.purchaseId,p.expiresAt);
+}
+byId("extra-shop-entry").addEventListener("click",()=>{extraShowView(true);extraLoadProducts();extraRestorePending()});
+byId("extra-shop-back").addEventListener("click",()=>extraShowView(false));
+byId("extra-close-buy").addEventListener("click",extraCloseBuy);
+byId("extra-buy-modal").addEventListener("click",e=>{if(e.target===byId("extra-buy-modal"))extraCloseBuy()});
+byId("extra-confirm-buy").addEventListener("click",extraCreatePayment);
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box}
@@ -80,6 +224,29 @@ button:disabled{opacity:.55;cursor:not-allowed}
 footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 @media(orientation:landscape) and (max-height:500px){body{padding:7px}.container{max-width:850px}.products-grid{grid-template-columns:repeat(3,minmax(0,1fr))}header{padding:12px 8px}header h1{font-size:19px}.modal-image-frame{max-height:220px}}
 @media(max-width:350px){body{padding:7px}.product-card{padding:6px}.product-title{font-size:12px}.product-price{font-size:14px}}
+
+/* Separate Game Package Shop */
+#extra-shop-entry{margin-top:10px;background:linear-gradient(135deg,#ef8b2c,#c85b16)}
+#extra-shop-view{display:none;margin-top:14px}
+.extra-layout{display:grid;grid-template-columns:112px minmax(0,1fr);gap:9px;align-items:start}
+.extra-categories{display:flex;flex-direction:column;gap:7px;position:sticky;top:8px}
+.extra-category{background:#293044;border:1px solid #48516a;color:#dce3f5;padding:10px 5px;font-size:11px;line-height:1.35}
+.extra-category.active{background:#a84e18;border-color:#ff9a43;color:#fff}
+.extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.extra-card{min-width:0;background:#22283b;border:1px solid #454d68;border-radius:10px;padding:6px}
+.extra-card img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#101827;border-radius:7px}
+.extra-card-title{text-align:center;font-size:12px;font-weight:bold;margin:6px 0;overflow-wrap:anywhere}
+.extra-card-price{text-align:center;color:#ffb35c;font-weight:bold;margin:5px 0}
+.extra-buy{background:linear-gradient(135deg,#ef8b2c,#c85b16);padding:9px 4px}
+.extra-back{background:#303950;margin-bottom:9px}
+.extra-field{width:100%;padding:12px;margin:6px 0 10px;background:#10131e;color:#fff;border:1px solid #515a78;border-radius:8px;font-size:14px}
+.extra-field-label{display:block;color:#c5cce0;font-size:12px;margin-top:7px}
+#extra-payment-box{display:none;background:#1b2030;border:1px solid #d87929;border-radius:13px;padding:14px;margin-top:14px;overflow-wrap:anywhere}
+#extra-qrcode{background:#fff;border-radius:10px;padding:10px;width:fit-content;max-width:100%;margin:12px auto}
+#extra-qrcode img,#extra-qrcode canvas{max-width:100%;height:auto}
+.extra-paid{color:#62e6a5;font-weight:bold}
+@media(max-width:350px){.extra-layout{grid-template-columns:94px minmax(0,1fr)}.extra-category{font-size:10px}}
+
 </style>
 </head>
 <body>
@@ -88,6 +255,44 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 <button type="button" class="history-open" id="open-history" title="ប្រវត្តិការទិញ">⟳</button>
 <h1>SNV Game Top-up</h1><p>ជ្រើសរើសកញ្ចប់ដែលអ្នកចង់បាន</p>
 </header>
+
+<button type="button" id="extra-shop-entry">បើក Game Package Shop</button>
+
+<section id="extra-shop-view">
+  <button type="button" class="extra-back" id="extra-shop-back">← ត្រឡប់ទៅ Account Shop</button>
+  <div class="extra-layout">
+    <nav class="extra-categories" id="extra-categories" aria-label="Package categories"></nav>
+    <div>
+      <div class="extra-grid" id="extra-products-grid"><p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p></div>
+    </div>
+  </div>
+  <div id="extra-shop-message" class="message"></div>
+  <section id="extra-payment-box">
+    <div class="order-line">Receipt: <span id="extra-receipt" class="order-value"></span></div>
+    <div class="order-line">Package: <span id="extra-order-product"></span></div>
+    <div class="order-line">Amount: <span id="extra-order-amount" class="order-value"></span></div>
+    <div class="order-line">Status: <span id="extra-order-status" class="order-value">awaiting_payment</span></div>
+    <div id="extra-qr-area"><div id="extra-qrcode"></div><div class="qr-label">SCAN TO PAY - KHQR</div></div>
+    <div class="countdown">ពេលវេលា៖ <span id="extra-countdown">02:30</span></div>
+    <p class="payment-note" id="extra-payment-note">សូមស្កេន KHQR ដើម្បីទូទាត់។</p>
+    <div id="extra-game-info" class="history-note"></div>
+  </section>
+</section>
+
+<div class="modal" id="extra-buy-modal">
+ <div class="modal-content">
+  <div class="modal-header"><h3>ព័ត៌មានសម្រាប់ Top-up</h3><button type="button" class="close-modal" id="extra-close-buy">×</button></div>
+  <div id="extra-selected-name" class="modal-title"></div>
+  <div id="extra-selected-price" class="modal-price"></div>
+  <label class="extra-field-label" for="extra-game-uid">Game UID *</label><input class="extra-field" id="extra-game-uid" autocomplete="off" placeholder="បញ្ចូល Game UID">
+  <label class="extra-field-label" for="extra-game-email">Game Email *</label><input class="extra-field" id="extra-game-email" type="email" autocomplete="email" placeholder="បញ្ចូល Game Email">
+  <label class="extra-field-label" for="extra-game-case">Game Case ID (មិនចាំបាច់)</label><input class="extra-field" id="extra-game-case" class="extra-field" autocomplete="off" placeholder="បើមាន">
+  <label class="extra-field-label" for="extra-game-reference">Game Reference Code (មិនចាំបាច់)</label><input class="extra-field" id="extra-game-reference" autocomplete="off" placeholder="បើមាន">
+  <button type="button" class="extra-buy" id="extra-confirm-buy">បង្កើត KHQR</button>
+  <p class="modal-note">មិនត្រូវបញ្ចូល Password ឬ OTP ទេ។</p>
+ </div>
+</div>
+
 <h2 class="section-title">Package List</h2>
 <div id="message" class="message"></div>
 <section class="packages-panel"><div id="products-grid" class="products-grid"><p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p></div></section>
