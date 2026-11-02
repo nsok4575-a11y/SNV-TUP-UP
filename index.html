@@ -33,6 +33,7 @@ function extraShowView(show){
  // Both shops remain visible as separate sections on the same page.
  byId("extra-shop-view").style.display="block";
 }
+
 function extraCategoryValue(label) {
     return String(label || "")
         .replace(/^[⭐🕐🏐🎽🔥🏆]\s*/u, "")
@@ -57,7 +58,6 @@ function extraRenderCategories() {
 
         b.addEventListener("click", () => {
             extraActiveCategory = categoryValue;
-
             extraRenderCategories();
             extraRenderProducts();
         });
@@ -82,18 +82,51 @@ function extraRenderProducts() {
         return;
     }
 
-    // កូដបង្ហាញផលិតផលដែលនៅសល់ ត្រូវបន្តនៅខាងក្រោមនេះ
+    rows.forEach(p => {
+        const card = document.createElement("article");
+        card.className = "extra-card";
+
+        const img = document.createElement("img");
+        img.alt = extraDisplayTitle(p.title);
+
+        const urls = extraImages(p);
+
+        if (urls.length) {
+            img.src = urls[0];
+            img.style.cursor = "zoom-in";
+
+            img.addEventListener("click", () => {
+                extraOpenImage(p);
+            });
+
+            img.onerror = () => {
+                img.style.display = "none";
+            };
+        }
+
+        const price = document.createElement("div");
+        price.className = "extra-card-price";
+
+        const n = Number(p.price);
+
+        price.textContent = Number.isFinite(n)
+            ? n.toFixed(2) + " " + (p.currency || "USD")
+            : "-";
+
+        const buy = document.createElement("button");
+        buy.type = "button";
+        buy.className = "extra-buy";
+        buy.textContent = "ទិញ";
+
+        buy.addEventListener("click", () => {
+            extraOpenBuy(p);
+        });
+
+        card.append(img, price, buy);
+        grid.appendChild(card);
+    });
 }
- rows.forEach(p=>{
-  const card=document.createElement("article");card.className="extra-card";
-  const img=document.createElement("img");img.alt=extraDisplayTitle(p.title);const urls=extraImages(p);
-  if(urls.length){img.src=urls[0];img.style.cursor="zoom-in";img.addEventListener("click",()=>extraOpenImage(p));img.onerror=()=>{img.style.display="none"}}
-  const price=document.createElement("div");price.className="extra-card-price";const n=Number(p.price);price.textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-";
-  const buy=document.createElement("button");buy.type="button";buy.className="extra-buy";buy.textContent="ទិញ";
-  buy.addEventListener("click",()=>extraOpenBuy(p));
-  card.append(img,price,buy);grid.appendChild(card);
- });
-}
+
 async function extraLoadProducts(){
  const grid=byId("extra-products-grid");grid.innerHTML='<p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p>';
  try{
