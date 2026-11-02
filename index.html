@@ -48,11 +48,10 @@ function extraRenderProducts(){
   const card=document.createElement("article");card.className="extra-card";
   const img=document.createElement("img");img.alt=extraDisplayTitle(p.title);const urls=extraImages(p);
   if(urls.length){img.src=urls[0];img.style.cursor="zoom-in";img.addEventListener("click",()=>extraOpenImage(p));img.onerror=()=>{img.style.display="none"}}
-  const title=document.createElement("div");title.className="extra-card-title";title.textContent=extraDisplayTitle(p.title);
   const price=document.createElement("div");price.className="extra-card-price";const n=Number(p.price);price.textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-";
   const buy=document.createElement("button");buy.type="button";buy.className="extra-buy";buy.textContent="ទិញ";
   buy.addEventListener("click",()=>extraOpenBuy(p));
-  card.append(img,title,price,buy);grid.appendChild(card);
+  card.append(img,price,buy);grid.appendChild(card);
  });
 }
 async function extraLoadProducts(){
@@ -245,7 +244,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 .extra-image-content{max-width:560px}
 .extra-image-preview{display:block;width:100%;max-height:75vh;object-fit:contain;border-radius:10px;background:#101827}
 .extra-card-title{text-align:center;font-size:12px;font-weight:bold;margin:6px 0;overflow-wrap:anywhere}
-.extra-card-price{text-align:center;color:#ffb35c;font-weight:bold;margin:5px 0}
+.extra-card-price{text-align:center;color:#ffb35c;font-weight:bold;margin:2px 0 4px;line-height:1.2}
 .extra-buy{background:linear-gradient(135deg,#ef8b2c,#c85b16);padding:9px 4px}
 .extra-back{background:#303950;margin-bottom:9px}
 .extra-field{width:100%;padding:12px;margin:6px 0 10px;background:#10131e;color:#fff;border:1px solid #515a78;border-radius:8px;font-size:14px}
