@@ -194,6 +194,10 @@ body{padding:7px}.product-card{padding:8px 6px}.product-title{font-size:13px}.pr
 <button class="copy-button" onclick="copyDelivery('delivery-code')">ចម្លងលេខកូដ</button>
 </div>
 <p id="delivery-message" style="text-align:center;color:#d2ffeb;font-size:13px"></p>
+<button type="button" id="received-package-button"
+style="margin-top:15px;background:linear-gradient(135deg,#6558e8,#4938bd);padding:13px;font-size:15px">
+ទទួលបានកញ្ចប់
+</button>
 </section>
 
 <div class="notice">
@@ -1307,10 +1311,55 @@ async function recoverPurchaseHistory(){
     byId("recover-history").disabled=false;
   }
 }
+// =====================================
+// CUSTOMER RECEIVED PACKAGE
+// =====================================
+function receivedPackage(){
 
+  if(!paymentFinished){
+    showMessage(
+      "សូមរង់ចាំការទូទាត់ជោគជ័យ និងព័ត៌មានកញ្ចប់ជាមុនសិន។",
+      "error"
+    );
+    return;
+  }
+
+  // បញ្ឈប់ការពិនិត្យការទូទាត់ និងម៉ោងរាប់ថយក្រោយ
+  stopPaymentTimers();
+
+  // ដកផ្ទាំង KHQR និងព័ត៌មានកញ្ចប់ចេញពីទំព័រ
+  byId("order-box").remove();
+  byId("delivery-box").remove();
+
+  // លុបតែការបញ្ជាទិញបច្ចុប្បន្នពី Browser
+  localStorage.removeItem(PENDING_PURCHASE_KEY);
+
+  // សម្អាតស្ថានភាពបញ្ជាទិញក្នុងទំព័រ
+  currentPurchaseId=null;
+  serverExpiresAt=null;
+  isCheckingPayment=false;
+  paymentFinished=true;
+
+  // ត្រឡប់ទៅផ្នែក Package List
+  clearMessage();
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+  showMessage(
+    "អ្នកបានទទួលកញ្ចប់រួចរាល់។ អរគុណដែលបានប្រើ SNV Game Top-up។",
+    "success"
+  );
+}
 // =====================================
 // BUTTON EVENTS
 // =====================================
+byId("received-package-button").addEventListener(
+  "click",
+  receivedPackage
+);
 byId("refresh-button").addEventListener("click",loadProducts);
 byId("close-modal").addEventListener("click",closeProductModal);
 byId("previous-image").addEventListener("click",()=>changeModalImage(-1));
