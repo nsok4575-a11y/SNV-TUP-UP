@@ -1345,8 +1345,13 @@ byId("close-history").addEventListener("click",closeHistoryModal);
 byId("history-modal").addEventListener("click",e=>{
  if(e.target===byId("history-modal"))closeHistoryModal();
 });
-byId("load-history").addEventListener("click",loadPurchaseHistory);
-byId("recover-history").addEventListener("click",recoverPurchaseHistory);
+if (typeof loadPurchaseHistory === "function") {
+ byId("load-history").addEventListener("click",loadPurchaseHistory);
+}
+
+if (typeof recoverPurchaseHistory === "function") {
+ byId("recover-history").addEventListener("click",recoverPurchaseHistory);
+}
 byId("copy-pin").addEventListener("click",async()=>{
  const pin=byId("saved-pin").textContent;
  if(!/^\d{8,12}$/.test(pin)){
