@@ -451,6 +451,48 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
  .extra-layout{grid-template-columns:94px minmax(0,1fr)}
  .extra-category{font-size:10px}
 }
+/* OLD PACKAGE LIST - ORANGE THEME */
+.packages-panel {
+    background: #1b2030;
+    border: 1px solid #d87929;
+}
+
+.product-card {
+    background: #22283b;
+    border: 1px solid #454d68;
+    border-radius: 10px;
+}
+
+.product-card:active {
+    background: #303750;
+}
+
+.product-image-frame {
+    background: #101827;
+    border: 1px solid #454d68;
+}
+
+.product-price {
+    color: #ffb35c;
+}
+
+.card-buy-button {
+    background: linear-gradient(135deg, #ef8b2c, #c85b16);
+    color: #fff;
+    border-radius: 7px;
+}
+
+.order-box {
+    border: 1px solid #d87929;
+}
+
+.modal-content {
+    border-color: #d87929;
+}
+
+.modal-header h3 {
+    color: #ffb35c;
+}
 </style>
 </head>
 <body>
@@ -619,7 +661,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 
 <script>
 const SUPABASE_URL="https://ckqfewtvpirmxcanmyiu.supabase.co";
-const SUPABASE_KEY="PASTE_YOUR_EXISTING_SUPABASE_PUBLISHABLE_KEY_HERE";
+const SUPABASE_KEY="sb_publishable_IIlUeTGAGTgv1FoAoruWKQ_vRgxMCth";
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const VERIFY_FAST_INTERVAL_MS=10000,VERIFY_NORMAL_INTERVAL_MS=30000,VERIFY_FAST_DURATION_MS=30000;
