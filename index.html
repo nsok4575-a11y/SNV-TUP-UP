@@ -1160,109 +1160,159 @@ function formatDate(v){
  const d=new Date(v);
  return Number.isNaN(d.getTime())?"-":d.toLocaleString("km-KH");
 }
-function renderPurchaseHistory(purchases){
- const list=byId("history-list");
- list.innerHTML="";
- const paid=Array.isArray(purchases)?purchases.filter(p=>p.payment_status==="paid"||p.status==="paid"):[];
- if(!paid.length){
+
+ 
+function renderPurchaseHistory(purchases) {
+ const list = byId("history-list");
+ list.innerHTML = "";
+
+ const paid = Array.isArray(purchases)
+  ? purchases.filter(p =>
+     p.payment_status === "paid" || p.status === "paid"
+    )
+  : [];
+
+ if (!paid.length) {
   showHistoryMessage("មិនទាន់មានប្រវត្តិការទិញដែលបានបង់ប្រាក់ទេ។");
   return;
  }
+
  showHistoryMessage("បានផ្ទុកប្រវត្តិការទិញរួចរាល់។");
- paid.forEach(p=>{
-  const item=document.createElement("div");
-  item.className="history-item";
-  const title=document.createElement("div");
-  title.className="history-item-title";
-  title.textContent=p.item_title||p.product_name||"Package";
-  const receipt=document.createElement("div");
-  receipt.className="history-item-line";
-  receipt.textContent="លេខបញ្ជាទិញ៖ "+(p.receipt_code||"-");
-  const price=document.createElement("div");
-  price.className="history-item-line";
-  const n=Number(p.total??p.amount);
-  price.textContent="តម្លៃ៖ "+(Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-");
-  const date=document.createElement("div");
-  date.className="history-item-line";
-  date.textContent="ថ្ងៃទិញ៖ "+formatDate(p.paid_at);
-  const status=document.createElement("div");
-  status.className="history-item-line history-item-status";
-  status.textContent="PAID ✓";
-  item.append(title,receipt,price,date,status);
-  if(p.delivery){
-   const d=p.delivery;
-   [["Gmail",d.gmail],["Password",d.package_password],["លេខកូដ",d.code_8_digits]].forEach(pair=>{
-    const x=document.createElement("div");
-    x.className="history-item-line";
-    x.textContent=pair[0]+"៖ "+(pair[1]||"-");
+
+ paid.forEach(p => {
+  const item = document.createElement("div");
+  item.className = "history-item";
+
+  const title = document.createElement("div");
+  title.className = "history-item-title";
+  title.textContent = p.item_title || p.product_name || "Package";
+
+  const receipt = document.createElement("div");
+  receipt.className = "history-item-line";
+  receipt.textContent = "លេខបញ្ជាទិញ៖ " + (p.receipt_code || "-");
+
+  const price = document.createElement("div");
+  price.className = "history-item-line";
+
+  const n = Number(p.total ?? p.amount);
+
+  price.textContent = "តម្លៃ៖ " +
+   (Number.isFinite(n)
+    ? n.toFixed(2) + " " + (p.currency || "USD")
+    : "-");
+
+  const date = document.createElement("div");
+  date.className = "history-item-line";
+  date.textContent = "ថ្ងៃទិញ៖ " + formatDate(p.paid_at);
+
+  const status = document.createElement("div");
+  status.className = "history-item-line history-item-status";
+  status.textContent = "PAID ✓";
+
+  item.append(title, receipt, price, date, status);
+
+  if (p.delivery) {
+   const d = p.delivery;
+
+   [["Gmail", d.gmail],
+    ["Password", d.package_password],
+    ["លេខកូដ", d.code_8_digits]
+   ].forEach(pair => {
+    const x = document.createElement("div");
+    x.className = "history-item-line";
+    x.textContent = pair[0] + "៖ " + (pair[1] || "-");
     item.appendChild(x);
    });
-   const b=document.createElement("button");
-   b.type="button";
-   b.textContent="បង្ហាញព័ត៌មានកញ្ចប់";
-   b.addEventListener("click",()=>{
-    byId("delivery-gmail").textContent=d.gmail||"";
-    byId("delivery-password").textContent=d.package_password||"";
-    byId("delivery-code").textContent=d.code_8_digits||"";
-    byId("delivery-message").textContent="ព័ត៌មានពីប្រវត្តិការទិញរបស់អ្នក។";
-    byId("delivery-box").style.display="block";
+
+   const b = document.createElement("button");
+   b.type = "button";
+   b.textContent = "បង្ហាញព័ត៌មានកញ្ចប់";
+
+   b.addEventListener("click", () => {
+    byId("delivery-gmail").textContent = d.gmail || "";
+    byId("delivery-password").textContent = d.package_password || "";
+    byId("delivery-code").textContent = d.code_8_digits || "";
+    byId("delivery-message").textContent =
+     "ព័ត៌មានពីប្រវត្តិការទិញរបស់អ្នក។";
+    byId("delivery-box").style.display = "block";
     closeHistoryModal();
-    byId("delivery-box").scrollIntoView({behavior:"smooth",block:"center"});
+
+    byId("delivery-box").scrollIntoView({
+     behavior: "smooth",
+     block: "center"
+    });
    });
+
    item.appendChild(b);
   }
+
+  // DELETE HISTORY BUTTON
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.textContent = "លុបប្រវត្តិនេះ";
+  deleteButton.style.background = "#b83232";
+  deleteButton.style.color = "#ffffff";
+  deleteButton.style.marginTop = "10px";
+
+  deleteButton.addEventListener("click", async () => {
+   if (!p.id) {
+    alert("មិនមានលេខសម្គាល់ការទិញទេ។");
+    return;
+   }
+
+   const confirmed = confirm(
+    "តើអ្នកប្រាកដថាចង់លាក់ប្រវត្តិការទិញនេះមែនទេ?"
+   );
+
+   if (!confirmed) return;
+
+   deleteButton.disabled = true;
+   deleteButton.textContent = "កំពុងលាក់...";
+
+   try {
+    const c = getCustomerCredentials();
+
+    if (!c.deviceSecret) {
+     throw new Error("មិនមាន Device Secret ទេ។");
+    }
+
+    const { data, error } =
+     await supabaseClient.functions.invoke(
+      "snv-purchase-history",
+      {
+       body: {
+        action: "hide",
+        device_secret: c.deviceSecret,
+        purchase_id: String(p.id)
+       }
+      }
+     );
+
+    if (error) throw new Error(error.message);
+
+    if (!data || data.success !== true) {
+     throw new Error(
+      data && data.error
+       ? data.error
+       : "មិនអាចលាក់ប្រវត្តិនេះបានទេ។"
+     );
+    }
+
+    renderPurchaseHistory(data.purchases || []);
+
+   } catch (e) {
+    console.error(e);
+    alert("លាក់ប្រវត្តិមិនបានទេ៖ " + e.message);
+    deleteButton.disabled = false;
+    deleteButton.textContent = "លុបប្រវត្តិនេះ";
+   }
+  });
+
+  item.appendChild(deleteButton);
   list.appendChild(item);
  });
 }
-async function loadPurchaseHistory(){
- const c=getCustomerCredentials();
- if(!c.deviceSecret){
-  showHistoryMessage("មិនមាន Device Secret ទេ។ សូមប្រើ Recovery PIN ដើម្បីស្ដារគណនី។");
-  return;
- }
- showHistoryMessage("កំពុងផ្ទុកប្រវត្តិការទិញ...");
- byId("load-history").disabled=true;
- try{
-  const {data,error}=await supabaseClient.functions.invoke("snv-purchase-history",{
-   body:{action:"history",device_secret:c.deviceSecret}
-  });
-  if(error)throw new Error(error.message||"History request failed");
-  if(!data||data.success!==true)throw new Error(data&&data.error?data.error:"មិនអាចផ្ទុកប្រវត្តិការទិញបានទេ។");
-  renderPurchaseHistory(data.purchases||[]);
- }catch(e){
-  console.error(e);
-  showHistoryMessage("មិនអាចផ្ទុកប្រវត្តិការទិញបានទេ៖ "+e.message);
- }finally{
-  byId("load-history").disabled=false;
- }
-}
-async function recoverPurchaseHistory(){
- const pin=byId("recovery-pin-input").value.trim();
- if(!/^\d{8,12}$/.test(pin)){
-  showHistoryMessage("សូមបញ្ចូល Recovery PIN ដែលមាន 8 ដល់ 12 ខ្ទង់។");
-  return;
- }
- const secret=randomHex(32);
- byId("recover-history").disabled=true;
- showHistoryMessage("កំពុងស្ដារប្រវត្តិការទិញ...");
- try{
-  const {data,error}=await supabaseClient.functions.invoke("snv-purchase-history",{
-   body:{action:"recover",history_pin:pin,new_device_secret:secret}
-  });
-  if(error)throw new Error(error.message||"Recovery request failed");
-  if(!data||data.success!==true)throw new Error(data&&data.error?data.error:"ស្ដារប្រវត្តិការទិញមិនបានទេ។");
-  saveCustomerCredentials(secret,pin);
-  byId("saved-pin").textContent=pin;
-  byId("recovery-pin-input").value="";
-  renderPurchaseHistory(data.purchases||[]);
-  showHistoryMessage("បានស្ដារប្រវត្តិការទិញជោគជ័យ។ ឧបករណ៍នេះត្រូវបានភ្ជាប់ទៅគណនីរបស់អ្នកហើយ។");
- }catch(e){
-  console.error(e);
-  showHistoryMessage("ស្ដារមិនបានទេ៖ "+e.message);
- }finally{
-  byId("recover-history").disabled=false;
- }
-}
+
 function receivedPackage(){
  if(!paymentFinished){
   showMessage("សូមរង់ចាំការទូទាត់ជោគជ័យ និងព័ត៌មានកញ្ចប់ជាមុនសិន។","error");
