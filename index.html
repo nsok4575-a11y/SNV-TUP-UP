@@ -1364,51 +1364,45 @@ document.addEventListener("keydown",e=>{
 });
 (function startWebsite(){
 
-  // 1. ផ្ទុកព័ត៌មានអតិថិជន
-  try {
-    const c = getCustomerCredentials();
+  function runWebsite(){
 
-    if (c && c.historyPin) {
-      byId("saved-pin").textContent = c.historyPin;
+    console.log("SNV Website started");
+
+    try {
+      const c = getCustomerCredentials();
+
+      if (c && c.historyPin) {
+        byId("saved-pin").textContent = c.historyPin;
+      }
+    } catch (e) {
+      console.error("Customer error:", e);
     }
-  } catch (e) {
-    console.error("Customer startup error:", e);
+
+    loadProducts().catch(function(e) {
+      console.error("Main products error:", e);
+    });
+
+    restorePendingPurchase().catch(function(e) {
+      console.error("Main purchase error:", e);
+    });
+
+    extraLoadProducts().catch(function(e) {
+      console.error("Extra products error:", e);
+    });
+
+    extraRestorePending().catch(function(e) {
+      console.error("Extra purchase error:", e);
+    });
   }
 
-  // 2. ផ្ទុក Main Package ដោយឡែក
-  try {
-    Promise.resolve(loadProducts()).catch(function(e) {
-      console.error("Main Package loading error:", e);
-    });
-  } catch (e) {
-    console.error("Main Package startup error:", e);
-  }
-
-  // 3. ស្ដារការទិញ Main Package
-  try {
-    Promise.resolve(restorePendingPurchase()).catch(function(e) {
-      console.error("Main purchase restore error:", e);
-    });
-  } catch (e) {
-    console.error("Main purchase startup error:", e);
-  }
-
-  // 4. ផ្ទុក Game Package Shop ដោយឡែក
-  try {
-    Promise.resolve(extraLoadProducts()).catch(function(e) {
-      console.error("Extra Package loading error:", e);
-    });
-  } catch (e) {
-    console.error("Extra Package startup error:", e);
-  }
-
-  // 5. ស្ដារការទិញ Extra Package
-  try {
-    Promise.resolve(extraRestorePending()).catch(function(e) {
-      console.error("Extra purchase restore error:", e);
-    });
-  } catch (e) {
-    console.error("Extra purchase startup error:", e);
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      runWebsite,
+      { once: true }
+    );
+  } else {
+    runWebsite();
   }
 
 })();
