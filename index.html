@@ -17,12 +17,20 @@ el.textContent=text;
 el.className="message "+type;
 el.style.display="block";
 }
-function extraImageUrl(value){
-if(!value||typeof value!=="string")return "";
-const v=value.trim();
-if(/^https?:///i.test(v))return v;
-const clean=v.replace(/^/+/,"").replace(/^snv-extra-images//,"");
-return SUPABASE_URL+"/storage/v1/object/public/snv-extra-images/"+clean.split("/").map(encodeURIComponent).join("/");
+function extraImageUrl(value) {
+  if (!value || typeof value !== "string") return "";
+
+  const v = value.trim();
+
+  if (/^https?:\/\//i.test(v)) return v;
+
+  const clean = v
+    .replace(/^\/+/, "")
+    .replace(/^snv-extra-images\//, "");
+
+  return SUPABASE_URL +
+    "/storage/v1/object/public/snv-extra-images/" +
+    clean.split("/").map(encodeURIComponent).join("/");
 }
 function extraDisplayTitle(value){
 return String(value||"").replace(/^\spackage\s/i,"").trim()||String(value||"");
