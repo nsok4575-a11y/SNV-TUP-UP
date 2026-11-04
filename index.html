@@ -197,22 +197,66 @@ extraChecking=false;
 }
 }
 function extraScheduleVerify(){
-if(!extraPurchaseId||extraPaid)return;
-const delay=Date.now()-extraVerifyStarted<30000?10000:30000;
-extraVerifyTimer=setTimeout(async()=>{
-await extraVerify();
-extraScheduleVerify();
-},delay);
+ if(!extraPurchaseId||extraPaid)return;
+
+ const expiryTime=new Date(extraExpiry).getTime();
+
+ if(!Number.isFinite(expiryTime)){
+  extraStopTimers();
+  return;
+ }
+
+ const elapsed=Date.now()-extraVerifyStarted;
+ const nextCheck=elapsed<40000
+  ? 40000
+  : (Math.floor(elapsed/10000)+1)*10000;
+
+ const nextTime=extraVerifyStarted+nextCheck;
+
+ if(nextTime>=expiryTime){
+  extraVerifyTimer=setTimeout(()=>{
+   extraVerifyTimer=null;
+   if(!extraPaid){
+    extraStopTimers();
+    byId("extra-qr-area").style.display="none";
+    byId("extra-payment-note").textContent=
+     "QR បានផុតកំណត់។ ប្រព័ន្ធបានបញ្ឈប់ការផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តិ។";
+   }
+  },Math.max(0,expiryTime-Date.now()));
+  return;
+ }
+
+ extraVerifyTimer=setTimeout(async()=>{
+  extraVerifyTimer=null;
+
+  if(!extraPurchaseId||extraPaid)return;
+
+  if(Date.now()>=expiryTime){
+   extraStopTimers();
+   return;
+  }
+
+  await extraVerify();
+
+  if(!extraPaid)extraScheduleVerify();
+ },Math.max(0,nextTime-Date.now()));
 }
+
 function extraStartVerify(id,expiry){
-extraStopTimers();
-extraPurchaseId=id;
-extraExpiry=expiry;
-extraPaid=false;
-byId("extra-done-button").style.display="none";
-extraVerifyStarted=Date.now();
-extraStartCountdown();
-extraVerify().finally(()=>extraScheduleVerify());
+ extraStopTimers();
+
+ extraPurchaseId=id;
+ extraExpiry=expiry;
+ extraPaid=false;
+
+ byId("extra-done-button").style.display="none";
+
+ extraVerifyStarted=Date.now();
+
+ extraStartCountdown();
+
+ // ចាប់ផ្ដើមផ្ទៀងផ្ទាត់នៅវិនាទីទី 40
+ extraScheduleVerify();
 }
 async function extraCreatePayment(){
 if(extraCreating||!extraSelectedProduct)return;
@@ -1019,26 +1063,42 @@ async function verifyPayment(){
   isCheckingPayment=false;  
  }  
 }  
+
 function scheduleNextVerification(){
  if(!currentPurchaseId||paymentFinished)return;
 
+ const elapsed = Date.now() - verificationStartedAt;
  const expiryTime = serverExpiresAt
   ? new Date(serverExpiresAt).getTime()
   : verificationStartedAt + 120000;
 
- const remaining = expiryTime - Date.now();
-
- if(!Number.isFinite(expiryTime)||remaining<=0){
+ if(!Number.isFinite(expiryTime)){
   showPaymentExpired();
   return;
  }
 
- verifyTimeout=setTimeout(async()=>{
-  verifyTimeout=null;
+ // 30 វិនាទីដំបូងមិនផ្ទៀងផ្ទាត់
+ // បន្ទាប់មកផ្ទៀងផ្ទាត់រៀងរាល់ 10 វិនាទី
+ const nextCheck = elapsed < 40000
+  ? 40000
+  : (Math.floor(elapsed / 10000) + 1) * 10000;
+
+ const nextTime = verificationStartedAt + nextCheck;
+
+ if(nextTime >= expiryTime){
+  verifyTimeout = setTimeout(()=>{
+   verifyTimeout = null;
+   if(!paymentFinished) showPaymentExpired();
+  }, Math.max(0, expiryTime - Date.now()));
+  return;
+ }
+
+ verifyTimeout = setTimeout(async()=>{
+  verifyTimeout = null;
 
   if(!currentPurchaseId||paymentFinished)return;
 
-  if(Date.now()>=expiryTime){
+  if(Date.now() >= expiryTime){
    showPaymentExpired();
    return;
   }
@@ -1047,8 +1107,9 @@ function scheduleNextVerification(){
 
   if(!paymentFinished)scheduleNextVerification();
 
- },Math.min(30000,remaining));
+ }, Math.max(0, nextTime - Date.now()));
 }
+
 function startPaymentVerification(id,expiry){
  stopVerification();
 
@@ -1058,9 +1119,10 @@ function startPaymentVerification(id,expiry){
  isCheckingPayment=false;
  verificationStartedAt=Date.now();
 
- // រង់ចាំ 30 វិនាទី មុនផ្ទៀងផ្ទាត់លើកដំបូង
+ // ចាប់ផ្ដើមរង់ចាំដល់វិនាទីទី 40
  scheduleNextVerification();
 }
+
 function restorePendingPurchase(){  
  const p=getPendingPurchase();  
  if(!p||!p.purchaseId)return;  
