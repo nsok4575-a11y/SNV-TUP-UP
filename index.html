@@ -1019,26 +1019,48 @@ async function verifyPayment(){
   isCheckingPayment=false;  
  }  
 }  
-function scheduleNextVerification(){  
- if(!currentPurchaseId||paymentFinished)return;  
- const delay=Date.now()-verificationStartedAt<VERIFY_FAST_DURATION_MS?VERIFY_FAST_INTERVAL_MS:VERIFY_NORMAL_INTERVAL_MS;  
- verifyTimeout=setTimeout(async()=>{  
-  verifyTimeout=null;  
-  await verifyPayment();  
-  if(!paymentFinished)scheduleNextVerification();  
- },delay);  
-}  
-function startPaymentVerification(id,expiry){  
- stopVerification();  
- currentPurchaseId=id;  
- serverExpiresAt=expiry||null;  
- paymentFinished=false;  
- isCheckingPayment=false;  
- verificationStartedAt=Date.now();  
- verifyPayment().finally(()=>{  
-  if(!paymentFinished)scheduleNextVerification();  
- });  
-}  
+function scheduleNextVerification(){
+ if(!currentPurchaseId||paymentFinished)return;
+
+ const expiryTime = serverExpiresAt
+  ? new Date(serverExpiresAt).getTime()
+  : verificationStartedAt + 120000;
+
+ const remaining = expiryTime - Date.now();
+
+ if(!Number.isFinite(expiryTime)||remaining<=0){
+  showPaymentExpired();
+  return;
+ }
+
+ verifyTimeout=setTimeout(async()=>{
+  verifyTimeout=null;
+
+  if(!currentPurchaseId||paymentFinished)return;
+
+  if(Date.now()>=expiryTime){
+   showPaymentExpired();
+   return;
+  }
+
+  await verifyPayment();
+
+  if(!paymentFinished)scheduleNextVerification();
+
+ },Math.min(30000,remaining));
+}
+function startPaymentVerification(id,expiry){
+ stopVerification();
+
+ currentPurchaseId=id;
+ serverExpiresAt=expiry||null;
+ paymentFinished=false;
+ isCheckingPayment=false;
+ verificationStartedAt=Date.now();
+
+ // រង់ចាំ 30 វិនាទី មុនផ្ទៀងផ្ទាត់លើកដំបូង
+ scheduleNextVerification();
+}
 function restorePendingPurchase(){  
  const p=getPendingPurchase();  
  if(!p||!p.purchaseId)return;  
