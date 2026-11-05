@@ -1212,20 +1212,26 @@ async function showPaymentSuccess(result){
     });
 }
 
+
+
 function showPaymentExpired(){
     if(paymentFinished) return;
 
     stopCountdown();
 
-    byId("order-status").textContent = "QR EXPIRED";
-    byId("order-status").style.color = "#ff8d8d";
+    // លាក់ផ្ទាំងបញ្ជាទិញទាំងមូល រួមទាំង QR
+    byId("order-box").style.display = "none";
 
+    // លាក់តំបន់ QR
     byId("qr-area").style.display = "none";
+
+    // កំណត់សារផុតកំណត់
     byId("countdown").textContent = "ផុតកំណត់";
 
-    byId("payment-instruction").textContent =
-        "QR បានផុតកំណត់។ ប្រព័ន្ធកំពុងរក្សាការបញ្ជាទិញ រហូតដល់មានលទ្ធផលផ្ទៀងផ្ទាត់ច្បាស់លាស់។";
+    byId("order-status").textContent = "QR EXPIRED";
+    byId("order-status").style.color = "#ff8d8d";
 }
+
 
 /*
  * verifyPayment() បញ្ជូនលទ្ធផល៖
