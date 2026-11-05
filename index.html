@@ -312,6 +312,18 @@ function extraStartVerify(id,expiry){
         extraScheduleVerify();
     });
 }
+async function extraCreatePayment(){
+if(extraCreating||!extraSelectedProduct)return;
+const uid=byId("extra-game-uid").value.trim();
+const email=byId("extra-game-email").value.trim();
+if(!uid||!email){
+extraMsg("សូមបំពេញ Game UID និង Game Email ជាមុនសិន។");
+return;
+}
+if(!/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email)){
+extraMsg("Game Email មិនត្រឹមត្រូវទេ។");
+return;
+}
 const old = extraGetPending();
 
 if(old?.purchaseId && old.status !== "paid"){
@@ -361,40 +373,6 @@ if(old?.purchaseId && old.status !== "paid"){
     }catch(e){
         console.warn("Old purchase verification:",e);
         extraMsg("មិនអាចផ្ទៀងផ្ទាត់ការបញ្ជាទិញចាស់បានទេ។ សូមសាកម្ដងទៀត។");
-        return;
-    }
-}
-if(!/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email)){
-extraMsg("Game Email មិនត្រឹមត្រូវទេ។");
-return;
-}
-const old=extraGetPending();
-if(old?.purchaseId && old.status !== "paid"){
-
-    const oldExpiry = old.expiresAt
-        ? new Date(old.expiresAt).getTime()
-        : NaN;
-
-    const checkedAt = old.lastVerifyAt
-        ? Number(old.lastVerifyAt)
-        : NaN;
-
-    const confirmedUnpaid =
-        old.lastVerifyResult === false &&
-        Number.isFinite(checkedAt) &&
-        Number.isFinite(oldExpiry) &&
-        checkedAt >= oldExpiry;
-
-    if(
-        Number.isFinite(oldExpiry) &&
-        Date.now() >= oldExpiry &&
-        confirmedUnpaid
-    ){
-        localStorage.removeItem(EXTRA_PENDING_KEY);
-    }else{
-        extraMsg(
-            "ការបញ្ជាទិញចាស់មិនទាន់បានផ្ទៀងផ្ទាត់ចុងក្រោយទេ។"
-        );
         return;
     }
 }
