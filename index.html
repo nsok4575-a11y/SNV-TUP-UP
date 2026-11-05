@@ -160,62 +160,157 @@ extraVerifyTimer=null;
 extraCountdownTimer=null;
 }
 function extraStartCountdown(){
-if(extraCountdownTimer)clearInterval(extraCountdownTimer);
-const tick=()=>{
-const sec=Math.max(0,Math.ceil((new Date(extraExpiry).getTime()-Date.now())/1000));
-byId("extra-countdown").textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
-if(sec<=0)clearInterval(extraCountdownTimer);
-};
-tick();
-extraCountdownTimer=setInterval(tick,1000);
+    if(extraCountdownTimer){
+        clearInterval(extraCountdownTimer);
+    }
+
+    const tick = async ()=>{
+        if(extraPaid) return;
+
+        const expiryMs = new Date(extraExpiry).getTime();
+
+        const sec = Math.max(
+            0,
+            Math.ceil((expiryMs - Date.now()) / 1000)
+        );
+
+        byId("extra-countdown").textContent =
+            String(Math.floor(sec / 60)).padStart(2,"0") +
+            ":" +
+            String(sec % 60).padStart(2,"0");
+
+        if(sec <= 0){
+            clearInterval(extraCountdownTimer);
+            extraCountdownTimer = null;
+
+            byId("extra-qr-area").style.display = "none";
+            byId("extra-order-status").textContent = "QR EXPIRED";
+            byId("extra-countdown").textContent = "ផុតកំណត់";
+
+            // ផ្ទៀងផ្ទាត់ចុងក្រោយក្រោយផុតកំណត់
+            await extraVerify();
+
+            byId("extra-payment-box").style.display = "none";
+        }
+    };
+
+    tick();
+
+    extraCountdownTimer = setInterval(tick,1000);
 }
 async function extraVerify(){
-if(!extraPurchaseId||extraChecking||extraPaid)return;
-extraChecking=true;
-try{
-const {data,error}=await supabaseClient.functions.invoke("snv-extra-verify",{body:{purchase_id:extraPurchaseId}});
-if(error)throw error;
-if(data?.success&&data?.paid===true&&data?.payment_status==="paid"){
-extraPaid=true;
-extraStopTimers();
-byId("extra-order-status").textContent="PAID ✓";
-byId("extra-order-status").className="extra-paid";
-byId("extra-qr-area").style.display="none";
-byId("extra-countdown").textContent="បានទូទាត់រួច";
-byId("extra-payment-note").textContent="ការទូទាត់ត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។";
-byId("extra-done-button").style.display="block";
-const saved=extraGetPending();
-if(saved){saved.status="paid";extraSavePending(saved)}
-extraMsg("ការទូទាត់ជោគជ័យ!","success");
-return;
-}
-const status=data?.payment_status||"awaiting_payment";
-byId("extra-order-status").textContent=status;
-const saved=extraGetPending();
-if(saved){saved.status=status;extraSavePending(saved)}
-}catch(e){
-console.warn("Extra payment verification:",e);
-}finally{
-extraChecking=false;
-}
+    if(!extraPurchaseId || extraChecking || extraPaid){
+        return null;
+    }
+
+    extraChecking = true;
+
+    try{
+        const {data,error} =
+            await supabaseClient.functions.invoke(
+                "snv-extra-verify",
+                {
+                    body:{purchase_id:extraPurchaseId}
+                }
+            );
+
+        if(error) throw error;
+
+        const saved = extraGetPending();
+
+        if(
+            data?.success &&
+            data?.paid === true &&
+            data?.payment_status === "paid"
+        ){
+            extraPaid = true;
+            extraStopTimers();
+
+            byId("extra-order-status").textContent = "PAID ✓";
+            byId("extra-order-status").className = "extra-paid";
+            byId("extra-qr-area").style.display = "none";
+            byId("extra-countdown").textContent = "បានទូទាត់រួច";
+            byId("extra-payment-note").textContent =
+                "ការទូទាត់ត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។";
+            byId("extra-done-button").style.display = "block";
+
+            if(saved){
+                saved.status = "paid";
+                saved.lastVerifyResult = true;
+                saved.lastVerifyAt = Date.now();
+                extraSavePending(saved);
+            }
+
+            extraMsg("ការទូទាត់ជោគជ័យ!","success");
+            return data;
+        }
+
+        if(data?.success && data?.paid === false){
+            if(saved){
+                saved.status =
+                    data.payment_status || "awaiting_payment";
+                saved.lastVerifyResult = false;
+                saved.lastVerifyAt = Date.now();
+                extraSavePending(saved);
+            }
+
+            byId("extra-order-status").textContent =
+                data.payment_status || "awaiting_payment";
+
+            return data;
+        }
+
+        return null;
+
+    }catch(e){
+        console.warn("Extra payment verification:",e);
+        return null;
+
+    }finally{
+        extraChecking = false;
+    }
 }
 function extraScheduleVerify(){
-if(!extraPurchaseId||extraPaid)return;
-const delay=Date.now()-extraVerifyStarted<30000?10000:30000;
-extraVerifyTimer=setTimeout(async()=>{
-await extraVerify();
-extraScheduleVerify();
-},delay);
+    if(!extraPurchaseId || extraPaid || !extraExpiry){
+        return;
+    }
+
+    const expiryMs = new Date(extraExpiry).getTime();
+    const now = Date.now();
+
+    if(!Number.isFinite(expiryMs) || now >= expiryMs){
+        return;
+    }
+
+    const elapsed = Date.now() - extraVerifyStarted;
+
+    const nextAt = elapsed < 40000
+        ? extraVerifyStarted + 40000
+        : extraVerifyStarted +
+          (Math.floor(elapsed / 10000) + 1) * 10000;
+
+    extraVerifyTimer = setTimeout(async function(){
+        await extraVerify();
+        extraScheduleVerify();
+    }, Math.max(0, Math.min(nextAt, expiryMs) - now));
 }
+
 function extraStartVerify(id,expiry){
-extraStopTimers();
-extraPurchaseId=id;
-extraExpiry=expiry;
-extraPaid=false;
-byId("extra-done-button").style.display="none";
-extraVerifyStarted=Date.now();
-extraStartCountdown();
-extraVerify().finally(()=>extraScheduleVerify());
+    extraStopTimers();
+
+    extraPurchaseId = id;
+    extraExpiry = expiry;
+    extraPaid = false;
+
+    byId("extra-done-button").style.display = "none";
+
+    extraVerifyStarted = Date.now();
+
+    extraStartCountdown();
+
+    extraVerify().finally(function(){
+        extraScheduleVerify();
+    });
 }
 async function extraCreatePayment(){
 if(extraCreating||!extraSelectedProduct)return;
