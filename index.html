@@ -7,6 +7,7 @@
 <script>  
 const EXTRA_CATEGORIES=["⭐RECOMMENDED","🕐WEEKLY & MONTHLY","🏐BASIC","🎽S POINT","🔥COLOSSEUM","🏆LEAGUE"];  
 const EXTRA_PENDING_KEY="snv_extra_pending_purchase_v1";  
+localStorage.removeItem(EXTRA_PENDING_KEY);
 let extraProducts=[],extraSelectedProduct=null,extraActiveCategory="RECOMMENDED";  
 let extraPurchaseId=null,extraExpiry=null,extraVerifyTimer=null,extraCountdownTimer=null;  
 let extraChecking=false,extraPaid=false,extraCreating=false,extraVerifyStarted=0;  function byId(id){return document.getElementById(id)}
