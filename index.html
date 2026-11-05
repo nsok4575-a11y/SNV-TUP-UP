@@ -197,66 +197,22 @@ extraChecking=false;
 }
 }
 function extraScheduleVerify(){
- if(!extraPurchaseId||extraPaid)return;
-
- const expiryTime=new Date(extraExpiry).getTime();
-
- if(!Number.isFinite(expiryTime)){
-  extraStopTimers();
-  return;
- }
-
- const elapsed=Date.now()-extraVerifyStarted;
- const nextCheck=elapsed<40000
-  ? 40000
-  : (Math.floor(elapsed/10000)+1)*10000;
-
- const nextTime=extraVerifyStarted+nextCheck;
-
- if(nextTime>=expiryTime){
-  extraVerifyTimer=setTimeout(()=>{
-   extraVerifyTimer=null;
-   if(!extraPaid){
-    extraStopTimers();
-    byId("extra-qr-area").style.display="none";
-    byId("extra-payment-note").textContent=
-     "QR បានផុតកំណត់។ ប្រព័ន្ធបានបញ្ឈប់ការផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តិ។";
-   }
-  },Math.max(0,expiryTime-Date.now()));
-  return;
- }
-
- extraVerifyTimer=setTimeout(async()=>{
-  extraVerifyTimer=null;
-
-  if(!extraPurchaseId||extraPaid)return;
-
-  if(Date.now()>=expiryTime){
-   extraStopTimers();
-   return;
-  }
-
-  await extraVerify();
-
-  if(!extraPaid)extraScheduleVerify();
- },Math.max(0,nextTime-Date.now()));
+if(!extraPurchaseId||extraPaid)return;
+const delay=Date.now()-extraVerifyStarted<30000?10000:30000;
+extraVerifyTimer=setTimeout(async()=>{
+await extraVerify();
+extraScheduleVerify();
+},delay);
 }
-
 function extraStartVerify(id,expiry){
- extraStopTimers();
-
- extraPurchaseId=id;
- extraExpiry=expiry;
- extraPaid=false;
-
- byId("extra-done-button").style.display="none";
-
- extraVerifyStarted=Date.now();
-
- extraStartCountdown();
-
- // ចាប់ផ្ដើមផ្ទៀងផ្ទាត់នៅវិនាទីទី 40
- extraScheduleVerify();
+extraStopTimers();
+extraPurchaseId=id;
+extraExpiry=expiry;
+extraPaid=false;
+byId("extra-done-button").style.display="none";
+extraVerifyStarted=Date.now();
+extraStartCountdown();
+extraVerify().finally(()=>extraScheduleVerify());
 }
 async function extraCreatePayment(){
 if(extraCreating||!extraSelectedProduct)return;
