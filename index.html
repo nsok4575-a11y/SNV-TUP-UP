@@ -312,13 +312,57 @@ function extraStartVerify(id,expiry){
         extraScheduleVerify();
     });
 }
-async function extraCreatePayment(){
-if(extraCreating||!extraSelectedProduct)return;
-const uid=byId("extra-game-uid").value.trim();
-const email=byId("extra-game-email").value.trim();
-if(!uid||!email){
-extraMsg("សូមបំពេញ Game UID និង Game Email ជាមុនសិន។");
-return;
+const old = extraGetPending();
+
+if(old?.purchaseId && old.status !== "paid"){
+
+    const expiry = old.expiresAt
+        ? new Date(old.expiresAt).getTime()
+        : NaN;
+
+    if(!Number.isFinite(expiry)){
+        extraMsg("មិនអាចផ្ទៀងផ្ទាត់ពេលផុតកំណត់នៃការបញ្ជាទិញចាស់បានទេ។");
+        return;
+    }
+
+    if(Date.now() < expiry){
+        extraMsg("ការបញ្ជាទិញចាស់មិនទាន់ផុតកំណត់ទេ។");
+        return;
+    }
+
+    try{
+        const {data,error} =
+            await supabaseClient.functions.invoke(
+                "snv-extra-verify",
+                {
+                    body:{
+                        purchase_id:old.purchaseId
+                    }
+                }
+            );
+
+        if(error) throw error;
+
+        if(data?.success && data?.paid === true){
+            old.status = "paid";
+            extraSavePending(old);
+
+            extraMsg("ការបញ្ជាទិញចាស់បានទូទាត់រួចហើយ។");
+            return;
+        }
+
+        if(data?.success && data?.paid === false){
+            localStorage.removeItem(EXTRA_PENDING_KEY);
+        }else{
+            extraMsg("Server មិនទាន់អាចបញ្ជាក់ស្ថានភាពការទូទាត់ចាស់បានទេ។");
+            return;
+        }
+
+    }catch(e){
+        console.warn("Old purchase verification:",e);
+        extraMsg("មិនអាចផ្ទៀងផ្ទាត់ការបញ្ជាទិញចាស់បានទេ។ សូមសាកម្ដងទៀត។");
+        return;
+    }
 }
 if(!/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email)){
 extraMsg("Game Email មិនត្រឹមត្រូវទេ។");
