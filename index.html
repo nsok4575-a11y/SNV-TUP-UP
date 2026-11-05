@@ -607,6 +607,14 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
   </div>  
  </div>  
 </div>  <section id="order-box" class="order-box">  
+
+<button
+    type="button"
+    onclick="closeOrderPanel()"
+    style="width:100%;padding:12px;margin:8px 0;background:#dc3545;color:white;border:0;border-radius:8px;font-size:15px;font-weight:bold;">
+    ✕ បិទផ្ទាំង
+</button>
+
  <h3>ការទូទាត់ KHQR</h3>  
  <div class="order-line">លេខបញ្ជាទិញ៖ <span id="receipt-code" class="order-value"></span></div>  
  <div class="order-line">កញ្ចប់៖ <span id="order-product"></span></div>  
@@ -1327,6 +1335,15 @@ function finishExpiredPurchase(){
         "QR ចាស់បានផុតកំណត់។ អ្នកអាចបញ្ជាទិញថ្មីបាន។ ប្រវត្តិចាស់នៅតែរក្សាទុកក្នុង Server។",
         "success"
     );
+}
+
+// ដាក់មុខងារថ្មីនៅទីនេះ
+function closeOrderPanel(){
+    const orderBox = document.getElementById("order-box");
+
+    if(orderBox){
+        orderBox.style.display = "none";
+    }
 }
 
 function scheduleNextVerification(){
