@@ -698,546 +698,1106 @@ function getOrCreateCustomerCredentials(){
  return{deviceSecret:randomHex(32),historyPin:generateRecoveryPin(),isNew:true};  
 }  
 function savePendingPurchase(p){localStorage.setItem(PENDING_PURCHASE_KEY,JSON.stringify(p))}  
-function getPendingPurchase(){  
- try{  
-  const r=localStorage.getItem(PENDING_PURCHASE_KEY);  
-  return r?JSON.parse(r):null;  
- }catch(e){  
-  console.warn(e);  
-  return null;  
- }  
-}  
-function getImageUrl(path){  
- if(!path||typeof path!=="string")return "";  
- path=path.trim();  
- if(!path)return "";  
- if(path.startsWith("https://")||path.startsWith("http://"))return path;  
- const clean=path.replace(/^\/+/,"").replace(/^package-images\//,"");  
- return SUPABASE_URL+"/storage/v1/object/public/package-images/"+clean.split("/").map(encodeURIComponent).join("/");  
-}  
-function getProductImages(p){  
- let a=[];  
- if(Array.isArray(p.image_urls))a=p.image_urls.slice();  
- else if(typeof p.image_urls==="string"){  
-  try{  
-   const x=JSON.parse(p.image_urls);  
-   if(Array.isArray(x))a=x;  
-  }catch(e){console.warn(e)}  
- }  
- a=a.map(x=>typeof x==="string"?x:(x&&typeof x==="object"?(x.image_url||x.url||x.path||""):""));  
- return Array.from(new Set((p.image_url?[p.image_url]:[]).concat(a).map(getImageUrl).filter(Boolean))).slice(0,MAX_IMAGES);  
-}  
-function stopAllSlideshows(){  
- slideshowTimers.forEach(clearInterval);  
- slideshowTimers=[];  
-}  
-function createPackageSlideshow(p,frame){  
- const images=getProductImages(p);  
- const img=document.createElement("img");  
- const ph=document.createElement("div");  
- img.className="product-auto-image";  
- img.alt=p.title||"Package image";  
- ph.className="product-no-image";  
- ph.textContent="មិនមានរូបភាព";  
- frame.append(img,ph);  
- if(!images.length){  
-  img.style.display="none";  
-  return;  
- }  
- let i=0;  
- function show(){  
-  img.style.display="block";  
-  ph.style.display="none";  
-  img.src=images[i];  
-  i=(i+1)%images.length;  
- }  
- img.onerror=()=>{  
-  img.style.display="none";  
-  ph.textContent="មិនអាចបង្ហាញរូបភាពបានទេ";  
-  ph.style.display="block";  
- };  
- img.onload=()=>{  
-  img.style.display="block";  
-  ph.style.display="none";  
- };  
- show();  
- if(images.length>1)slideshowTimers.push(setInterval(show,3000));  
-}  
-function openProductModal(p){  
- selectedProduct=p;  
- selectedImages=getProductImages(p);  
- selectedImageIndex=0;  
- byId("modal-title").textContent=p.title||"Package";  
- byId("modal-details").textContent=p.details||"";  
- const n=Number(p.price);  
- byId("modal-price").textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"តម្លៃមិនត្រឹមត្រូវ";  
- updateModalImage();  
- byId("product-modal").classList.add("show");  
- document.body.style.overflow="hidden";  
-}  
-function closeProductModal(){  
- byId("product-modal").classList.remove("show");  
- if(!byId("history-modal").classList.contains("show"))document.body.style.overflow="";  
-}  
-function updateModalImage(){  
- const img=byId("modal-image"),ph=byId("modal-placeholder"),counter=byId("image-counter");  
- if(!selectedImages.length){  
-  img.style.display="none";  
-  img.removeAttribute("src");  
-  ph.textContent="មិនមានរូបភាព";  
-  ph.style.display="block";  
-  counter.textContent="គ្មានរូបភាព";  
-  byId("previous-image").disabled=true;  
-  byId("next-image").disabled=true;  
-  return;  
- }  
- img.style.display="block";  
- ph.style.display="none";  
- img.onerror=()=>{  
-  img.style.display="none";  
-  ph.textContent="មិនអាចបង្ហាញរូបភាពនេះបានទេ";  
-  ph.style.display="block";  
- };  
- img.onload=()=>{  
-  img.style.display="block";  
-  ph.style.display="none";  
- };  
- img.src=selectedImages[selectedImageIndex];  
- counter.textContent=(selectedImageIndex+1)+"/"+selectedImages.length;  
- byId("previous-image").disabled=selectedImages.length<=1;  
- byId("next-image").disabled=selectedImages.length<=1;  
-}  
-function changeModalImage(d){  
- if(selectedImages.length<=1)return;  
- selectedImageIndex=(selectedImageIndex+d+selectedImages.length)%selectedImages.length;  
- updateModalImage();  
-}  
-async function loadProducts(){  
- const grid=byId("products-grid"),btn=byId("refresh-button");  
- stopAllSlideshows();  
- grid.innerHTML='<p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p>';  
- btn.disabled=true;  
- clearMessage();  
- try{  
-  const {data,error}=await supabaseClient.from("snv_catalog")  
-   .select("id,title,details,price,currency,image_url,image_urls,created_at")  
-   .eq("available",true).order("created_at",{ascending:true}).limit(MAX_PACKAGES);  
-  if(error)throw error;  
-  grid.innerHTML="";  
-  if(!data||!data.length){  
-   grid.innerHTML='<p class="empty-message">មិនទាន់មានកញ្ចប់ដែលអាចបង្ហាញបានទេ។</p>';  
-   return;  
-  }  
-  data.forEach(p=>{  
-   const card=document.createElement("article");  
-   card.className="product-card";  
-   card.tabIndex=0;  
-   card.setAttribute("role","button");  
-   const frame=document.createElement("div");  
-   frame.className="product-image-frame";  
-   createPackageSlideshow(p,frame);  
-   const title=document.createElement("div");  
-   title.className="product-title";  
-   title.textContent=p.title||"Package";  
-   const details=document.createElement("div");  
-   details.className="product-details";  
-   details.textContent=p.details||"";  
-   const price=document.createElement("div");  
-   price.className="product-price";  
-   const n=Number(p.price);  
-   price.textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"តម្លៃមិនត្រឹមត្រូវ";  
-   const buy=document.createElement("button");  
-   buy.type="button";  
-   buy.className="card-buy-button";  
-   buy.textContent="បញ្ជាទិញ";  
-   buy.addEventListener("click",e=>{  
-    e.stopPropagation();  
-    createPayment(p.id,buy);  
-   });  
-   const hint=document.createElement("div");  
-   hint.className="product-hint";  
-   hint.textContent="ចុចកញ្ចប់ដើម្បីមើលព័ត៌មានលម្អិត";  
-   card.append(frame,title,details,price,buy,hint);  
-   card.addEventListener("click",()=>openProductModal(p));  
-   card.addEventListener("keydown",e=>{  
-    if(e.key==="Enter"||e.key===" "){  
-     e.preventDefault();  
-     openProductModal(p);  
-    }  
-   });  
-   grid.appendChild(card);  
-  });  
- }catch(e){  
-  console.error(e);  
-  grid.innerHTML="";  
-  showMessage("មិនអាចផ្ទុកកញ្ចប់បានទេ។ "+(e.message||""),"error");  
- }finally{  
-  btn.disabled=false;  
- }  
-}  
-function displayKHQR(text){  
- const el=byId("qrcode");  
- el.innerHTML="";  
- if(typeof QRCode==="undefined")throw new Error("មិនអាចផ្ទុក QR Code Library បានទេ។");  
- if(typeof text!=="string"||!text.trim())throw new Error("KHQR មិនត្រឹមត្រូវទេ។");  
- new QRCode(el,{text,width:250,height:250,colorDark:"#000",colorLight:"#fff",correctLevel:QRCode.CorrectLevel.L});  
-}  
-function stopCountdown(){  
- if(countdownInterval){  
-  clearInterval(countdownInterval);  
-  countdownInterval=null;  
- }  
-}  
-function stopVerification(){  
- if(verifyTimeout){  
-  clearTimeout(verifyTimeout);  
-  verifyTimeout=null;  
- }  
-}  
-function stopPaymentTimers(){  
- stopCountdown();  
- stopVerification();  
-}  
-function startCountdown(){  
- stopCountdown();  
- const el=byId("countdown");  
- function update(){  
-  if(!serverExpiresAt){el.textContent="--:--";return}  
-  const t=new Date(serverExpiresAt).getTime();  
-  if(!Number.isFinite(t)){el.textContent="--:--";return}  
-  const r=Math.max(0,Math.ceil((t-Date.now())/1000));  
-  el.textContent=String(Math.floor(r/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0");  
-  if(r<=0){  
-   stopCountdown();  
-   if(!paymentFinished)showPaymentExpired();  
-  }  
- }  
- update();  
- countdownInterval=setInterval(update,1000);  
-}  
-async function copyText(t){  
- if(!t)return false;  
- try{  
-  await navigator.clipboard.writeText(t);  
-  return true;  
- }catch(e){return false}  
-}  
-async function copyDelivery(id){  
- const ok=await copyText(byId(id).textContent);  
- showMessage(ok?"បានចម្លងព័ត៌មានរួចហើយ។":"មិនអាចចម្លងដោយស្វ័យប្រវត្តិបានទេ។ សូមជ្រើសរើសអត្ថបទដើម្បីចម្លង។",ok?"success":"error");  
-}  
-async function loadDeliveryForPurchase(id){  
- const c=getCustomerCredentials();  
- if(!c.deviceSecret)throw new Error("រកមិនឃើញ Device Secret នៅក្នុងឧបករណ៍នេះទេ។");  
- const {data,error}=await supabaseClient.functions.invoke("snv-get-purchase-delivery",{  
-  body:{purchase_id:id,device_secret:c.deviceSecret}  
- });  
- if(error)throw new Error("មិនអាចទាញព័ត៌មានកញ្ចប់បានទេ៖ "+error.message);  
- if(!data||data.success!==true||data.paid!==true||!data.delivery){  
-  throw new Error(data&&data.error?data.error:"មិនទាន់មានព័ត៌មានកញ្ចប់នៅ Server ទេ។");  
- }  
- return data.delivery;  
-}  
-function renderDelivery(d){  
- byId("delivery-gmail").textContent=d.gmail||"";  
- byId("delivery-password").textContent=d.package_password||"";  
- byId("delivery-code").textContent=d.code_8_digits||"";  
- byId("delivery-message").textContent="សូមរក្សាទុកព័ត៌មានកញ្ចប់របស់អ្នក។";  
- byId("delivery-box").style.display="block";  
-}  
-async function loadAndShowDelivery(id){  
- byId("delivery-box").style.display="block";  
- ["delivery-gmail","delivery-password","delivery-code"].forEach(x=>byId(x).textContent="កំពុងទាញព័ត៌មាន...");  
- byId("delivery-message").textContent="សូមរង់ចាំ...";  
- try{  
-  renderDelivery(await loadDeliveryForPurchase(id));  
- }catch(e){  
-  console.error(e);  
-  ["delivery-gmail","delivery-password","delivery-code"].forEach(x=>byId(x).textContent="មិនទាន់មានព័ត៌មាន");  
-  byId("delivery-message").textContent=e.message+" អ្នកអាចចូលប្រវត្តិការទិញ ហើយសាកល្បងផ្ទុកម្ដងទៀត។";  
- }  
-}  
-async function showPaymentSuccess(result){  
- if(paymentFinished)return;  
- paymentFinished=true;  
- stopPaymentTimers();  
- const saved=getPendingPurchase();  
- if(saved){  
-  saved.status="paid";  
-  savePendingPurchase(saved);  
- }  
- byId("order-status").textContent="PAID ✓";  
- byId("order-status").style.color="#62e6a5";  
- byId("qr-area").style.display="none";  
- byId("countdown").textContent="បានទូទាត់រួច";  
- byId("payment-instruction").textContent="ការទូទាត់របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។";  
- showMessage("ការទូទាត់ជោគជ័យ! លេខបញ្ជាទិញ៖ "+(result.receipt_code||""),"success");  
- await loadAndShowDelivery(currentPurchaseId);  
- byId("delivery-box").scrollIntoView({behavior:"smooth",block:"center"});  
-}  
-function showPaymentExpired(){  
- if(paymentFinished)return;  
- stopCountdown();  
- byId("order-status").textContent="QR EXPIRED";  
- byId("order-status").style.color="#ff8d8d";  
- byId("qr-area").style.display="none";  
- byId("countdown").textContent="ផុតកំណត់";  
- byId("payment-instruction").textContent="QR បានផុតកំណត់។ ប្រព័ន្ធនៅតែបន្តពិនិត្យស្ថានភាពការទូទាត់។";  
- showMessage("QR បានផុតកំណត់។ សូមរង់ចាំប្រព័ន្ធផ្ទៀងផ្ទាត់ស្ថានភាពការទូទាត់។","error");  
-}  
-async function verifyPayment(){  
- if(!currentPurchaseId||isCheckingPayment||paymentFinished)return;  
- isCheckingPayment=true;  
- try{  
-  const {data,error}=await supabaseClient.functions.invoke("snv-verify-payment",{  
-   body:{purchase_id:currentPurchaseId}  
-  });  
-  if(error){  
-   console.error(error);  
-   return;  
-  }  
-  if(data&&data.success===true&&data.paid===true&&(data.status==="paid"||data.payment_status==="paid")){  
-   await showPaymentSuccess(data);  
-   return;  
-  }  
-  const s=data?.payment_status||data?.status;  
-  if(s){  
-   byId("order-status").textContent=s;  
-   const p=getPendingPurchase();  
-   if(p){  
-    p.status=s;  
-    savePendingPurchase(p);  
-   }  
-  }  
-  if(serverExpiresAt){  
-   const t=new Date(serverExpiresAt).getTime();  
-   if(Number.isFinite(t)&&Date.now()>=t)showPaymentExpired();  
-  }  
- }catch(e){  
-  console.error(e);  
- }finally{  
-  isCheckingPayment=false;  
- }  
-}  
+function getPendingPurchase(){
+    try{
+        const r = localStorage.getItem(PENDING_PURCHASE_KEY);
+        return r ? JSON.parse(r) : null;
+    }catch(e){
+        console.warn(e);
+        return null;
+    }
+}
+
+function getImageUrl(path){
+    if(!path || typeof path !== "string") return "";
+
+    path = path.trim();
+    if(!path) return "";
+
+    if(path.startsWith("https://") || path.startsWith("http://")){
+        return path;
+    }
+
+    const clean = path
+        .replace(/^\/+/, "")
+        .replace(/^package-images\//, "");
+
+    return SUPABASE_URL +
+        "/storage/v1/object/public/package-images/" +
+        clean.split("/").map(encodeURIComponent).join("/");
+}
+
+function getProductImages(p){
+    let a = [];
+
+    if(Array.isArray(p.image_urls)){
+        a = p.image_urls.slice();
+    }else if(typeof p.image_urls === "string"){
+        try{
+            const x = JSON.parse(p.image_urls);
+            if(Array.isArray(x)) a = x;
+        }catch(e){
+            console.warn(e);
+        }
+    }
+
+    a = a.map(x =>
+        typeof x === "string"
+            ? x
+            : (x && typeof x === "object"
+                ? (x.image_url || x.url || x.path || "")
+                : "")
+    );
+
+    return Array.from(
+        new Set(
+            (p.image_url ? [p.image_url] : [])
+                .concat(a)
+                .map(getImageUrl)
+                .filter(Boolean)
+        )
+    ).slice(0, MAX_IMAGES);
+}
+
+function stopAllSlideshows(){
+    slideshowTimers.forEach(clearInterval);
+    slideshowTimers = [];
+}
+
+function createPackageSlideshow(p, frame){
+    const images = getProductImages(p);
+    const img = document.createElement("img");
+    const ph = document.createElement("div");
+
+    img.className = "product-auto-image";
+    img.alt = p.title || "Package image";
+
+    ph.className = "product-no-image";
+    ph.textContent = "មិនមានរូបភាព";
+
+    frame.append(img, ph);
+
+    if(!images.length){
+        img.style.display = "none";
+        return;
+    }
+
+    let i = 0;
+
+    function show(){
+        img.style.display = "block";
+        ph.style.display = "none";
+        img.src = images[i];
+        i = (i + 1) % images.length;
+    }
+
+    img.onerror = () => {
+        img.style.display = "none";
+        ph.textContent = "មិនអាចបង្ហាញរូបភាពបានទេ";
+        ph.style.display = "block";
+    };
+
+    img.onload = () => {
+        img.style.display = "block";
+        ph.style.display = "none";
+    };
+
+    show();
+
+    if(images.length > 1){
+        slideshowTimers.push(setInterval(show, 3000));
+    }
+}
+
+function openProductModal(p){
+    selectedProduct = p;
+    selectedImages = getProductImages(p);
+    selectedImageIndex = 0;
+
+    byId("modal-title").textContent = p.title || "Package";
+    byId("modal-details").textContent = p.details || "";
+
+    const n = Number(p.price);
+
+    byId("modal-price").textContent =
+        Number.isFinite(n)
+            ? n.toFixed(2) + " " + (p.currency || "USD")
+            : "តម្លៃមិនត្រឹមត្រូវ";
+
+    updateModalImage();
+
+    byId("product-modal").classList.add("show");
+    document.body.style.overflow = "hidden";
+}
+
+function closeProductModal(){
+    byId("product-modal").classList.remove("show");
+
+    if(!byId("history-modal").classList.contains("show")){
+        document.body.style.overflow = "";
+    }
+}
+
+function updateModalImage(){
+    const img = byId("modal-image");
+    const ph = byId("modal-placeholder");
+    const counter = byId("image-counter");
+
+    if(!selectedImages.length){
+        img.style.display = "none";
+        img.removeAttribute("src");
+
+        ph.textContent = "មិនមានរូបភាព";
+        ph.style.display = "block";
+
+        counter.textContent = "គ្មានរូបភាព";
+
+        byId("previous-image").disabled = true;
+        byId("next-image").disabled = true;
+        return;
+    }
+
+    img.style.display = "block";
+    ph.style.display = "none";
+
+    img.onerror = () => {
+        img.style.display = "none";
+        ph.textContent = "មិនអាចបង្ហាញរូបភាពនេះបានទេ";
+        ph.style.display = "block";
+    };
+
+    img.onload = () => {
+        img.style.display = "block";
+        ph.style.display = "none";
+    };
+
+    img.src = selectedImages[selectedImageIndex];
+
+    counter.textContent =
+        (selectedImageIndex + 1) + "/" + selectedImages.length;
+
+    byId("previous-image").disabled = selectedImages.length <= 1;
+    byId("next-image").disabled = selectedImages.length <= 1;
+}
+
+function changeModalImage(d){
+    if(selectedImages.length <= 1) return;
+
+    selectedImageIndex =
+        (selectedImageIndex + d + selectedImages.length) %
+        selectedImages.length;
+
+    updateModalImage();
+}
+
+async function loadProducts(){
+    const grid = byId("products-grid");
+    const btn = byId("refresh-button");
+
+    stopAllSlideshows();
+
+    grid.innerHTML =
+        '<p class="empty-message">កំពុងផ្ទុកកញ្ចប់...</p>';
+
+    btn.disabled = true;
+    clearMessage();
+
+    try{
+        const {data, error} = await supabaseClient
+            .from("snv_catalog")
+            .select("id,title,details,price,currency,image_url,image_urls,created_at")
+            .eq("available", true)
+            .order("created_at", {ascending: true})
+            .limit(MAX_PACKAGES);
+
+        if(error) throw error;
+
+        grid.innerHTML = "";
+
+        if(!data || !data.length){
+            grid.innerHTML =
+                '<p class="empty-message">មិនទាន់មានកញ្ចប់ដែលអាចបង្ហាញបានទេ។</p>';
+            return;
+        }
+
+        data.forEach(p => {
+            const card = document.createElement("article");
+            card.className = "product-card";
+            card.tabIndex = 0;
+            card.setAttribute("role", "button");
+
+            const frame = document.createElement("div");
+            frame.className = "product-image-frame";
+
+            createPackageSlideshow(p, frame);
+
+            const title = document.createElement("div");
+            title.className = "product-title";
+            title.textContent = p.title || "Package";
+
+            const details = document.createElement("div");
+            details.className = "product-details";
+            details.textContent = p.details || "";
+
+            const price = document.createElement("div");
+            price.className = "product-price";
+
+            const n = Number(p.price);
+
+            price.textContent =
+                Number.isFinite(n)
+                    ? n.toFixed(2) + " " + (p.currency || "USD")
+                    : "តម្លៃមិនត្រឹមត្រូវ";
+
+            const buy = document.createElement("button");
+            buy.type = "button";
+            buy.className = "card-buy-button";
+            buy.textContent = "បញ្ជាទិញ";
+
+            buy.addEventListener("click", e => {
+                e.stopPropagation();
+                createPayment(p.id, buy);
+            });
+
+            const hint = document.createElement("div");
+            hint.className = "product-hint";
+            hint.textContent = "ចុចកញ្ចប់ដើម្បីមើលព័ត៌មានលម្អិត";
+
+            card.append(frame, title, details, price, buy, hint);
+
+            card.addEventListener("click", () => openProductModal(p));
+
+            card.addEventListener("keydown", e => {
+                if(e.key === "Enter" || e.key === " "){
+                    e.preventDefault();
+                    openProductModal(p);
+                }
+            });
+
+            grid.appendChild(card);
+        });
+
+    }catch(e){
+        console.error(e);
+        grid.innerHTML = "";
+        showMessage(
+            "មិនអាចផ្ទុកកញ្ចប់បានទេ។ " + (e.message || ""),
+            "error"
+        );
+    }finally{
+        btn.disabled = false;
+    }
+}
+
+function displayKHQR(text){
+    const el = byId("qrcode");
+    el.innerHTML = "";
+
+    if(typeof QRCode === "undefined"){
+        throw new Error("មិនអាចផ្ទុក QR Code Library បានទេ។");
+    }
+
+    if(typeof text !== "string" || !text.trim()){
+        throw new Error("KHQR មិនត្រឹមត្រូវទេ។");
+    }
+
+    new QRCode(el, {
+        text: text,
+        width: 250,
+        height: 250,
+        colorDark: "#000",
+        colorLight: "#fff",
+        correctLevel: QRCode.CorrectLevel.L
+    });
+}
+
+function stopCountdown(){
+    if(countdownInterval){
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+}
+
+function stopVerification(){
+    if(verifyTimeout){
+        clearTimeout(verifyTimeout);
+        verifyTimeout = null;
+    }
+}
+
+function stopPaymentTimers(){
+    stopCountdown();
+    stopVerification();
+}
+
+function startCountdown(){
+    stopCountdown();
+
+    const el = byId("countdown");
+
+    function update(){
+        if(!serverExpiresAt){
+            el.textContent = "--:--";
+            return;
+        }
+
+        const t = new Date(serverExpiresAt).getTime();
+
+        if(!Number.isFinite(t)){
+            el.textContent = "--:--";
+            return;
+        }
+
+        const r = Math.max(0, Math.ceil((t - Date.now()) / 1000));
+
+        el.textContent =
+            String(Math.floor(r / 60)).padStart(2, "0") +
+            ":" +
+            String(r % 60).padStart(2, "0");
+
+        if(r <= 0){
+            stopCountdown();
+
+            if(!paymentFinished){
+                showPaymentExpired();
+            }
+        }
+    }
+
+    update();
+    countdownInterval = setInterval(update, 1000);
+}
+
+async function copyText(t){
+    if(!t) return false;
+
+    try{
+        await navigator.clipboard.writeText(t);
+        return true;
+    }catch(e){
+        return false;
+    }
+}
+
+async function copyDelivery(id){
+    const ok = await copyText(byId(id).textContent);
+
+    showMessage(
+        ok
+            ? "បានចម្លងព័ត៌មានរួចហើយ។"
+            : "មិនអាចចម្លងដោយស្វ័យប្រវត្តិបានទេ។ សូមជ្រើសរើសអត្ថបទដើម្បីចម្លង។",
+        ok ? "success" : "error"
+    );
+}
+
+async function loadDeliveryForPurchase(id){
+    const c = getCustomerCredentials();
+
+    if(!c.deviceSecret){
+        throw new Error("រកមិនឃើញ Device Secret នៅក្នុងឧបករណ៍នេះទេ។");
+    }
+
+    const {data, error} = await supabaseClient.functions.invoke(
+        "snv-get-purchase-delivery",
+        {
+            body: {
+                purchase_id: id,
+                device_secret: c.deviceSecret
+            }
+        }
+    );
+
+    if(error){
+        throw new Error(
+            "មិនអាចទាញព័ត៌មានកញ្ចប់បានទេ៖ " + error.message
+        );
+    }
+
+    if(!data || data.success !== true ||
+       data.paid !== true || !data.delivery){
+        throw new Error(
+            data && data.error
+                ? data.error
+                : "មិនទាន់មានព័ត៌មានកញ្ចប់នៅ Server ទេ។"
+        );
+    }
+
+    return data.delivery;
+}
+
+function renderDelivery(d){
+    byId("delivery-gmail").textContent = d.gmail || "";
+    byId("delivery-password").textContent = d.package_password || "";
+    byId("delivery-code").textContent = d.code_8_digits || "";
+
+    byId("delivery-message").textContent =
+        "សូមរក្សាទុកព័ត៌មានកញ្ចប់របស់អ្នក។";
+
+    byId("delivery-box").style.display = "block";
+}
+
+async function loadAndShowDelivery(id){
+    byId("delivery-box").style.display = "block";
+
+    [
+        "delivery-gmail",
+        "delivery-password",
+        "delivery-code"
+    ].forEach(x => {
+        byId(x).textContent = "កំពុងទាញព័ត៌មាន...";
+    });
+
+    byId("delivery-message").textContent = "សូមរង់ចាំ...";
+
+    try{
+        renderDelivery(await loadDeliveryForPurchase(id));
+    }catch(e){
+        console.error(e);
+
+        [
+            "delivery-gmail",
+            "delivery-password",
+            "delivery-code"
+        ].forEach(x => {
+            byId(x).textContent = "មិនទាន់មានព័ត៌មាន";
+        });
+
+        byId("delivery-message").textContent =
+            e.message +
+            " អ្នកអាចចូលប្រវត្តិការទិញ ហើយសាកល្បងផ្ទុកម្ដងទៀត។";
+    }
+}
+
+async function showPaymentSuccess(result){
+    if(paymentFinished) return;
+
+    paymentFinished = true;
+    stopPaymentTimers();
+
+    const saved = getPendingPurchase();
+
+    if(saved){
+        saved.status = "paid";
+        savePendingPurchase(saved);
+    }
+
+    byId("order-status").textContent = "PAID ✓";
+    byId("order-status").style.color = "#62e6a5";
+
+    byId("qr-area").style.display = "none";
+    byId("countdown").textContent = "បានទូទាត់រួច";
+
+    byId("payment-instruction").textContent =
+        "ការទូទាត់របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ជោគជ័យ។";
+
+    showMessage(
+        "ការទូទាត់ជោគជ័យ! លេខបញ្ជាទិញ៖ " +
+        (result.receipt_code || ""),
+        "success"
+    );
+
+    await loadAndShowDelivery(currentPurchaseId);
+
+    byId("delivery-box").scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+}
+
+function showPaymentExpired(){
+    if(paymentFinished) return;
+
+    stopCountdown();
+
+    byId("order-status").textContent = "QR EXPIRED";
+    byId("order-status").style.color = "#ff8d8d";
+
+    byId("qr-area").style.display = "none";
+    byId("countdown").textContent = "ផុតកំណត់";
+
+    byId("payment-instruction").textContent =
+        "QR បានផុតកំណត់។ ប្រព័ន្ធកំពុងរក្សាការបញ្ជាទិញ រហូតដល់មានលទ្ធផលផ្ទៀងផ្ទាត់ច្បាស់លាស់។";
+}
+
+/*
+ * verifyPayment() បញ្ជូនលទ្ធផល៖
+ * true  = Server បញ្ជាក់ថាបង់រួច
+ * false = Server បញ្ជាក់ច្បាស់ថាមិនទាន់បង់
+ * null  = មិនអាចដឹងលទ្ធផល ឬមានកំហុស
+ */
+async function verifyPayment(){
+    if(!currentPurchaseId ||
+       isCheckingPayment ||
+       paymentFinished){
+        return null;
+    }
+
+    isCheckingPayment = true;
+
+    let result = null;
+
+    try{
+        const {data, error} =
+            await supabaseClient.functions.invoke(
+                "snv-verify-payment",
+                {
+                    body: {
+                        purchase_id: currentPurchaseId
+                    }
+                }
+            );
+
+        if(error){
+            console.error(error);
+            return null;
+        }
+
+        if(data &&
+           data.success === true &&
+           data.paid === true &&
+           (data.status === "paid" ||
+            data.payment_status === "paid")){
+
+            result = true;
+            await showPaymentSuccess(data);
+            return true;
+        }
+
+        const status =
+            data?.payment_status || data?.status || "";
+
+        if(data &&
+           data.success === true &&
+           data.paid === false){
+
+            result = false;
+
+            const p = getPendingPurchase();
+
+            if(p){
+                p.status = status || "awaiting_payment";
+                p.lastVerifyResult = false;
+                p.lastVerifyAt = new Date().toISOString();
+                savePendingPurchase(p);
+            }
+
+            if(status){
+                byId("order-status").textContent = status;
+            }
+
+            return false;
+        }
+
+        // មិនមាន paid:false ច្បាស់លាស់ គឺមិនចាត់ទុកថាបញ្ជាក់មិនទាន់បង់ទេ
+        console.warn("Verification response is not conclusive:", data);
+        return null;
+
+    }catch(e){
+        console.error(e);
+        return null;
+
+    }finally{
+        isCheckingPayment = false;
+    }
+}
+
+function finishExpiredPurchase(){
+    if(paymentFinished) return;
+
+    stopPaymentTimers();
+    showPaymentExpired();
+
+    const p = getPendingPurchase();
+
+    /*
+     * អនុញ្ញាតការបញ្ជាទិញថ្មីតែប៉ុណ្ណោះ
+     * ប្រសិនបើការផ្ទៀងផ្ទាត់ចុងក្រោយបានបញ្ជាក់ paid:false។
+     */
+    if(p &&
+       p.purchaseId === currentPurchaseId &&
+       p.lastVerifyResult === false &&
+       p.lastVerifyAt){
+
+        const checkedAt = new Date(p.lastVerifyAt).getTime();
+        const expiry = new Date(serverExpiresAt).getTime();
+
+        // លទ្ធផលត្រូវបានទទួលមុនផុតកំណត់
+        if(Number.isFinite(checkedAt) &&
+           Number.isFinite(expiry) &&
+           checkedAt < expiry){
+
+            localStorage.removeItem(PENDING_PURCHASE_KEY);
+
+            byId("order-box").style.display = "none";
+
+            currentPurchaseId = null;
+            serverExpiresAt = null;
+
+            showMessage(
+                "QR ចាស់បានផុតកំណត់ ហើយ Server បានបញ្ជាក់ថាមិនទាន់បង់ប្រាក់។ អ្នកអាចបញ្ជាទិញថ្មីបាន។",
+                "success"
+            );
+
+            return;
+        }
+    }
+
+    // បើលទ្ធផលមិនច្បាស់ ត្រូវរក្សាការបញ្ជាទិញចាស់ទុក
+    showMessage(
+        "QR បានផុតកំណត់ ប៉ុន្តែមិនទាន់មានលទ្ធផលផ្ទៀងផ្ទាត់ច្បាស់លាស់ទេ។ សូមកុំបង្កើតការបញ្ជាទិញថ្មីរហូតដល់ដោះស្រាយការបញ្ជាទិញនេះ។",
+        "error"
+    );
+}
 
 function scheduleNextVerification(){
- if(!currentPurchaseId||paymentFinished)return;
+    if(!currentPurchaseId || paymentFinished) return;
 
- const elapsed = Date.now() - verificationStartedAt;
- const expiryTime = serverExpiresAt
-  ? new Date(serverExpiresAt).getTime()
-  : verificationStartedAt + 120000;
+    const expiryTime = serverExpiresAt
+        ? new Date(serverExpiresAt).getTime()
+        : verificationStartedAt + 120000;
 
- if(!Number.isFinite(expiryTime)){
-  showPaymentExpired();
-  return;
- }
+    if(!Number.isFinite(expiryTime)){
+        showPaymentExpired();
+        return;
+    }
 
- // 30 វិនាទីដំបូងមិនផ្ទៀងផ្ទាត់
- // បន្ទាប់មកផ្ទៀងផ្ទាត់រៀងរាល់ 10 វិនាទី
- const nextCheck = elapsed < 40000
-  ? 40000
-  : (Math.floor(elapsed / 10000) + 1) * 10000;
+    const now = Date.now();
 
- const nextTime = verificationStartedAt + nextCheck;
+    if(now >= expiryTime){
+        finishExpiredPurchase();
+        return;
+    }
 
- if(nextTime >= expiryTime){
-  verifyTimeout = setTimeout(()=>{
-   verifyTimeout = null;
-   if(!paymentFinished) showPaymentExpired();
-  }, Math.max(0, expiryTime - Date.now()));
-  return;
- }
+    const elapsed = now - verificationStartedAt;
 
- verifyTimeout = setTimeout(async()=>{
-  verifyTimeout = null;
+    // ពិនិត្យដំបូងនៅ 40 វិនាទី
+    // បន្ទាប់មករៀងរាល់ 10 វិនាទី
+    const nextCheck = elapsed < 40000
+        ? 40000
+        : (Math.floor(elapsed / 10000) + 1) * 10000;
 
-  if(!currentPurchaseId||paymentFinished)return;
+    const nextTime = verificationStartedAt + nextCheck;
 
-  if(Date.now() >= expiryTime){
-   showPaymentExpired();
-   return;
-  }
+    // មិនកំណត់ការពិនិត្យថ្មីនៅ ឬក្រោយពេលផុតកំណត់
+    if(nextTime >= expiryTime){
+        verifyTimeout = setTimeout(() => {
+            verifyTimeout = null;
+            finishExpiredPurchase();
+        }, Math.max(0, expiryTime - Date.now()));
 
-  await verifyPayment();
+        return;
+    }
 
-  if(!paymentFinished)scheduleNextVerification();
+    verifyTimeout = setTimeout(async () => {
+        verifyTimeout = null;
 
- }, Math.max(0, nextTime - Date.now()));
+        if(!currentPurchaseId || paymentFinished) return;
+
+        if(Date.now() >= expiryTime){
+            finishExpiredPurchase();
+            return;
+        }
+
+        await verifyPayment();
+
+        if(!paymentFinished){
+            scheduleNextVerification();
+        }
+
+    }, Math.max(0, nextTime - Date.now()));
 }
 
-function startPaymentVerification(id,expiry){
- stopVerification();
+function startPaymentVerification(id, expiry){
+    stopVerification();
 
- currentPurchaseId=id;
- serverExpiresAt=expiry||null;
- paymentFinished=false;
- isCheckingPayment=false;
- verificationStartedAt=Date.now();
+    currentPurchaseId = id;
+    serverExpiresAt = expiry || null;
 
- // ចាប់ផ្ដើមរង់ចាំដល់វិនាទីទី 40
- scheduleNextVerification();
+    paymentFinished = false;
+    isCheckingPayment = false;
+
+    const expiryTime = serverExpiresAt
+        ? new Date(serverExpiresAt).getTime()
+        : NaN;
+
+    if(Number.isFinite(expiryTime)){
+        // QR មានអាយុកាល 120 វិនាទី
+        // ប្រើពេលផុតកំណត់ដើម្បីរកពេលចាប់ផ្ដើមដើម
+        verificationStartedAt = expiryTime - 120000;
+    }else{
+        verificationStartedAt = Date.now();
+    }
+
+    scheduleNextVerification();
 }
 
-function restorePendingPurchase(){  
- const p=getPendingPurchase();  
- if(!p||!p.purchaseId)return;  
- currentPurchaseId=p.purchaseId;  
- serverExpiresAt=p.expiresAt||null;  
- paymentFinished=false;  
- byId("receipt-code").textContent=p.receiptCode||"-";  
- byId("order-product").textContent=p.productName||"-";  
- const n=Number(p.amount);  
- byId("order-amount").textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-";  
- byId("order-status").textContent=p.status||"awaiting_payment";  
- byId("qr-area").style.display="none";  
- byId("countdown").textContent=p.status==="paid"?"បានទូទាត់រួច":"QR មិនមានក្រោយ Refresh";  
- byId("payment-instruction").textContent="បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាពការទូទាត់។";  
- byId("order-box").style.display="block";  
- startPaymentVerification(p.purchaseId,p.expiresAt);  
-}  
-async function createPayment(productId,button){  
- if(isCreatingPayment)return;  
- const old=getPendingPurchase();  
- if(old&&old.purchaseId&&old.status!=="paid"){  
-  showMessage("អ្នកមានការបញ្ជាទិញមួយកំពុងរង់ចាំការផ្ទៀងផ្ទាត់។ សូមពិនិត្យការបញ្ជាទិញនោះជាមុន។","error");  
-  closeProductModal();  
-  byId("order-box").scrollIntoView({behavior:"smooth"});  
-  return;  
- }  
- isCreatingPayment=true;  
- clearMessage();  
- button.disabled=true;  
- button.textContent="កំពុងបង្កើត KHQR...";  
- try{  
-  stopPaymentTimers();  
-  currentPurchaseId=null;  
-  serverExpiresAt=null;  
-  paymentFinished=false;  
-  isCheckingPayment=false;  
-  byId("delivery-box").style.display="none";  
-  byId("order-box").style.display="none";  
-  const c=getOrCreateCustomerCredentials();  
-  const {data,error}=await supabaseClient.functions.invoke("snv-create-khqr",{  
-   body:{product_id:productId,device_secret:c.deviceSecret,history_pin:c.historyPin}  
-  });  
-  if(error)throw new Error("មិនអាចហៅ snv-create-khqr បានទេ។ "+(error.message||""));  
-  if(!data||data.success!==true||!data.purchase||!data.payment||!data.payment.qr){  
-   throw new Error(data&&data.error?data.error:"ទិន្នន័យ KHQR មិនត្រឹមត្រូវទេ។");  
-  }  
-  const p=data.purchase,pay=data.payment;  
-  if(!p.id)throw new Error("Server មិនបានផ្ញើ purchase ID មកទេ។");  
-  saveCustomerCredentials(c.deviceSecret,c.historyPin);  
-  byId("saved-pin").textContent=c.historyPin;  
-  byId("receipt-code").textContent=p.receipt_code||"-";  
-  byId("order-product").textContent=p.product_name||p.item_title||"-";  
-  const n=Number(p.amount??p.total);  
-  byId("order-amount").textContent=Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-";  
-  byId("order-status").textContent=p.payment_status||"awaiting_payment";  
-  byId("order-status").style.color="#62e6a5";  
-  byId("qr-area").style.display="block";  
-  byId("payment-instruction").textContent="សូមស្កេន KHQR។ ប្រព័ន្ធនឹងពិនិត្យ Bakong ភ្លាមៗ ហើយបន្តពិនិត្យតាមចន្លោះពេលស្វ័យប្រវត្តិ។";  
-  displayKHQR(pay.qr);  
-  const expiry=pay.expires_at||new Date(Date.now()+Number(pay.expires_in_seconds||150)*1000).toISOString();  
-  savePendingPurchase({  
-   purchaseId:p.id,  
-   receiptCode:p.receipt_code||"",  
-   productName:p.product_name||p.item_title||"",  
-   amount:p.amount??p.total,  
-   currency:p.currency||"USD",  
-   expiresAt:expiry,  
-   status:"awaiting_payment"  
-  });  
-  byId("order-box").style.display="block";  
-  closeProductModal();  
-  serverExpiresAt=expiry;  
-  startCountdown();  
-  startPaymentVerification(p.id,expiry);  
-  let msg="បានបង្កើត KHQR ដោយជោគជ័យ។ សូមស្កេនដើម្បីទូទាត់។";  
-  if(c.isNew)msg+=" Recovery PIN របស់អ្នកគឺ "+c.historyPin+"។ សូមចម្លង និងរក្សាទុក PIN នេះ។";  
-  showMessage(msg,"success");  
-  byId("order-box").scrollIntoView({behavior:"smooth"});  
- }catch(e){  
-  console.error(e);  
-  showMessage(e.message||"មានបញ្ហាក្នុងការបង្កើត KHQR។","error");  
- }finally{  
-  isCreatingPayment=false;  
-  button.disabled=false;  
-  button.textContent="បញ្ជាទិញ";  
- }  
-}  
-function openHistoryModal(){  
- byId("history-modal").classList.add("show");  
- document.body.style.overflow="hidden";  
- const c=getCustomerCredentials();  
- byId("saved-pin").textContent=c.historyPin||"មិនទាន់មាន PIN";  
- byId("history-list").innerHTML="";  
- if(c.deviceSecret&&c.historyPin)loadPurchaseHistory();  
- else showHistoryMessage("មិនទាន់មានព័ត៌មានអតិថិជននៅលើឧបករណ៍នេះទេ។ ប្រសិនបើអ្នកធ្លាប់ទិញ សូមប្រើ Recovery PIN ខាងក្រោម។");  
-}  
-function closeHistoryModal(){  
- byId("history-modal").classList.remove("show");  
- if(!byId("product-modal").classList.contains("show"))document.body.style.overflow="";  
-}  
-function formatDate(v){  
- if(!v)return "-";  
- const d=new Date(v);  
- return Number.isNaN(d.getTime())?"-":d.toLocaleString("km-KH");  
-}  
-function renderPurchaseHistory(purchases){  
- const list=byId("history-list");  
- list.innerHTML="";  
- const paid=Array.isArray(purchases)?purchases.filter(p=>p.payment_status==="paid"||p.status==="paid"):[];  
- if(!paid.length){  
-  showHistoryMessage("មិនទាន់មានប្រវត្តិការទិញដែលបានបង់ប្រាក់ទេ។");  
-  return;  
- }  
- showHistoryMessage("បានផ្ទុកប្រវត្តិការទិញរួចរាល់។");  
- paid.forEach(p=>{  
-  const item=document.createElement("div");  
-  item.className="history-item";  
-  const title=document.createElement("div");  
-  title.className="history-item-title";  
-  title.textContent=p.item_title||p.product_name||"Package";  
-  const receipt=document.createElement("div");  
-  receipt.className="history-item-line";  
-  receipt.textContent="លេខបញ្ជាទិញ៖ "+(p.receipt_code||"-");  
-  const price=document.createElement("div");  
-  price.className="history-item-line";  
-  const n=Number(p.total??p.amount);  
-  price.textContent="តម្លៃ៖ "+(Number.isFinite(n)?n.toFixed(2)+" "+(p.currency||"USD"):"-");  
-  const date=document.createElement("div");  
-  date.className="history-item-line";  
-  date.textContent="ថ្ងៃទិញ៖ "+formatDate(p.paid_at);  
-  const status=document.createElement("div");  
-  status.className="history-item-line history-item-status";  
-  status.textContent="PAID ✓";  
-  item.append(title,receipt,price,date,status);  
-  if(p.delivery){  
-   const d=p.delivery;  
-   [["Gmail",d.gmail],["Password",d.package_password],["លេខកូដ",d.code_8_digits]].forEach(pair=>{  
-    const x=document.createElement("div");  
-    x.className="history-item-line";  
-    x.textContent=pair[0]+"៖ "+(pair[1]||"-");  
-    item.appendChild(x);  
-   });  
-   const b=document.createElement("button");  
-   b.type="button";  
-   b.textContent="បង្ហាញព័ត៌មានកញ្ចប់";  
-   b.addEventListener("click",()=>{  
-    byId("delivery-gmail").textContent=d.gmail||"";  
-    byId("delivery-password").textContent=d.package_password||"";  
-    byId("delivery-code").textContent=d.code_8_digits||"";  
-    byId("delivery-message").textContent="ព័ត៌មានពីប្រវត្តិការទិញរបស់អ្នក។";  
-    byId("delivery-box").style.display="block";  
-    closeHistoryModal();  
-    byId("delivery-box").scrollIntoView({behavior:"smooth",block:"center"});  
-   });  
-   item.appendChild(b);  
-  }  
-  list.appendChild(item);  
- });  
-}  
+function restorePendingPurchase(){
+    const p = getPendingPurchase();
+
+    if(!p || !p.purchaseId) return;
+
+    currentPurchaseId = p.purchaseId;
+    serverExpiresAt = p.expiresAt || null;
+
+    paymentFinished = p.status === "paid";
+
+    byId("receipt-code").textContent = p.receiptCode || "-";
+    byId("order-product").textContent = p.productName || "-";
+
+    const n = Number(p.amount);
+
+    byId("order-amount").textContent =
+        Number.isFinite(n)
+            ? n.toFixed(2) + " " + (p.currency || "USD")
+            : "-";
+
+    byId("order-status").textContent = p.status || "awaiting_payment";
+
+    byId("qr-area").style.display = "none";
+
+    byId("countdown").textContent =
+        p.status === "paid"
+            ? "បានទូទាត់រួច"
+            : "QR មិនមានក្រោយ Refresh";
+
+    byId("payment-instruction").textContent =
+        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធនឹងបង្ហាញស្ថានភាពដែលបានរក្សាទុក។";
+
+    byId("order-box").style.display = "block";
+
+    if(p.status === "paid"){
+        paymentFinished = true;
+        return;
+    }
+
+    const expiryTime = p.expiresAt
+        ? new Date(p.expiresAt).getTime()
+        : NaN;
+
+    // ក្រោយ Refresh ប្រសិនបើ QR ផុតកំណត់ហើយ
+    // មិនផ្ញើសំណើផ្ទៀងផ្ទាត់ថ្មីទេ
+    if(!Number.isFinite(expiryTime) || Date.now() >= expiryTime){
+        showPaymentExpired();
+
+        showMessage(
+            "ការបញ្ជាទិញចាស់បានផុតកំណត់។ មិនអាចបញ្ជាក់លទ្ធផលចុងក្រោយពីទិន្នន័យក្នុងឧបករណ៍នេះបានទេ។ សូមរក្សាទុកលេខបញ្ជាទិញសម្រាប់ពិនិត្យបន្ត។",
+            "error"
+        );
+
+        return;
+    }
+
+    startCountdown();
+    startPaymentVerification(p.purchaseId, p.expiresAt);
+}
+
+async function createPayment(productId, button){
+    if(isCreatingPayment) return;
+
+    const old = getPendingPurchase();
+
+    if(old && old.purchaseId && old.status !== "paid"){
+        showMessage(
+            "អ្នកមានការបញ្ជាទិញមួយកំពុងរង់ចាំការផ្ទៀងផ្ទាត់។ សូមពិនិត្យការបញ្ជាទិញនោះជាមុន។",
+            "error"
+        );
+
+        closeProductModal();
+
+        byId("order-box").scrollIntoView({
+            behavior: "smooth"
+        });
+
+        return;
+    }
+
+    isCreatingPayment = true;
+    clearMessage();
+
+    button.disabled = true;
+    button.textContent = "កំពុងបង្កើត KHQR...";
+
+    try{
+        stopPaymentTimers();
+
+        currentPurchaseId = null;
+        serverExpiresAt = null;
+
+        paymentFinished = false;
+        isCheckingPayment = false;
+
+        byId("delivery-box").style.display = "none";
+        byId("order-box").style.display = "none";
+
+        const c = getOrCreateCustomerCredentials();
+
+        const {data, error} =
+            await supabaseClient.functions.invoke(
+                "snv-create-khqr",
+                {
+                    body: {
+                        product_id: productId,
+                        device_secret: c.deviceSecret,
+                        history_pin: c.historyPin
+                    }
+                }
+            );
+
+        if(error){
+            throw new Error(
+                "មិនអាចហៅ snv-create-khqr បានទេ។ " +
+                (error.message || "")
+            );
+        }
+
+        if(!data ||
+           data.success !== true ||
+           !data.purchase ||
+           !data.payment ||
+           !data.payment.qr){
+
+            throw new Error(
+                data && data.error
+                    ? data.error
+                    : "ទិន្នន័យ KHQR មិនត្រឹមត្រូវទេ។"
+            );
+        }
+
+        const p = data.purchase;
+        const pay = data.payment;
+
+        if(!p.id){
+            throw new Error("Server មិនបានផ្ញើ purchase ID មកទេ។");
+        }
+
+        saveCustomerCredentials(c.deviceSecret, c.historyPin);
+
+        byId("saved-pin").textContent = c.historyPin;
+
+        byId("receipt-code").textContent = p.receipt_code || "-";
+
+        byId("order-product").textContent =
+            p.product_name || p.item_title || "-";
+
+        const n = Number(p.amount ?? p.total);
+
+        byId("order-amount").textContent =
+            Number.isFinite(n)
+                ? n.toFixed(2) + " " + (p.currency || "USD")
+                : "-";
+
+        byId("order-status").textContent =
+            p.payment_status || "awaiting_payment";
+
+        byId("order-status").style.color = "#62e6a5";
+
+        byId("qr-area").style.display = "block";
+
+        byId("payment-instruction").textContent =
+            "សូមស្កេន KHQR។ ប្រព័ន្ធនឹងពិនិត្យនៅវិនាទីទី 40 ហើយបន្តរៀងរាល់ 10 វិនាទីរហូតដល់មុន 120 វិនាទី។";
+
+        displayKHQR(pay.qr);
+
+        const expiry = pay.expires_at ||
+            new Date(
+                Date.now() +
+                Number(pay.expires_in_seconds || 120) * 1000
+            ).toISOString();
+
+        savePendingPurchase({
+            purchaseId: p.id,
+            receiptCode: p.receipt_code || "",
+            productName: p.product_name || p.item_title || "",
+            amount: p.amount ?? p.total,
+            currency: p.currency || "USD",
+            expiresAt: expiry,
+            status: "awaiting_payment",
+            lastVerifyResult: null,
+            lastVerifyAt: null
+        });
+
+        byId("order-box").style.display = "block";
+
+        closeProductModal();
+
+        serverExpiresAt = expiry;
+
+        startCountdown();
+        startPaymentVerification(p.id, expiry);
+
+        let msg =
+            "បានបង្កើត KHQR ដោយជោគជ័យ។ សូមស្កេនដើម្បីទូទាត់។";
+
+        if(c.isNew){
+            msg +=
+                " Recovery PIN របស់អ្នកគឺ " +
+                c.historyPin +
+                "។ សូមចម្លង និងរក្សាទុក PIN នេះ។";
+        }
+
+        showMessage(msg, "success");
+
+        byId("order-box").scrollIntoView({
+            behavior: "smooth"
+        });
+
+    }catch(e){
+        console.error(e);
+
+        showMessage(
+            e.message || "មានបញ្ហាក្នុងការបង្កើត KHQR។",
+            "error"
+        );
+
+    }finally{
+        isCreatingPayment = false;
+        button.disabled = false;
+        button.textContent = "បញ្ជាទិញ";
+    }
+}
+
+function openHistoryModal(){
+    byId("history-modal").classList.add("show");
+    document.body.style.overflow = "hidden";
+
+    const c = getCustomerCredentials();
+
+    byId("saved-pin").textContent =
+        c.historyPin || "មិនទាន់មាន PIN";
+
+    byId("history-list").innerHTML = "";
+
+    if(c.deviceSecret && c.historyPin){
+        loadPurchaseHistory();
+    }else{
+        showHistoryMessage(
+            "មិនទាន់មានព័ត៌មានអតិថិជននៅលើឧបករណ៍នេះទេ។ ប្រសិនបើអ្នកធ្លាប់ទិញ សូមប្រើ Recovery PIN ខាងក្រោម។"
+        );
+    }
+}
+
+function closeHistoryModal(){
+    byId("history-modal").classList.remove("show");
+
+    if(!byId("product-modal").classList.contains("show")){
+        document.body.style.overflow = "";
+    }
+}
+
+function formatDate(v){
+    if(!v) return "-";
+
+    const d = new Date(v);
+
+    return Number.isNaN(d.getTime())
+        ? "-"
+        : d.toLocaleString("km-KH");
+}
+
+function renderPurchaseHistory(purchases){
+    const list = byId("history-list");
+    list.innerHTML = "";
+
+    const paid = Array.isArray(purchases)
+        ? purchases.filter(p =>
+            p.payment_status === "paid" ||
+            p.status === "paid"
+        )
+        : [];
+
+    if(!paid.length){
+        showHistoryMessage(
+            "មិនទាន់មានប្រវត្តិការទិញដែលបានបង់ប្រាក់ទេ។"
+        );
+        return;
+    }
+
+    showHistoryMessage(
+        "បានផ្ទុកប្រវត្តិការទិញរួចរាល់។"
+    );
+
+    paid.forEach(p => {
+        const item = document.createElement("div");
+        item.className = "history-item";
+
+        const title = document.createElement("div");
+        title.className = "history-item-title";
+        title.textContent =
+            p.item_title || p.product_name || "Package";
+
+        const receipt = document.createElement("div");
+        receipt.className = "history-item-line";
+        receipt.textContent =
+            "លេខបញ្ជាទិញ៖ " + (p.receipt_code || "-");
+
+        const price = document.createElement("div");
+        price.className = "history-item-line";
+
+        const n = Number(p.total ?? p.amount);
+
+        price.textContent =
+            "តម្លៃ៖ " +
+            (Number.isFinite(n)
+                ? n.toFixed(2) + " " + (p.currency || "USD")
+                : "-");
+
+        const date = document.createElement("div");
+        date.className = "history-item-line";
+        date.textContent =
+            "ថ្ងៃទិញ៖ " + formatDate(p.paid_at);
+
+        const status = document.createElement("div");
+        status.className =
+            "history-item-line history-item-status";
+        status.textContent = "PAID ✓";
+
+        item.append(title, receipt, price, date, status);
+
+        if(p.delivery){
+            const d = p.delivery;
+
+            [
+                ["Gmail", d.gmail],
+                ["Password", d.package_password],
+                ["លេខកូដ", d.code_8_digits]
+            ].forEach(pair => {
+                const x = document.createElement("div");
+                x.className = "history-item-line";
+                x.textContent =
+                    pair[0] + "៖ " + (pair[1] || "-");
+                item.appendChild(x);
+            });
+
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = "បង្ហាញព័ត៌មានកញ្ចប់";
+
+            b.addEventListener("click", () => {
+                byId("delivery-gmail").textContent = d.gmail || "";
+                byId("delivery-password").textContent =
+                    d.package_password || "";
+                byId("delivery-code").textContent =
+                    d.code_8_digits || "";
+
+                byId("delivery-message").textContent =
+                    "ព័ត៌មានពីប្រវត្តិការទិញរបស់អ្នក។";
+
+                byId("delivery-box").style.display = "block";
+
+                closeHistoryModal();
+
+                byId("delivery-box").scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            });
+
+            item.appendChild(b);
+        }
+
+        list.appendChild(item);
+    });
+}
 async function loadPurchaseHistory(){  
  const c=getCustomerCredentials();  
  if(!c.deviceSecret){  
