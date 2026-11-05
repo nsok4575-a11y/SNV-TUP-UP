@@ -143,6 +143,9 @@ function extraCloseBuy(){
 byId("extra-buy-modal").classList.remove("show");
 document.body.style.overflow="";
 }
+function extraClosePayment(){
+    byId("extra-payment-box").style.display = "none";
+}
 function extraSavePending(p){
 localStorage.setItem(EXTRA_PENDING_KEY,JSON.stringify(p));
 }
@@ -594,6 +597,14 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
  </div>  
  <div id="extra-shop-message" class="message"></div>  
  <section id="extra-payment-box">  
+ <div style="display:flex;justify-content:flex-end;">
+  <button
+    type="button"
+    onclick="extraClosePayment()"
+    style="background:#e74c3c;color:white;border:0;border-radius:8px;padding:8px 14px;font-size:18px;">
+    ✕
+  </button>
+</div>
   <div class="order-line">Receipt: <span id="extra-receipt" class="order-value"></span></div>  
   <div class="order-line"><span id="extra-order-product"></span></div>  
   <div class="order-line">Amount: <span id="extra-order-amount" class="order-value"></span></div>  
