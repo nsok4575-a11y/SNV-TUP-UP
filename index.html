@@ -1301,6 +1301,8 @@ async function verifyPayment(){
     }
 }
 
+
+
 function finishExpiredPurchase(){
     if(paymentFinished) return;
 
@@ -1309,43 +1311,21 @@ function finishExpiredPurchase(){
 
     const p = getPendingPurchase();
 
-    /*
-     * អនុញ្ញាតការបញ្ជាទិញថ្មីតែប៉ុណ្ណោះ
-     * ប្រសិនបើការផ្ទៀងផ្ទាត់ចុងក្រោយបានបញ្ជាក់ paid:false។
-     */
-    if(p &&
-       p.purchaseId === currentPurchaseId &&
-       p.lastVerifyResult === false &&
-       p.lastVerifyAt){
-
-        const checkedAt = new Date(p.lastVerifyAt).getTime();
-        const expiry = new Date(serverExpiresAt).getTime();
-
-        // លទ្ធផលត្រូវបានទទួលមុនផុតកំណត់
-        if(Number.isFinite(checkedAt) &&
-           Number.isFinite(expiry) &&
-           checkedAt < expiry){
-
-            localStorage.removeItem(PENDING_PURCHASE_KEY);
-
-            byId("order-box").style.display = "none";
-
-            currentPurchaseId = null;
-            serverExpiresAt = null;
-
-            showMessage(
-                "QR ចាស់បានផុតកំណត់ ហើយ Server បានបញ្ជាក់ថាមិនទាន់បង់ប្រាក់។ អ្នកអាចបញ្ជាទិញថ្មីបាន។",
-                "success"
-            );
-
-            return;
-        }
+    // លុបតែការបញ្ជាទិញដែលកំពុងបង្ហាញប៉ុណ្ណោះ
+    if(p && p.purchaseId === currentPurchaseId){
+        localStorage.removeItem(PENDING_PURCHASE_KEY);
     }
 
-    // បើលទ្ធផលមិនច្បាស់ ត្រូវរក្សាការបញ្ជាទិញចាស់ទុក
+    // បិទប្រអប់ QR ចាស់
+    byId("order-box").style.display = "none";
+
+    // សម្អាតស្ថានភាព QR ចាស់
+    currentPurchaseId = null;
+    serverExpiresAt = null;
+
     showMessage(
-        "QR បានផុតកំណត់ ប៉ុន្តែមិនទាន់មានលទ្ធផលផ្ទៀងផ្ទាត់ច្បាស់លាស់ទេ។ សូមកុំបង្កើតការបញ្ជាទិញថ្មីរហូតដល់ដោះស្រាយការបញ្ជាទិញនេះ។",
-        "error"
+        "QR ចាស់បានផុតកំណត់។ អ្នកអាចបញ្ជាទិញថ្មីបាន។ ប្រវត្តិចាស់នៅតែរក្សាទុកក្នុង Server។",
+        "success"
     );
 }
 
