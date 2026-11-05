@@ -274,9 +274,34 @@ extraMsg("Game Email មិនត្រឹមត្រូវទេ។");
 return;
 }
 const old=extraGetPending();
-if(old?.purchaseId&&old.status!=="paid"){
-extraMsg("មានការបញ្ជាទិញ Game Package មួយកំពុងរង់ចាំ។ សូមពិនិត្យវាជាមុន។");
-return;
+if(old?.purchaseId && old.status !== "paid"){
+
+    const oldExpiry = old.expiresAt
+        ? new Date(old.expiresAt).getTime()
+        : NaN;
+
+    const checkedAt = old.lastVerifyAt
+        ? Number(old.lastVerifyAt)
+        : NaN;
+
+    const confirmedUnpaid =
+        old.lastVerifyResult === false &&
+        Number.isFinite(checkedAt) &&
+        Number.isFinite(oldExpiry) &&
+        checkedAt >= oldExpiry;
+
+    if(
+        Number.isFinite(oldExpiry) &&
+        Date.now() >= oldExpiry &&
+        confirmedUnpaid
+    ){
+        localStorage.removeItem(EXTRA_PENDING_KEY);
+    }else{
+        extraMsg(
+            "ការបញ្ជាទិញចាស់មិនទាន់បានផ្ទៀងផ្ទាត់ចុងក្រោយទេ។"
+        );
+        return;
+    }
 }
 extraCreating=true;
 byId("extra-confirm-buy").disabled=true;
