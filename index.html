@@ -1491,9 +1491,31 @@ function restorePendingPurchase(){
 async function createPayment(productId, button){
     if(isCreatingPayment) return;
 
-    const old = getPendingPurchase();
+    
+const old = getPendingPurchase();
 
-    if(old && old.purchaseId && old.status !== "paid"){
+if(old && old.purchaseId && old.status !== "paid"){
+
+    const oldExpiry = old.expiresAt
+        ? new Date(old.expiresAt).getTime()
+        : NaN;
+
+    // បើ QR ចាស់ផុតកំណត់ អាចដោះសោការបញ្ជាទិញថ្មី
+    if(Number.isFinite(oldExpiry) && Date.now() >= oldExpiry){
+
+        localStorage.removeItem(PENDING_PURCHASE_KEY);
+
+        stopPaymentTimers();
+
+        currentPurchaseId = null;
+        serverExpiresAt = null;
+        paymentFinished = false;
+        isCheckingPayment = false;
+
+        byId("order-box").style.display = "none";
+
+    }else{
+
         showMessage(
             "អ្នកមានការបញ្ជាទិញមួយកំពុងរង់ចាំការផ្ទៀងផ្ទាត់។ សូមពិនិត្យការបញ្ជាទិញនោះជាមុន។",
             "error"
@@ -1507,6 +1529,8 @@ async function createPayment(productId, button){
 
         return;
     }
+}
+
 
     isCreatingPayment = true;
     clearMessage();
