@@ -1582,7 +1582,8 @@ function startPaymentVerification(id, expiry){
     scheduleNextVerification();
 }
 
-function restorePendingPurchase(){
+
+async function restorePendingPurchase(){
     const p = getPendingPurchase();
 
     if(!p || !p.purchaseId) return;
@@ -1603,23 +1604,38 @@ function restorePendingPurchase(){
             : "-";
 
     byId("order-status").textContent = p.status || "awaiting_payment";
-
     byId("qr-area").style.display = "none";
-
-    byId("countdown").textContent =
-        p.status === "paid"
-            ? "បានទូទាត់រួច"
-            : "QR មិនមានក្រោយ Refresh";
-
-    byId("payment-instruction").textContent =
-        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធនឹងបង្ហាញស្ថានភាពដែលបានរក្សាទុក។";
 
     byId("order-box").style.display = "block";
 
     if(p.status === "paid"){
         paymentFinished = true;
+
+        byId("countdown").textContent = "បានទូទាត់រួច";
+        byId("payment-instruction").textContent =
+            "ការទូទាត់បានជោគជ័យ។ កំពុងស្ដារព័ត៌មានកញ្ចប់របស់អ្នក...";
+
+        await loadAndShowDelivery(p.purchaseId);
         return;
     }
+
+    const expiryTime = p.expiresAt
+        ? new Date(p.expiresAt).getTime()
+        : NaN;
+
+    if(!Number.isFinite(expiryTime) || Date.now() >= expiryTime){
+        showPaymentExpired();
+        return;
+    }
+
+    byId("countdown").textContent = "QR មិនមានក្រោយ Refresh";
+    byId("payment-instruction").textContent =
+        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាព។";
+
+    startCountdown();
+    startPaymentVerification(p.purchaseId, p.expiresAt);
+}
+
 
     const expiryTime = p.expiresAt
         ? new Date(p.expiresAt).getTime()
