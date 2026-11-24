@@ -1674,9 +1674,41 @@ if(old && old.purchaseId && old.status !== "paid"){
             );
 
         if(error){
+            let detail = error.message || "Unknown error";
+            let httpStatus = "";
+
+            // បង្ហាញសារពិតពី Edge Function ដើម្បីងាយរកមូលហេតុ
+            try{
+                const response = error.context;
+                if(response && typeof response.clone === "function"){
+                    httpStatus = response.status ? "HTTP " + response.status : "";
+                    const raw = await response.clone().text();
+                    if(raw){
+                        try{
+                            const body = JSON.parse(raw);
+                            const safeParts = [
+                                body.error,
+                                body.message,
+                                body.msg,
+                                body.code,
+                                body.details,
+                                body.hint
+                            ].filter(v => typeof v === "string" && v.trim());
+                            if(safeParts.length) detail = safeParts.join(" | ");
+                            else detail = raw.slice(0, 900);
+                        }catch(parseError){
+                            detail = raw.slice(0, 900);
+                        }
+                    }
+                }
+            }catch(readError){
+                // ប្រើ error.message ដើម ប្រសិនបើមិនអាចអាន response បាន
+            }
+
             throw new Error(
-                "មិនអាចហៅ snv-create-khqr បានទេ។ " +
-                (error.message || "")
+                "មិនអាចបង្កើត KHQR បានទេ។ " +
+                (httpStatus ? httpStatus + " — " : "") +
+                detail
             );
         }
 
