@@ -1387,6 +1387,9 @@ function showPaymentExpired(){
  * false = Server បញ្ជាក់ច្បាស់ថាមិនទាន់បង់
  * null  = មិនអាចដឹងលទ្ធផល ឬមានកំហុស
  */
+
+
+
 async function verifyPayment(){
     if(!currentPurchaseId ||
        isCheckingPayment ||
@@ -1396,31 +1399,38 @@ async function verifyPayment(){
 
     isCheckingPayment = true;
 
-    let result = null;
-
     try{
+        const c = getCustomerCredentials();
+
+        if(!/^[a-f0-9]{64}$/i.test(c.deviceSecret) ||
+           !/^\d{8,12}$/.test(c.historyPin)){
+            throw new Error(
+                "ទិន្នន័យអតិថិជនមិនត្រឹមត្រូវ។ សូមប្រើ Recovery PIN ដើម្បីស្ដារគណនី។"
+            );
+        }
+
         const {data, error} =
             await supabaseClient.functions.invoke(
                 "snv-verify-payment",
                 {
                     body: {
-                        purchase_id: currentPurchaseId
+                        purchase_id: currentPurchaseId,
+                        device_secret: c.deviceSecret,
+                        history_pin: c.historyPin
                     }
                 }
             );
 
         if(error){
-            console.error(error);
+            console.error("VERIFY ERROR:", error);
             return null;
         }
 
         if(data &&
            data.success === true &&
            data.paid === true &&
-           (data.status === "paid" ||
-            data.payment_status === "paid")){
+           data.payment_status === "paid"){
 
-            result = true;
             await showPaymentSuccess(data);
             return true;
         }
@@ -1432,14 +1442,17 @@ async function verifyPayment(){
            data.success === true &&
            data.paid === false){
 
-            result = false;
-
             const p = getPendingPurchase();
 
-            if(p){
+            if(p && p.purchaseId === currentPurchaseId){
                 p.status = status || "awaiting_payment";
                 p.lastVerifyResult = false;
                 p.lastVerifyAt = new Date().toISOString();
+
+                p.reservationReleased =
+                    data.reservation_released === true ||
+                    p.reservationReleased === true;
+
                 savePendingPurchase(p);
             }
 
@@ -1447,15 +1460,25 @@ async function verifyPayment(){
                 byId("order-status").textContent = status;
             }
 
+            if(status === "expired" &&
+               data.reservation_released === true){
+
+                byId("payment-instruction").textContent =
+                    "ការបញ្ជាទិញចាស់បានផុតកំណត់ ហើយ Server បានដោះ Reservation រួចហើយ។ អ្នកអាចបង្កើតការបញ្ជាទិញថ្មីបាន។";
+            }
+
             return false;
         }
 
-        // មិនមាន paid:false ច្បាស់លាស់ គឺមិនចាត់ទុកថាបញ្ជាក់មិនទាន់បង់ទេ
-        console.warn("Verification response is not conclusive:", data);
+        console.warn(
+            "Verification response is not conclusive:",
+            data
+        );
+
         return null;
 
     }catch(e){
-        console.error(e);
+        console.error("VERIFY PAYMENT ERROR:", e);
         return null;
 
     }finally{
@@ -1469,27 +1492,25 @@ function finishExpiredPurchase(){
     if(paymentFinished) return;
 
     stopPaymentTimers();
+
+    // រក្សាការបញ្ជាទិញចាស់ទុក
+    // មិនលុប localStorage
+    // មិនប្តូរ purchase ID
+    // មិនដោះ Reservation នៅ Server
+
     showPaymentExpired();
 
-    const p = getPendingPurchase();
+    byId("order-box").style.display = "block";
 
-    // លុបតែការបញ្ជាទិញដែលកំពុងបង្ហាញប៉ុណ្ណោះ
-    if(p && p.purchaseId === currentPurchaseId){
-        localStorage.removeItem(PENDING_PURCHASE_KEY);
-    }
-
-    // បិទប្រអប់ QR ចាស់
-    byId("order-box").style.display = "none";
-
-    // សម្អាតស្ថានភាព QR ចាស់
-    currentPurchaseId = null;
-    serverExpiresAt = null;
+    byId("payment-instruction").textContent =
+        "QR បានផុតកំណត់។ ការបញ្ជាទិញនៅតែរក្សាទុក។ សូមរង់ចាំការផ្ទៀងផ្ទាត់ពី Bakong មុនបង្កើតការបញ្ជាទិញថ្មី។";
 
     showMessage(
-        "QR ចាស់បានផុតកំណត់។ អ្នកអាចបញ្ជាទិញថ្មីបាន។ ប្រវត្តិចាស់នៅតែរក្សាទុកក្នុង Server។",
-        "success"
+        "QR ផុតកំណត់ហើយ ប៉ុន្តែស្ថានភាពការទូទាត់មិនទាន់ត្រូវបានបញ្ជាក់។ សូមកុំបង្កើតការបញ្ជាទិញថ្មីនៅឡើយ។",
+        "error"
     );
 }
+
 
 // ដាក់មុខងារថ្មីនៅទីនេះ
 function closeOrderPanel(){
@@ -1500,6 +1521,7 @@ function closeOrderPanel(){
     }
 }
 
+
 function scheduleNextVerification(){
     if(!currentPurchaseId || paymentFinished) return;
 
@@ -1508,32 +1530,42 @@ function scheduleNextVerification(){
         : verificationStartedAt + 120000;
 
     if(!Number.isFinite(expiryTime)){
-        showPaymentExpired();
+        finishExpiredPurchase();
         return;
     }
 
     const now = Date.now();
 
+    // បើ QR ផុតកំណត់ហើយ
+    // ពិនិត្យជាមួយ Server ម្ដងទៀត មិនលុបការបញ្ជាទិញទេ
     if(now >= expiryTime){
-        finishExpiredPurchase();
+        verifyTimeout = setTimeout(async () => {
+            verifyTimeout = null;
+
+            if(!currentPurchaseId || paymentFinished) return;
+
+            await verifyPayment();
+
+            if(!paymentFinished){
+                finishExpiredPurchase();
+            }
+        }, 1000);
+
         return;
     }
 
     const elapsed = now - verificationStartedAt;
 
-    // ពិនិត្យដំបូងនៅ 40 វិនាទី
-    // បន្ទាប់មករៀងរាល់ 10 វិនាទី
     const nextCheck = elapsed < 40000
         ? 40000
         : (Math.floor(elapsed / 10000) + 1) * 10000;
 
     const nextTime = verificationStartedAt + nextCheck;
 
-    // មិនកំណត់ការពិនិត្យថ្មីនៅ ឬក្រោយពេលផុតកំណត់
     if(nextTime >= expiryTime){
         verifyTimeout = setTimeout(() => {
             verifyTimeout = null;
-            finishExpiredPurchase();
+            scheduleNextVerification();
         }, Math.max(0, expiryTime - Date.now()));
 
         return;
@@ -1544,11 +1576,6 @@ function scheduleNextVerification(){
 
         if(!currentPurchaseId || paymentFinished) return;
 
-        if(Date.now() >= expiryTime){
-            finishExpiredPurchase();
-            return;
-        }
-
         await verifyPayment();
 
         if(!paymentFinished){
@@ -1557,6 +1584,7 @@ function scheduleNextVerification(){
 
     }, Math.max(0, nextTime - Date.now()));
 }
+
 
 function startPaymentVerification(id, expiry){
     stopVerification();
@@ -1582,6 +1610,7 @@ function startPaymentVerification(id, expiry){
     scheduleNextVerification();
 }
 
+
 async function restorePendingPurchase(){
     const p = getPendingPurchase();
 
@@ -1591,9 +1620,13 @@ async function restorePendingPurchase(){
     serverExpiresAt = p.expiresAt || null;
 
     paymentFinished = p.status === "paid";
+    isCheckingPayment = false;
 
-    byId("receipt-code").textContent = p.receiptCode || "-";
-    byId("order-product").textContent = p.productName || "-";
+    byId("receipt-code").textContent =
+        p.receiptCode || "-";
+
+    byId("order-product").textContent =
+        p.productName || "-";
 
     const n = Number(p.amount);
 
@@ -1612,7 +1645,8 @@ async function restorePendingPurchase(){
     if(p.status === "paid"){
         paymentFinished = true;
 
-        byId("countdown").textContent = "បានទូទាត់រួច";
+        byId("countdown").textContent =
+            "បានទូទាត់រួច";
 
         byId("payment-instruction").textContent =
             "ការទូទាត់បានជោគជ័យ។ កំពុងស្ដារព័ត៌មានកញ្ចប់របស់អ្នក...";
@@ -1621,46 +1655,73 @@ async function restorePendingPurchase(){
         return;
     }
 
-    // ប្រសិនបើមិនទាន់បានបង់ប្រាក់
+    paymentFinished = false;
+
     byId("countdown").textContent =
-        "QR មិនមានក្រោយ Refresh";
+        "កំពុងពិនិត្យការទូទាត់";
 
     byId("payment-instruction").textContent =
-        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាព។";
+        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់ជាមួយ Bakong។";
 
     const expiryTime = p.expiresAt
         ? new Date(p.expiresAt).getTime()
         : NaN;
 
+    // បើ QR ផុតកំណត់ ឬថ្ងៃផុតកំណត់មិនត្រឹមត្រូវ
+    // ត្រូវពិនិត្យ Bakong ម្តងទៀត មិនត្រូវលុបការបញ្ជាទិញទេ
     if(!Number.isFinite(expiryTime) || Date.now() >= expiryTime){
+
+        const result = await verifyPayment();
+
+        if(paymentFinished){
+            return;
+        }
+
         showPaymentExpired();
 
-        showMessage(
-            "ការបញ្ជាទិញចាស់បានផុតកំណត់។ សូមបង្កើតការបញ្ជាទិញថ្មី ប្រសិនបើអ្នកមិនទាន់បានបង់ប្រាក់។",
-            "error"
-        );
+        byId("order-box").style.display = "block";
+
+        if(result === false){
+            showMessage(
+                "Bakong មិនទាន់បញ្ជាក់ថាបានទូទាត់ទេ។ ការបញ្ជាទិញចាស់ត្រូវបានរក្សាទុក។",
+                "error"
+            );
+        }else{
+            showMessage(
+                "មិនទាន់អាចផ្ទៀងផ្ទាត់ការទូទាត់បានទេ។ សូមព្យាយាមពិនិត្យម្ដងទៀតពេលក្រោយ។",
+                "error"
+            );
+        }
 
         return;
     }
 
+    // បើមិនទាន់ផុតកំណត់
     startCountdown();
-    startPaymentVerification(p.purchaseId, p.expiresAt);
+
+    startPaymentVerification(
+        p.purchaseId,
+        p.expiresAt
+    );
 }
 
 async function createPayment(productId, button){
     if(isCreatingPayment) return;
 
     
+
+
 const old = getPendingPurchase();
 
 if(old && old.purchaseId && old.status !== "paid"){
 
-    const oldExpiry = old.expiresAt
-        ? new Date(old.expiresAt).getTime()
-        : NaN;
+    // អនុញ្ញាតការបញ្ជាទិញថ្មីតែពេល Server
+    // បញ្ជាក់ថា Reservation ចាស់ត្រូវបានដោះរួច
 
-    // បើ QR ចាស់ផុតកំណត់ អាចដោះសោការបញ្ជាទិញថ្មី
-    if(Number.isFinite(oldExpiry) && Date.now() >= oldExpiry){
+    if(
+        old.status === "expired" &&
+        old.reservationReleased === true
+    ){
 
         localStorage.removeItem(PENDING_PURCHASE_KEY);
 
@@ -1676,11 +1737,13 @@ if(old && old.purchaseId && old.status !== "paid"){
     }else{
 
         showMessage(
-            "អ្នកមានការបញ្ជាទិញមួយកំពុងរង់ចាំការផ្ទៀងផ្ទាត់។ សូមពិនិត្យការបញ្ជាទិញនោះជាមុន។",
+            "ការបញ្ជាទិញចាស់មិនទាន់ត្រូវបានដោះ Reservation ដោយ Server ទេ។ សូមរង់ចាំការផ្ទៀងផ្ទាត់ជាមុន។",
             "error"
         );
 
         closeProductModal();
+
+        byId("order-box").style.display = "block";
 
         byId("order-box").scrollIntoView({
             behavior: "smooth"
@@ -1689,6 +1752,7 @@ if(old && old.purchaseId && old.status !== "paid"){
         return;
     }
 }
+
 
 
     isCreatingPayment = true;
