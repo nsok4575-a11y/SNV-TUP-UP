@@ -1519,9 +1519,9 @@ function closeOrderPanel(){
     if(orderBox){
         orderBox.style.display = "none";
     }
+
+    clearMessage();
 }
-
-
 
 function scheduleNextVerification(){
     if(!currentPurchaseId || paymentFinished) return;
