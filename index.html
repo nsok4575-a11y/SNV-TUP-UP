@@ -1520,9 +1520,10 @@ function closeOrderPanel(){
         orderBox.style.display = "none";
     }
 
+    localStorage.setItem("SNV_ORDER_PANEL_HIDDEN", "1");
+
     clearMessage();
 }
-
 function scheduleNextVerification(){
     if(!currentPurchaseId || paymentFinished) return;
 
@@ -1635,17 +1636,17 @@ async function restorePendingPurchase(){
 
     if(!p || !p.purchaseId) return;
 
+    const panelHidden =
+        localStorage.getItem("SNV_ORDER_PANEL_HIDDEN") === "1";
+
     currentPurchaseId = p.purchaseId;
     serverExpiresAt = p.expiresAt || null;
 
     paymentFinished = p.status === "paid";
     isCheckingPayment = false;
 
-    byId("receipt-code").textContent =
-        p.receiptCode || "-";
-
-    byId("order-product").textContent =
-        p.productName || "-";
+    byId("receipt-code").textContent = p.receiptCode || "-";
+    byId("order-product").textContent = p.productName || "-";
 
     const n = Number(p.amount);
 
@@ -1658,14 +1659,15 @@ async function restorePendingPurchase(){
         p.status || "awaiting_payment";
 
     byId("qr-area").style.display = "none";
-    byId("order-box").style.display = "block";
 
-    // បើបានបង់ប្រាក់រួច
+    // គោរពការបិទផ្ទាំងដែលបានរក្សាទុក
+    byId("order-box").style.display =
+        panelHidden ? "none" : "block";
+
     if(p.status === "paid"){
         paymentFinished = true;
 
-        byId("countdown").textContent =
-            "បានទូទាត់រួច";
+        byId("countdown").textContent = "បានទូទាត់រួច";
 
         byId("payment-instruction").textContent =
             "ការទូទាត់បានជោគជ័យ។ កំពុងស្ដារព័ត៌មានកញ្ចប់របស់អ្នក...";
@@ -1679,7 +1681,6 @@ async function restorePendingPurchase(){
     byId("countdown").textContent =
         "កំពុងពិនិត្យការទូទាត់";
 
-    // បើ Server បានដោះ Reservation រួចហើយ
     if(
         p.status === "expired" &&
         p.reservationReleased === true
@@ -1689,9 +1690,6 @@ async function restorePendingPurchase(){
 
         return;
     }
-
-    byId("payment-instruction").textContent =
-        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធកំពុងផ្ទៀងផ្ទាត់ជាមួយ Bakong រៀងរាល់ 10 វិនាទី។";
 
     const expiryTime = p.expiresAt
         ? new Date(p.expiresAt).getTime()
@@ -1703,17 +1701,16 @@ async function restorePendingPurchase(){
     ){
         showPaymentExpired();
 
-        byId("order-box").style.display = "block";
+        byId("order-box").style.display =
+            panelHidden ? "none" : "block";
 
-        // កុំឈប់ក្រោយពិនិត្យតែមួយដង
+        byId("payment-instruction").textContent =
+            "QR បានផុតកំណត់។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាពការទូទាត់ជាមួយ Bakong រៀងរាល់ 10 វិនាទី។";
+
         startPaymentVerification(
             p.purchaseId,
             p.expiresAt || null
         );
-
-        // បង្ហាញសាររង់ចាំ
-        byId("payment-instruction").textContent =
-            "QR បានផុតកំណត់។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាពការទូទាត់ជាមួយ Bakong រៀងរាល់ 10 វិនាទី។";
 
         return;
     }
@@ -1764,6 +1761,7 @@ if(old && old.purchaseId && old.status !== "paid"){
         );
 
         closeProductModal();
+        localStorage.removeItem("SNV_ORDER_PANEL_HIDDEN");
 
         byId("order-box").style.display = "block";
 
