@@ -721,10 +721,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
         <div class="snv-event-timer" id="snv-event-2-timer"></div>
     </div>
 </div>
-<div id="snv-event-debug"
-     style="color:yellow;padding:10px;font-size:14px;">
-    កំពុងពិនិត្យ EVENT...
-</div>
+
 
  <div class="extra-layout">  
   <nav class="extra-categories" id="extra-categories" aria-label="Package categories"></nav>  
@@ -2232,11 +2229,9 @@ loadSnvEvents();
 console.log("EVENT AREA:", byId("snv-event-area"));
 console.log("EVENT 1:", byId("snv-event-1"));
 console.log("EVENT 2:", byId("snv-event-2"));
-const eventDebug = byId("snv-event-debug");
 
-if (eventDebug) {
-    eventDebug.textContent = "កំពុងពិនិត្យ EVENT...";
-}
+
+
 
 async function testSnvEvent() {
     try {
