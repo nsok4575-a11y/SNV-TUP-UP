@@ -67,6 +67,30 @@ function extraCategoryValue(label) {
 
     return value;
 }
+function extraRenderCategories(){
+    const nav = byId("extra-categories");
+    nav.innerHTML = "";
+
+    EXTRA_CATEGORIES.forEach(cat => {
+        const categoryValue = extraCategoryValue(cat);
+
+        const b = document.createElement("button");
+        b.type = "button";
+
+        b.className = "extra-category" +
+            (categoryValue === extraActiveCategory ? " active" : "");
+
+        b.textContent = cat;
+
+        b.addEventListener("click", () => {
+            extraActiveCategory = categoryValue;
+            extraRenderCategories();
+            extraRenderProducts();
+        });
+
+        nav.appendChild(b);
+    });
+}
 function extraRenderProducts(){
 const grid=byId("extra-products-grid");
 grid.innerHTML="";
