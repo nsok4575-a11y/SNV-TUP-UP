@@ -5,7 +5,16 @@
 <title>SNV Game Top-up</title>  
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
 <script>  
-const EXTRA_CATEGORIES=["⭐RECOMMENDED","🕐WEEKLY & MONTHLY","🏐BASIC","🎽S POINT","🔥COLOSSEUM","🏆LEAGUE"];  
+const EXTRA_CATEGORIES = [
+    "🎉 EVENT 1",
+    "🎉 EVENT 2",
+    "⭐ RECOMMENDED",
+    "🕐 WEEKLY & MONTHLY",
+    "🏐 BASIC",
+    "🎽 S POINT",
+    "🔥 COLOSSEUM",
+    "🏆 LEAGUE"
+];
 const EXTRA_PENDING_KEY="snv_extra_pending_purchase_v1";  
 localStorage.removeItem(EXTRA_PENDING_KEY);
 let extraProducts=[],extraSelectedProduct=null,extraActiveCategory="RECOMMENDED";  
@@ -47,25 +56,16 @@ return [...new Set(urls.map(extraImageUrl).filter(Boolean))];
 function extraShowView(show){
 byId("extra-shop-view").style.display="block";
 }
-function extraCategoryValue(label){
-return String(label||"").replace(/^[⭐🕐🏐🎽🔥🏆]\s*/u,"").trim().toUpperCase();
-}
-function extraRenderCategories(){
-const nav=byId("extra-categories");
-nav.innerHTML="";
-EXTRA_CATEGORIES.forEach(cat=>{
-const categoryValue=extraCategoryValue(cat);
-const b=document.createElement("button");
-b.type="button";
-b.className="extra-category"+(categoryValue===extraActiveCategory?" active":"");
-b.textContent=cat;
-b.addEventListener("click",()=>{
-extraActiveCategory=categoryValue;
-extraRenderCategories();
-extraRenderProducts();
-});
-nav.appendChild(b);
-});
+function extraCategoryValue(label) {
+    const value = String(label || "")
+        .replace(/^[⭐🕐🏐🎽🔥🏆🎉]\s*/u, "")
+        .trim()
+        .toUpperCase();
+
+    if (value === "EVENT 1") return "EVENT_1";
+    if (value === "EVENT 2") return "EVENT_2";
+
+    return value;
 }
 function extraRenderProducts(){
 const grid=byId("extra-products-grid");
