@@ -1,22 +1,4 @@
-<!DOCTYPE html>
-
-<section id="snv-event-countdown">
-  <h2>🎉 EVENT COUNTDOWN</h2>
-
-  <div class="snv-event-card">
-    <h3>EVENT 1</h3>
-    <div id="snv-event-1-status">កំពុងផ្ទុកទិន្នន័យ...</div>
-    <div id="snv-event-1-timer" class="snv-event-timer">-- ថ្ងៃ --:--:--</div>
-  </div>
-
-  <div class="snv-event-card">
-    <h3>EVENT 2</h3>
-    <div id="snv-event-2-status">កំពុងផ្ទុកទិន្នន័យ...</div>
-    <div id="snv-event-2-timer" class="snv-event-timer">-- ថ្ងៃ --:--:--</div>
-  </div>
-</section>
-
-  <html lang="km">  
+<!DOCTYPE html>  <html lang="km">  
 <head>  
 <meta charset="UTF-8">  
 <meta name="viewport" content="width=device-width, initial-scale=1.0">  
@@ -498,6 +480,27 @@ byId("extra-done-button").addEventListener("click",extraClosePaidPanel);
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>  <style>  
+.snv-event-card {
+    background: linear-gradient(135deg, #29285c, #10131e);
+    border: 1px solid #7772ff;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+    color: white;
+    cursor: pointer;
+}
+
+.snv-event-card h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+}
+
+.snv-event-timer {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd45c;
+}
 *{box-sizing:border-box}  
 body{margin:0;padding:12px;background:#10131e;color:#fff;font-family:Arial,sans-serif}  
 .container{max-width:650px;margin:auto}  
@@ -662,46 +665,6 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 .modal-header h3 {  
     color: #ffb35c;  
 }  
-#snv-event-countdown {
-    background: #1b2030;
-    border: 1px solid #d87929;
-    border-radius: 14px;
-    padding: 15px;
-    margin: 18px 0;
-}
-
-#snv-event-countdown > h2 {
-    color: #ffb35c;
-    text-align: center;
-    font-size: 18px;
-    margin: 0 0 14px;
-}
-
-.snv-event-card {
-    background: #10131e;
-    border-radius: 10px;
-    padding: 12px;
-    margin-top: 10px;
-    text-align: center;
-}
-
-.snv-event-card h3 {
-    color: #ffb35c;
-    margin: 0 0 8px;
-}
-
-.snv-event-timer {
-    color: #ffffff;
-    font-size: 17px;
-    font-weight: bold;
-    margin-top: 8px;
-}
-
-#snv-event-1-status,
-#snv-event-2-status {
-    color: #bfc6df;
-    font-size: 13px;
-}
 </style>  </head>  
 <body>  
 <main class="container">  
@@ -744,6 +707,20 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
  </div>  
 </section>  
 <button type="button" class="refresh-button" id="refresh-button">ផ្ទុកកញ្ចប់ឡើងវិញ</button>  <section id="extra-shop-view">  
+
+<!-- SNV EVENT BUTTONS -->
+<div id="snv-event-area" style="display:none;">
+    <div id="snv-event-1" class="snv-event-card" style="display:none;">
+        <h3>🎉 EVENT 1</h3>
+        <div class="snv-event-timer" id="snv-event-1-timer"></div>
+    </div>
+
+    <div id="snv-event-2" class="snv-event-card" style="display:none;">
+        <h3>🎉 EVENT 2</h3>
+        <div class="snv-event-timer" id="snv-event-2-timer"></div>
+    </div>
+</div>
+
  <div class="extra-layout">  
   <nav class="extra-categories" id="extra-categories" aria-label="Package categories"></nav>  
   <div>  
@@ -2151,104 +2128,99 @@ document.addEventListener("keydown",e=>{
  extraLoadProducts();  
  extraRestorePending();  
 })();  
-
 // ===== SNV EVENT COUNTDOWN =====
 
-let snvEventData = [];
-let snvEventTimer = null;
-
-function updateSnvEventCountdown() {
-    const now = Date.now();
-
-    ["EVENT_1", "EVENT_2"].forEach((code, index) => {
-        const number = index + 1;
-        const status = byId("snv-event-" + number + "-status");
-        const timer = byId("snv-event-" + number + "-timer");
-
-        const event = snvEventData.find(
-            item => item.event_code === code
-        );
-
-        if (!event || !event.is_active || !event.ends_at) {
-            status.textContent = "មិនមាន EVENT សកម្មទេ";
-            timer.textContent = "-- ថ្ងៃ --:--:--";
-            return;
-        }
-
-        const start = event.starts_at
-            ? new Date(event.starts_at).getTime()
-            : 0;
-
-        const end = new Date(event.ends_at).getTime();
-
-        if (!Number.isFinite(end)) {
-            status.textContent = "ទិន្នន័យថ្ងៃផុតកំណត់មិនត្រឹមត្រូវ";
-            timer.textContent = "--";
-            return;
-        }
-
-        if (start > now) {
-            status.textContent = "EVENT មិនទាន់ចាប់ផ្ដើម";
-            timer.textContent = "-- ថ្ងៃ --:--:--";
-            return;
-        }
-
-        const remaining = end - now;
-
-        if (remaining <= 0) {
-            status.textContent = "EVENT ផុតកំណត់ហើយ";
-            timer.textContent = "00 ថ្ងៃ 00:00:00";
-            return;
-        }
-
-        const total = Math.floor(remaining / 1000);
-        const days = Math.floor(total / 86400);
-        const hours = Math.floor((total % 86400) / 3600);
-        const minutes = Math.floor((total % 3600) / 60);
-        const seconds = total % 60;
-
-        status.textContent = "EVENT កំពុងដំណើរការ";
-        timer.textContent =
-            days + " ថ្ងៃ " +
-            String(hours).padStart(2, "0") + ":" +
-            String(minutes).padStart(2, "0") + ":" +
-            String(seconds).padStart(2, "0");
-    });
-}
+let snvEventTimers = [];
 
 async function loadSnvEvents() {
+    const area = byId("snv-event-area");
+    if (!area) return;
+
     try {
         const { data, error } =
-            await supabaseClient.functions.invoke("snv-event-read", {
-                body: {}
-            });
+            await supabaseClient.functions.invoke(
+                "snv-event-read",
+                { body: {} }
+            );
 
         if (error) throw error;
-        if (!data || !data.success || !Array.isArray(data.events)) {
-            throw new Error("Invalid event response");
-        }
 
-        snvEventData = data.events;
-        updateSnvEventCountdown();
+        const events = data?.events || [];
+        const now = Date.now();
 
-        if (snvEventTimer) clearInterval(snvEventTimer);
+        let visibleCount = 0;
 
-        snvEventTimer = setInterval(
-            updateSnvEventCountdown,
-            1000
-        );
+        events.forEach(ev => {
+            const index = ev.event_code === "EVENT_1" ? 1 :
+                          ev.event_code === "EVENT_2" ? 2 : 0;
 
-    } catch (error) {
-        console.error("SNV event error:", error);
+            if (!index) return;
 
-        [1, 2].forEach(number => {
-            byId("snv-event-" + number + "-status")
-                .textContent = "មិនអាចទាញទិន្នន័យ EVENT បានទេ";
+            const card = byId("snv-event-" + index);
+            const timer = byId("snv-event-" + index + "-timer");
+
+            if (!card || !timer) return;
+
+            const start = Date.parse(ev.starts_at);
+            const end = Date.parse(ev.ends_at);
+
+            if (
+                ev.is_active !== true ||
+                !Number.isFinite(start) ||
+                !Number.isFinite(end) ||
+                end <= start
+            ) {
+                card.style.display = "none";
+                return;
+            }
+
+            card.style.display = "block";
+            visibleCount++;
+
+            if (snvEventTimers[index]) {
+                clearInterval(snvEventTimers[index]);
+            }
+
+            function updateTimer() {
+                const current = Date.now();
+
+                if (current < start) {
+                    timer.textContent =
+                        "ចាប់ផ្តើមក្នុង " + formatEventTime(start - current);
+                } else if (current < end) {
+                    timer.textContent =
+                        "នៅសល់ " + formatEventTime(end - current);
+                } else {
+                    timer.textContent = "EVENT បានបញ្ចប់";
+                    clearInterval(snvEventTimers[index]);
+                }
+            }
+
+            updateTimer();
+            snvEventTimers[index] = setInterval(updateTimer, 1000);
         });
+
+        area.style.display = visibleCount > 0 ? "block" : "none";
+
+    } catch (err) {
+        console.error("SNV EVENT ERROR:", err);
+        area.style.display = "none";
     }
 }
 
-loadSnvEvents();
+function formatEventTime(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const days = Math.floor(total / 86400);
+    const hours = Math.floor((total % 86400) / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const seconds = total % 60;
 
+    return days + "ថ្ងៃ " +
+           String(hours).padStart(2, "0") + ":" +
+           String(minutes).padStart(2, "0") + ":" +
+           String(seconds).padStart(2, "0");
+}
+
+loadSnvEvents();
 </script>  </body>  
 </html>  
