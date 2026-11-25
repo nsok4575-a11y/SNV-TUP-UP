@@ -778,7 +778,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
   <div id="qrcode"></div>  
   <div class="qr-label">SCAN TO PAY - KHQR</div>  
  </div>  
- <div class="countdown">ម៉ោងបង្ហាញ៖ <span id="countdown">15:00</span></div>  
+ <div class="countdown">ម៉ោងបង្ហាញ៖ <span id="countdown">02:30</span></div>  
  <p class="payment-note" id="payment-instruction">សូមបើកកម្មវិធីធនាគារដែលគាំទ្រ KHQR ហើយស្កេន QR ខាងលើ។</p>  
 </section>  <section id="delivery-box" class="delivery-box">  
  <h3>ការទូទាត់ជោគជ័យ ✓</h3>  
@@ -1366,10 +1366,12 @@ async function showPaymentSuccess(result){
     });
 }
 
+
 function showPaymentExpired(){
     if(paymentFinished) return;
 
     stopCountdown();
+    stopVerification();
 
     byId("order-status").textContent = "QR EXPIRED";
     byId("order-status").style.color = "#ff8d8d";
@@ -1378,7 +1380,7 @@ function showPaymentExpired(){
     byId("countdown").textContent = "ផុតកំណត់";
 
     byId("payment-instruction").textContent =
-        "QR បានផុតកំណត់។ ប្រព័ន្ធកំពុងរក្សាការបញ្ជាទិញ រហូតដល់មានលទ្ធផលផ្ទៀងផ្ទាត់ច្បាស់លាស់។";
+        "QR បានផុតកំណត់។ ការផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តិត្រូវបានបញ្ឈប់។ អ្នកអាចបង្កើត KHQR ថ្មីបាន។";
 }
 
 /*
@@ -1495,6 +1497,7 @@ function closeOrderPanel(){
     }
 }
 
+
 function scheduleNextVerification(){
     if(!currentPurchaseId || paymentFinished || verifyTimeout) return;
 
@@ -1502,21 +1505,34 @@ function scheduleNextVerification(){
         ? new Date(serverExpiresAt).getTime()
         : NaN;
 
-    // QR ផុតកំណត់គ្រាន់តែបិទ QR ប៉ុណ្ណោះ មិនបញ្ឈប់ការផ្ទៀងផ្ទាត់ទេ
-    if(Number.isFinite(expiryTime) && Date.now() >= expiryTime){
+    if(!Number.isFinite(expiryTime) || Date.now() >= expiryTime){
+        stopVerification();
         showPaymentExpired();
+        return;
     }
 
-    // ពិនិត្យរៀងរាល់ 10 វិនាទី រហូតដល់ paid ឬ server បញ្ជាក់ reservation_released
+    const remaining = expiryTime - Date.now();
+
+    const delay = Math.min(
+        VERIFY_FAST_INTERVAL_MS,
+        remaining
+    );
+
     verifyTimeout = setTimeout(async () => {
         verifyTimeout = null;
+
         if(!currentPurchaseId || paymentFinished) return;
 
         const currentExpiry = serverExpiresAt
             ? new Date(serverExpiresAt).getTime()
             : NaN;
-        if(Number.isFinite(currentExpiry) && Date.now() >= currentExpiry){
+
+        if(!Number.isFinite(currentExpiry) ||
+           Date.now() >= currentExpiry){
+
+            stopVerification();
             showPaymentExpired();
+            return;
         }
 
         await verifyPayment();
@@ -1524,7 +1540,8 @@ function scheduleNextVerification(){
         if(currentPurchaseId && !paymentFinished){
             scheduleNextVerification();
         }
-    }, VERIFY_FAST_INTERVAL_MS);
+
+    }, delay);
 }
 
 function startPaymentVerification(id, expiry){
@@ -1540,16 +1557,17 @@ function startPaymentVerification(id, expiry){
         ? new Date(serverExpiresAt).getTime()
         : NaN;
 
-    if(Number.isFinite(expiryTime)){
-        // QR មានអាយុកាល 120 វិនាទី
-        // ប្រើពេលផុតកំណត់ដើម្បីរកពេលចាប់ផ្ដើមដើម
-        verificationStartedAt = expiryTime - 120000;
-    }else{
-        verificationStartedAt = Date.now();
+    if(!Number.isFinite(expiryTime) || Date.now() >= expiryTime){
+        showPaymentExpired();
+        return;
     }
+
+    verificationStartedAt = expiryTime - 150000;
 
     scheduleNextVerification();
 }
+
+
 
 async function restorePendingPurchase(){
     const p = getPendingPurchase();
@@ -1577,7 +1595,6 @@ async function restorePendingPurchase(){
     byId("qr-area").style.display = "none";
     byId("order-box").style.display = "block";
 
-    // ប្រសិនបើបានបង់ប្រាក់រួច
     if(p.status === "paid"){
         paymentFinished = true;
 
@@ -1590,56 +1607,51 @@ async function restorePendingPurchase(){
         return;
     }
 
-    // ប្រសិនបើមិនទាន់បានបង់ប្រាក់
-    byId("countdown").textContent =
-        "QR មិនមានក្រោយ Refresh";
-
-    byId("payment-instruction").textContent =
-        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធកំពុងពិនិត្យស្ថានភាព។";
-
     const expiryTime = p.expiresAt
         ? new Date(p.expiresAt).getTime()
         : NaN;
 
     if(!Number.isFinite(expiryTime) || Date.now() >= expiryTime){
         showPaymentExpired();
+
         byId("payment-instruction").textContent =
-            "QR បានផុតកំណត់។ កំពុងពិនិត្យ Server រហូតដល់បញ្ជាក់ថាការកក់ត្រូវបានដោះរួច។";
-    }else{
-        startCountdown();
+            "QR បានផុតកំណត់។ ការផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តិត្រូវបានបញ្ឈប់។ អ្នកអាចបង្កើត KHQR ថ្មីបាន។";
+
+        return;
     }
 
-    // ទោះ QR ផុតកំណត់ក៏ដោយ ត្រូវបន្តសួរ Server
+    byId("countdown").textContent = "កំពុងរាប់ថយក្រោយ";
+
+    byId("payment-instruction").textContent =
+        "បានស្ដារលេខបញ្ជាទិញ។ ប្រព័ន្ធកំពុងពិនិត្យការទូទាត់។";
+
+    startCountdown();
     startPaymentVerification(p.purchaseId, p.expiresAt);
 }
+
+
 
 async function createPayment(productId, button){
     if(isCreatingPayment) return;
 
-    
-const old = getPendingPurchase();
+    const old = getPendingPurchase();
 
-if(old && old.purchaseId && old.status !== "paid"){
-    // មិនអនុញ្ញាតឱ្យបង្កើតការទិញថ្មី ដោយផ្អែកលើ QR expiry តែមួយទេ
-    if(old.status === "expired" && old.reservationReleased === true){
-        localStorage.removeItem(PENDING_PURCHASE_KEY);
-        stopPaymentTimers();
-        currentPurchaseId = null;
-        serverExpiresAt = null;
-        paymentFinished = false;
-        isCheckingPayment = false;
-        byId("order-box").style.display = "none";
-    }else{
-        showMessage(
-            "អ្នកមានការបញ្ជាទិញចាស់កំពុងរង់ចាំការផ្ទៀងផ្ទាត់។ សូមរង់ចាំ Server បញ្ជាក់ថាការកក់ត្រូវបានដោះរួចសិន។",
-            "error"
-        );
-        closeProductModal();
-        byId("order-box").scrollIntoView({behavior:"smooth"});
-        return;
+    // រារាំងតែការទិញដែល QR ចាស់នៅមានសុពលភាព
+    if(old && old.purchaseId && old.status !== "paid"){
+        const oldExpiry = old.expiresAt
+            ? new Date(old.expiresAt).getTime()
+            : NaN;
+
+        if(!Number.isFinite(oldExpiry) || Date.now() < oldExpiry){
+            showMessage(
+                "អ្នកមាន KHQR ដែលនៅមានសុពលភាព។ សូមប្រើ QR ចាស់ ឬរង់ចាំឱ្យវាផុតកំណត់សិន។",
+                "error"
+            );
+            closeProductModal();
+            byId("order-box").scrollIntoView({behavior:"smooth"});
+            return;
+        }
     }
-}
-
 
     isCreatingPayment = true;
     clearMessage();
@@ -1652,7 +1664,6 @@ if(old && old.purchaseId && old.status !== "paid"){
 
         currentPurchaseId = null;
         serverExpiresAt = null;
-
         paymentFinished = false;
         isCheckingPayment = false;
 
@@ -1677,15 +1688,20 @@ if(old && old.purchaseId && old.status !== "paid"){
             let detail = error.message || "Unknown error";
             let httpStatus = "";
 
-            // បង្ហាញសារពិតពី Edge Function ដើម្បីងាយរកមូលហេតុ
             try{
                 const response = error.context;
+
                 if(response && typeof response.clone === "function"){
-                    httpStatus = response.status ? "HTTP " + response.status : "";
+                    httpStatus = response.status
+                        ? "HTTP " + response.status
+                        : "";
+
                     const raw = await response.clone().text();
+
                     if(raw){
                         try{
                             const body = JSON.parse(raw);
+
                             const safeParts = [
                                 body.error,
                                 body.message,
@@ -1693,17 +1709,20 @@ if(old && old.purchaseId && old.status !== "paid"){
                                 body.code,
                                 body.details,
                                 body.hint
-                            ].filter(v => typeof v === "string" && v.trim());
-                            if(safeParts.length) detail = safeParts.join(" | ");
-                            else detail = raw.slice(0, 900);
+                            ].filter(v =>
+                                typeof v === "string" && v.trim()
+                            );
+
+                            detail = safeParts.length
+                                ? safeParts.join(" | ")
+                                : raw.slice(0, 900);
+
                         }catch(parseError){
                             detail = raw.slice(0, 900);
                         }
                     }
                 }
-            }catch(readError){
-                // ប្រើ error.message ដើម ប្រសិនបើមិនអាចអាន response បាន
-            }
+            }catch(readError){}
 
             throw new Error(
                 "មិនអាចបង្កើត KHQR បានទេ។ " +
@@ -1735,7 +1754,6 @@ if(old && old.purchaseId && old.status !== "paid"){
         saveCustomerCredentials(c.deviceSecret, c.historyPin);
 
         byId("saved-pin").textContent = c.historyPin;
-
         byId("receipt-code").textContent = p.receipt_code || "-";
 
         byId("order-product").textContent =
@@ -1752,18 +1770,17 @@ if(old && old.purchaseId && old.status !== "paid"){
             p.payment_status || "awaiting_payment";
 
         byId("order-status").style.color = "#62e6a5";
-
         byId("qr-area").style.display = "block";
 
         byId("payment-instruction").textContent =
-            "សូមស្កេន KHQR។ ប្រព័ន្ធនឹងពិនិត្យរៀងរាល់ 10 វិនាទី ហើយបន្តពិនិត្យក្រោយ QR ផុតកំណត់ រហូតដល់ Server បញ្ជាក់លទ្ធផល។";
+            "សូមស្កេន KHQR។ ប្រព័ន្ធពិនិត្យការទូទាត់រៀងរាល់ 10 វិនាទី រហូតដល់ QR ផុតកំណត់។";
 
         displayKHQR(pay.qr);
 
         const expiry = pay.expires_at ||
             new Date(
                 Date.now() +
-                Number(pay.expires_in_seconds || 120) * 1000
+                Number(pay.expires_in_seconds || 150) * 1000
             ).toISOString();
 
         savePendingPurchase({
