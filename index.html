@@ -71,7 +71,16 @@ function extraRenderCategories(){
     const nav = byId("extra-categories");
     nav.innerHTML = "";
 
-    EXTRA_CATEGORIES.forEach(cat => {
+    EXTRA_CATEGORIES.forEach(cat=>{
+    const categoryValue = extraCategoryValue(cat);
+
+    if (
+        (categoryValue === "EVENT_1" ||
+         categoryValue === "EVENT_2") &&
+        !snvVisibleEventCategories.has(categoryValue)
+    ) {
+        return;
+    }
         const categoryValue = extraCategoryValue(cat);
 
         const b = document.createElement("button");
@@ -91,6 +100,7 @@ function extraRenderCategories(){
         nav.appendChild(b);
     });
 }
+let snvVisibleEventCategories = new Set();
 function extraRenderProducts(){
 const grid=byId("extra-products-grid");
 grid.innerHTML="";
@@ -2172,6 +2182,21 @@ async function loadSnvEvents() {
         if (error) throw error;
 
         const events = data?.events || [];
+        snvVisibleEventCategories = new Set();
+
+events.forEach(ev => {
+    const start = Date.parse(ev.starts_at);
+    const end = Date.parse(ev.ends_at);
+
+    if (
+        String(ev.is_active).toLowerCase() === "true" &&
+        Number.isFinite(start) &&
+        Number.isFinite(end) &&
+        end > start
+    ) {
+        snvVisibleEventCategories.add(ev.event_code);
+    }
+});
         console.log("SNV EVENT DATA:", data);
 console.log("SNV EVENT LIST:", events);
         const now = Date.now();
