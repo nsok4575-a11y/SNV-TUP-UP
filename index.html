@@ -1414,10 +1414,20 @@ async function verifyPayment(){
             }
         );
 
-        if(error){
-            console.error(error);
-            return null;
+       if(error){
+    console.error("VERIFY PAYMENT ERROR:", error);
+
+    if(error.context){
+        try{
+            const responseText = await error.context.text();
+            console.error("SERVER RESPONSE:", responseText);
+        }catch(e){
+            console.error("Cannot read server response:", e);
         }
+    }
+
+    return null;
+}
 
         if(data && data.success === true && data.paid === true &&
            (data.status === "paid" || data.payment_status === "paid")){
