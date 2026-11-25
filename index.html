@@ -710,6 +710,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 
 <!-- SNV EVENT BUTTONS -->
 <div id="snv-event-area" style="display:none;">
+
     <div id="snv-event-1" class="snv-event-card" style="display:none;">
         <h3>🎉 EVENT 1</h3>
         <div class="snv-event-timer" id="snv-event-1-timer"></div>
@@ -719,6 +720,10 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
         <h3>🎉 EVENT 2</h3>
         <div class="snv-event-timer" id="snv-event-2-timer"></div>
     </div>
+</div>
+<div id="snv-event-debug"
+     style="color:yellow;padding:10px;font-size:14px;">
+    កំពុងពិនិត្យ EVENT...
 </div>
 
  <div class="extra-layout">  
@@ -2227,5 +2232,31 @@ loadSnvEvents();
 console.log("EVENT AREA:", byId("snv-event-area"));
 console.log("EVENT 1:", byId("snv-event-1"));
 console.log("EVENT 2:", byId("snv-event-2"));
+const eventDebug = byId("snv-event-debug");
+
+if (eventDebug) {
+    eventDebug.textContent = "កំពុងពិនិត្យ EVENT...";
+}
+
+async function testSnvEvent() {
+    try {
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                "snv-event-read",
+                { body: {} }
+            );
+
+        if (error) throw error;
+
+        eventDebug.textContent =
+            "ទិន្នន័យ EVENT: " + JSON.stringify(data);
+
+    } catch (err) {
+        eventDebug.textContent =
+            "EVENT ERROR: " + String(err.message || err);
+    }
+}
+
+testSnvEvent();
 </script>  </body>  
 </html>  
