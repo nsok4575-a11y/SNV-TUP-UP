@@ -68,6 +68,7 @@ function extraCategoryValue(label) {
     return value;
 }
 
+
 let snvVisibleEventCategories = new Set();
 
 function extraRenderCategories() {
@@ -89,11 +90,25 @@ function extraRenderCategories() {
 
         const b = document.createElement("button");
         b.type = "button";
-
         b.className = "extra-category" +
             (categoryValue === extraActiveCategory ? " active" : "");
 
-        b.textContent = cat;
+        if (categoryValue === "EVENT_1" ||
+            categoryValue === "EVENT_2") {
+
+            const index = categoryValue === "EVENT_1" ? 1 : 2;
+
+            const title = document.createElement("span");
+            title.textContent = cat;
+
+            const timer = document.createElement("span");
+            timer.id = "snv-event-" + index + "-timer";
+            timer.className = "snv-event-timer";
+
+            b.append(title, timer);
+        } else {
+            b.textContent = cat;
+        }
 
         b.addEventListener("click", () => {
             extraActiveCategory = categoryValue;
@@ -104,6 +119,7 @@ function extraRenderCategories() {
         nav.appendChild(b);
     });
 }
+
 
 function extraRenderProducts(){
 const grid=byId("extra-products-grid");
@@ -2172,10 +2188,8 @@ document.addEventListener("keydown",e=>{
 
 let snvEventTimers = [];
 
-async function loadSnvEvents() {
-    const area = byId("snv-event-area");
-    if (!area) return;
 
+async function loadSnvEvents() {
     try {
         const { data, error } =
             await supabaseClient.functions.invoke(
@@ -2186,86 +2200,45 @@ async function loadSnvEvents() {
         if (error) throw error;
 
         const events = data?.events || [];
+
         snvVisibleEventCategories = new Set();
 
-events.forEach(ev => {
-    const start = Date.parse(ev.starts_at);
-    
-    const end = Date.parse(ev.ends_at);
+        events.forEach(ev => {
+            const start = Date.parse(ev.starts_at);
+            const end = Date.parse(ev.ends_at);
 
-    if (
-        String(ev.is_active).toLowerCase() === "true" &&
-        Number.isFinite(start) &&
-        Number.isFinite(end) &&
-        end > start
-    ) {
-        snvVisibleEventCategories.add(ev.event_code);
-    }
-});
-extraRenderCategories();
-        console.log("SNV EVENT DATA:", data);
-console.log("SNV EVENT LIST:", events);
-        const now = Date.now();
+            if (
+                String(ev.is_active).toLowerCase() === "true" &&
+                Number.isFinite(start) &&
+                Number.isFinite(end) &&
+                end > start
+            ) {
+                snvVisibleEventCategories.add(ev.event_code);
+            }
+        });
 
-        let visibleCount = 0;
+        // បង្កើតប៊ូតុង EVENT ជាមួយផ្ទាំងម៉ោង
+        extraRenderCategories();
 
+        // ចាប់ផ្តើមរាប់ថយក្រោយ
         events.forEach(ev => {
             const index = ev.event_code === "EVENT_1" ? 1 :
                           ev.event_code === "EVENT_2" ? 2 : 0;
 
             if (!index) return;
 
-            const card = byId("snv-event-" + index);
-            const timer = byId("snv-event-" + index + "-timer");
-
-            if (!card || !timer) return;
-
-            const start = Date.parse(ev.starts_at);
-            const end = Date.parse(ev.ends_at);
-
-            if (
-                String(ev.is_active).toLowerCase() !== "true" ||
-                !Number.isFinite(start) ||
-                !Number.isFinite(end) ||
-                end <= start
-            ) {
-                card.style.display = "none";
-                return;
-            }
-
-            card.style.display = "block";
-            visibleCount++;
-
             if (snvEventTimers[index]) {
                 clearInterval(snvEventTimers[index]);
             }
 
-            function updateTimer() {
-                const current = Date.now();
+            const start = Date.parse(ev.starts_at);
+            const end = Date.parse(ev.ends_at);
 
-                if (current < start) {
-                    timer.textContent =
-                        "ចាប់ផ្តើមក្នុង " + formatEventTime(start - current);
-                } else if (current < end) {
-                    timer.textContent =
-                        "នៅសល់ " + formatEventTime(end - current);
-                } else {
-                    timer.textContent = "EVENT បានបញ្ចប់";
-                    clearInterval(snvEventTimers[index]);
-                }
+            if (!snvVisibleEventCategories.has(ev.event_code)) {
+                return;
             }
 
-            updateTimer();
-            snvEventTimers[index] = setInterval(updateTimer, 1000);
-        });
-
-        area.style.display = visibleCount > 0 ? "block" : "none";
-
-    } catch (err) {
-        console.error("SNV EVENT ERROR:", err);
-        area.style.display = "none";
-    }
-}
+           
 
 function formatEventTime(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
@@ -2288,25 +2261,6 @@ console.log("EVENT 2:", byId("snv-event-2"));
 
 
 
-async function testSnvEvent() {
-    try {
-        const { data, error } =
-            await supabaseClient.functions.invoke(
-                "snv-event-read",
-                { body: {} }
-            );
 
-        if (error) throw error;
-
-        eventDebug.textContent =
-            "ទិន្នន័យ EVENT: " + JSON.stringify(data);
-
-    } catch (err) {
-        eventDebug.textContent =
-            "EVENT ERROR: " + String(err.message || err);
-    }
-}
-
-testSnvEvent();
 </script>  </body>  
 </html>  
