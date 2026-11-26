@@ -2170,14 +2170,22 @@ document.addEventListener("keydown",e=>{
   closeHistoryModal();  
  }  
 });  
-(function startWebsite(){  
- const c=getCustomerCredentials();  
- if(c.historyPin)byId("saved-pin").textContent=c.historyPin;  
- loadProducts();  
- restorePendingPurchase();  
- extraLoadProducts();  
- extraRestorePending();  
-})();  
+
+(function startWebsite(){
+    const c = getCustomerCredentials();
+
+    if(c.historyPin)
+        byId("saved-pin").textContent = c.historyPin;
+
+    loadProducts();
+    restorePendingPurchase();
+    extraLoadProducts();
+    extraRestorePending();
+
+    // ផ្ទុក EVENT និងចាប់ផ្ដើមរាប់ម៉ោង
+    loadSnvEvents();
+})();
+
 // ===== SNV EVENT COUNTDOWN =====
 
 let snvEventTimers = [];
