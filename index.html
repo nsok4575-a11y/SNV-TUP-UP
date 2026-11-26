@@ -2200,7 +2200,9 @@ async function loadSnvEvents() {
         if (error) throw error;
 
         const events = data?.events || [];
-
+        
+console.log("EVENT DATA:", data);
+console.log("EVENT LIST:", events);
         snvVisibleEventCategories = new Set();
 
         events.forEach(ev => {
@@ -2238,7 +2240,65 @@ async function loadSnvEvents() {
                 return;
             }
 
-           
+            function updateTimer() {
+                const timer = byId("snv-event-" + index + "-timer");
+                if (!timer) return;
+
+                const current = Date.now();
+
+                if (current < start) {
+                    timer.textContent =
+                        "ចាប់ផ្តើមក្នុង " +
+                        formatEventTime(start - current);
+                } else if (current < end) {
+                    timer.textContent =
+                        "នៅសល់ " +
+                        formatEventTime(end - current);
+                } else {
+                    timer.textContent = "EVENT បានបញ្ចប់";
+                    clearInterval(snvEventTimers[index]);
+                }
+            }
+
+            updateTimer();
+            snvEventTimers[index] = setInterval(updateTimer, 1000);
+        });
+
+        if (
+            extraActiveCategory === "EVENT_1" ||
+            extraActiveCategory === "EVENT_2"
+        ) {
+            if (!snvVisibleEventCategories.has(extraActiveCategory)) {
+                extraActiveCategory = "RECOMMENDED";
+            }
+        }
+
+        extraRenderCategories();
+        extraRenderProducts();
+
+    } catch (err) {
+        console.error("SNV EVENT ERROR:", err);
+
+        snvVisibleEventCategories.clear();
+
+        for (let i = 1; i <= 2; i++) {
+            if (snvEventTimers[i]) {
+                clearInterval(snvEventTimers[i]);
+                snvEventTimers[i] = null;
+            }
+        }
+
+        if (
+            extraActiveCategory === "EVENT_1" ||
+            extraActiveCategory === "EVENT_2"
+        ) {
+            extraActiveCategory = "RECOMMENDED";
+        }
+
+        extraRenderCategories();
+        extraRenderProducts();
+    }
+}
 
 function formatEventTime(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
