@@ -80,13 +80,7 @@ function extraRenderCategories() {
     EXTRA_CATEGORIES.forEach(cat => {
         const categoryValue = extraCategoryValue(cat);
 
-        if (
-            (categoryValue === "EVENT_1" ||
-             categoryValue === "EVENT_2") &&
-            !snvVisibleEventCategories.has(categoryValue)
-        ) {
-            return;
-        }
+      
 
         const b = document.createElement("button");
         b.type = "button";
@@ -2200,11 +2194,21 @@ async function loadSnvEvents() {
         if (error) throw error;
 
         const events = data?.events || [];
-        
-console.log("EVENT DATA:", data);
-console.log("EVENT LIST:", events);
+
+        console.log("SNV EVENT DATA:", data);
+        console.log("SNV EVENT LIST:", events);
+
+        // បញ្ឈប់ម៉ោងចាស់
+        for (let i = 1; i <= 2; i++) {
+            if (snvEventTimers[i]) {
+                clearInterval(snvEventTimers[i]);
+                snvEventTimers[i] = null;
+            }
+        }
+
         snvVisibleEventCategories = new Set();
 
+        // ពិនិត្យ EVENT ដែលសកម្ម
         events.forEach(ev => {
             const start = Date.parse(ev.starts_at);
             const end = Date.parse(ev.ends_at);
@@ -2219,29 +2223,29 @@ console.log("EVENT LIST:", events);
             }
         });
 
-        // បង្កើតប៊ូតុង EVENT ជាមួយផ្ទាំងម៉ោង
+        // បង្កើតប៊ូតុង EVENT
         extraRenderCategories();
 
-        // ចាប់ផ្តើមរាប់ថយក្រោយ
+        // ចាប់ផ្ដើមម៉ោង EVENT
         events.forEach(ev => {
-            const index = ev.event_code === "EVENT_1" ? 1 :
-                          ev.event_code === "EVENT_2" ? 2 : 0;
+            const index =
+                ev.event_code === "EVENT_1" ? 1 :
+                ev.event_code === "EVENT_2" ? 2 : 0;
 
             if (!index) return;
-
-            if (snvEventTimers[index]) {
-                clearInterval(snvEventTimers[index]);
-            }
-
-            const start = Date.parse(ev.starts_at);
-            const end = Date.parse(ev.ends_at);
 
             if (!snvVisibleEventCategories.has(ev.event_code)) {
                 return;
             }
 
+            const start = Date.parse(ev.starts_at);
+            const end = Date.parse(ev.ends_at);
+
             function updateTimer() {
-                const timer = byId("snv-event-" + index + "-timer");
+                const timer = byId(
+                    "snv-event-" + index + "-timer"
+                );
+
                 if (!timer) return;
 
                 const current = Date.now();
@@ -2256,14 +2260,20 @@ console.log("EVENT LIST:", events);
                         formatEventTime(end - current);
                 } else {
                     timer.textContent = "EVENT បានបញ្ចប់";
-                    clearInterval(snvEventTimers[index]);
+
+                    if (snvEventTimers[index]) {
+                        clearInterval(snvEventTimers[index]);
+                        snvEventTimers[index] = null;
+                    }
                 }
             }
 
             updateTimer();
-            snvEventTimers[index] = setInterval(updateTimer, 1000);
+            snvEventTimers[index] =
+                setInterval(updateTimer, 1000);
         });
 
+        // ប្រសិនបើ EVENT ដែលកំពុងជ្រើសរើសត្រូវបានបិទ
         if (
             extraActiveCategory === "EVENT_1" ||
             extraActiveCategory === "EVENT_2"
@@ -2299,6 +2309,7 @@ console.log("EVENT LIST:", events);
         extraRenderProducts();
     }
 }
+
 
 function formatEventTime(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
