@@ -79,6 +79,13 @@ function extraRenderCategories() {
 
     EXTRA_CATEGORIES.forEach(cat => {
         const categoryValue = extraCategoryValue(cat);
+        if (
+    (categoryValue === "EVENT_1" ||
+     categoryValue === "EVENT_2") &&
+    !snvVisibleEventCategories.has(categoryValue)
+) {
+    return;
+}
 
       
 
@@ -528,6 +535,40 @@ byId("extra-done-button").addEventListener("click",extraClosePaidPanel);
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>  <style>  
+.extra-category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    padding: 7px 4px;
+}
+
+.snv-event-timer {
+    display: block;
+    width: 100%;
+    font-size: 9px;
+    font-weight: bold;
+    color: #ffd45c;
+    text-align: center;
+    line-height: 1.3;
+}
+.extra-category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.snv-event-timer {
+    display: block;
+    width: 100%;
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffd45c;
+    text-align: center;
+    line-height: 1.4;
+}
 .snv-event-card {
     background: linear-gradient(135deg, #29285c, #10131e);
     border: 1px solid #7772ff;
@@ -547,6 +588,25 @@ byId("extra-done-button").addEventListener("click",extraClosePaidPanel);
 .snv-event-timer {
     font-size: 18px;
     font-weight: bold;
+    color: #ffd45c;
+}
+.extra-category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 9px !important;
+    padding: 5px 3px;
+    white-space: nowrap;
+}
+
+.snv-event-timer {
+    display: block;
+    font-size: 8px !important;
+    white-space: nowrap;
+    line-height: 1.2;
+    font-weight: normal;
     color: #ffd45c;
 }
 *{box-sizing:border-box}  
@@ -748,6 +808,15 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
   <p class="modal-note">មិនត្រូវបញ្ចូល Password ឬ OTP ទេ។</p>  
  </div>  
 </div>  <h2 class="section-title">Package List</h2>  
+<div style="background:#22283b;border:1px solid #d87929;border-radius:10px;padding:12px;margin-bottom:12px">
+    <label for="payment-provider" style="display:block;margin-bottom:8px;color:#ffb35c;font-weight:bold">
+        ជ្រើសរើសវិធីទូទាត់
+    </label>
+    <select id="payment-provider" style="width:100%;padding:12px;background:#10131e;color:white;border:1px solid #6558e8;border-radius:8px;font-size:15px">
+        <option value="bakong">Bakong KHQR</option>
+        <option value="aba">ABA KHQR</option>
+    </select>
+</div>
 <div id="message" class="message"></div>  
 <section class="packages-panel">  
  <div id="products-grid" class="products-grid">  
@@ -756,17 +825,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
 </section>  
 <button type="button" class="refresh-button" id="refresh-button">ផ្ទុកកញ្ចប់ឡើងវិញ</button>  <section id="extra-shop-view">  
 
-<!-- SNV EVENT BUTTONS -->
-<div id="snv-event-area" style="display:none;">
 
-    <div id="snv-event-1" class="snv-event-card" style="display:none;">
-        <h3>🎉 EVENT 1</h3>
-        <div class="snv-event-timer" id="snv-event-1-timer"></div>
-    </div>
-
-    <div id="snv-event-2" class="snv-event-card" style="display:none;">
-        <h3>🎉 EVENT 2</h3>
-        <div class="snv-event-timer" id="snv-event-2-timer"></div>
     </div>
 </div>
 
@@ -887,7 +946,7 @@ footer{text-align:center;color:#78819c;font-size:12px;margin:25px 0 10px}
  <button type="button" id="received-package-button" style="margin-top:15px;background:linear-gradient(135deg,#6558e8,#4938bd);padding:13px;font-size:15px">ទទួលបានកញ្ចប់</button>  
 </section>  <div class="notice">  
  <strong>ចំណាំ៖</strong>  
- ការបង្កើត KHQR មិនមានន័យថាការទូទាត់បានជោគជ័យទេ។ ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ជាមួយ Bakong មុនបង្ហាញព័ត៌មានកញ្ចប់។  
+ ការបង្កើត KHQR មិនមានន័យថាការទូទាត់បានជោគជ័យទេ។ ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ជាមួយអ្នកផ្តល់សេវាទូទាត់ដែលអ្នកបានជ្រើសរើស មុនបង្ហាញព័ត៌មានកញ្ចប់។  
 </div>  
 <footer>SNV Game Top-up</footer>  
 </main>  <script>  
@@ -1258,6 +1317,34 @@ function displayKHQR(text){
     });
 }
 
+function displayPaymentQR(payment, provider){
+    const el = byId("qrcode");
+    el.innerHTML = "";
+
+    if(provider === "aba" && payment && payment.qr_image){
+        const img = document.createElement("img");
+        let src = String(payment.qr_image).trim();
+
+        if(!/^data:image\//i.test(src) && !/^https?:\/\//i.test(src)){
+            src = "data:image/png;base64," + src;
+        }
+
+        img.src = src;
+        img.alt = "ABA KHQR";
+        img.style.width = "250px";
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+        img.onerror = function(){
+            el.innerHTML = "";
+            displayKHQR(payment.qr);
+        };
+        el.appendChild(img);
+        return;
+    }
+
+    displayKHQR(payment.qr);
+}
+
 function stopCountdown(){
     if(countdownInterval){
         clearInterval(countdownInterval);
@@ -1488,8 +1575,17 @@ async function verifyPayment(){
             return null;
         }
 
+        const pendingForProvider = getPendingPurchase();
+        const provider = pendingForProvider?.provider === "aba"
+            ? "aba"
+            : "bakong";
+
+        const verifyFunction = provider === "aba"
+            ? "snv-verify-aba"
+            : "snv-verify-payment";
+
         const {data, error} = await supabaseClient.functions.invoke(
-            "snv-verify-payment",
+            verifyFunction,
             {
                 body: {
                     purchase_id: currentPurchaseId,
@@ -1767,9 +1863,18 @@ async function createPayment(productId, button){
 
         const c = getOrCreateCustomerCredentials();
 
+        const providerSelect = byId("payment-provider");
+        const provider = providerSelect && providerSelect.value === "aba"
+            ? "aba"
+            : "bakong";
+
+        const createFunction = provider === "aba"
+            ? "snv-create-aba"
+            : "snv-create-khqr";
+
         const {data, error} =
             await supabaseClient.functions.invoke(
-                "snv-create-khqr",
+                createFunction,
                 {
                     body: {
                         product_id: productId,
@@ -1830,7 +1935,7 @@ async function createPayment(productId, button){
            data.success !== true ||
            !data.purchase ||
            !data.payment ||
-           !data.payment.qr){
+           !(data.payment.qr || (provider === "aba" && data.payment.qr_image))){
 
             throw new Error(
                 data && data.error
@@ -1868,9 +1973,10 @@ async function createPayment(productId, button){
         byId("qr-area").style.display = "block";
 
         byId("payment-instruction").textContent =
-            "សូមស្កេន KHQR។ ប្រព័ន្ធពិនិត្យការទូទាត់រៀងរាល់ 10 វិនាទី រហូតដល់ QR ផុតកំណត់។";
+            (provider === "aba" ? "ABA KHQR៖ " : "Bakong KHQR៖ ") +
+            "សូមស្កេន QR។ ប្រព័ន្ធពិនិត្យការទូទាត់រៀងរាល់ 10 វិនាទី រហូតដល់ QR ផុតកំណត់។";
 
-        displayKHQR(pay.qr);
+        displayPaymentQR(pay, provider);
 
         const expiry = pay.expires_at ||
             new Date(
@@ -1884,6 +1990,7 @@ async function createPayment(productId, button){
             productName: p.product_name || p.item_title || "",
             amount: p.amount ?? p.total,
             currency: p.currency || "USD",
+            provider: provider,
             expiresAt: expiry,
             status: "awaiting_payment",
             lastVerifyResult: null,
@@ -2230,7 +2337,13 @@ async function loadSnvEvents() {
                 snvVisibleEventCategories.add(ev.event_code);
             }
         });
-
+if (snvVisibleEventCategories.has("EVENT_1")) {
+    extraActiveCategory = "EVENT_1";
+} else if (snvVisibleEventCategories.has("EVENT_2")) {
+    extraActiveCategory = "EVENT_2";
+} else {
+    extraActiveCategory = "RECOMMENDED";
+}
         // បង្កើតប៊ូតុង EVENT
         extraRenderCategories();
 
